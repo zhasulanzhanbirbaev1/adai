@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 
 PORT = int(os.getenv("PORT", 8000))
 
+# Debug: show what env vars Railway provides
+_token = os.getenv("BOT_TOKEN", "")
+logger.info("BOT_TOKEN present: %s, length: %d", bool(_token), len(_token))
+
 
 async def main():
     from database import init_db
