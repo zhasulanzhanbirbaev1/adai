@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import uvicorn
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,35 +12,36 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+PORT = int(os.getenv("PORT", 8000))
+
 
 async def main():
     from database import init_db
     from bot import build_app
     from ai_manager import build_scheduler
+    from webhook_server import app as web_app
 
     init_db()
 
-    app = build_app()
-    scheduler = build_scheduler(app.bot)
+    bot_app = build_app()
+    scheduler = build_scheduler(bot_app.bot)
 
-    async with app:
+    config = uvicorn.Config(web_app, host="0.0.0.0", port=PORT, log_level="info")
+    server = uvicorn.Server(config)
+
+    async with bot_app:
         scheduler.start()
-        logger.info("AI scheduler started (sync every 1h, analyze every 6h)")
+        logger.info("AI scheduler started")
 
-        await app.start()
-        await app.updater.start_polling(drop_pending_updates=True)
-        logger.info("Bot started. Press Ctrl+C to stop.")
+        await bot_app.start()
+        await bot_app.updater.start_polling(drop_pending_updates=True)
+        logger.info("Bot started on port %d", PORT)
 
-        stop_event = asyncio.Event()
-        try:
-            await stop_event.wait()
-        except (KeyboardInterrupt, SystemExit):
-            pass
-        finally:
-            logger.info("Shutting down...")
-            scheduler.shutdown(wait=False)
-            await app.updater.stop()
-            await app.stop()
+        await server.serve()
+
+        scheduler.shutdown(wait=False)
+        await bot_app.updater.stop()
+        await bot_app.stop()
 
 
 if __name__ == "__main__":
