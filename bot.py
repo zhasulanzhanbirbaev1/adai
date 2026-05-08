@@ -275,41 +275,45 @@ async def handle_creative_niche(update: Update, context: ContextTypes.DEFAULT_TY
     photo_bytes = state["photo"]
     CREATIVE_STATES.pop(user.id, None)
 
-    await update.message.reply_text("⏳ Генерирую 3 варианта креатива... (займёт ~20 секунд)")
+    await update.message.reply_text("⏳ Генерирую баннеры... (займёт ~30 секунд)")
 
     openai_key = os.getenv("OPENAI_API_KEY", "")
     if not openai_key:
-        await update.message.reply_text("❌ OpenAI API не настроен. Добавьте OPENAI_API_KEY в .env")
+        await update.message.reply_text("❌ OpenAI API не настроен.")
         return
 
     try:
-        from creative_prompt import SYSTEM_PROMPT
-        from openai import AsyncOpenAI
+        import io
+        from image_generator import generate_ad_copy
+        from banner_composer import create_banners
+        from telegram import InputMediaPhoto
 
         photo_b64 = base64.b64encode(photo_bytes).decode()
-        client = AsyncOpenAI(api_key=openai_key)
-        response = await client.chat.completions.create(
-            model="gpt-4o",
-            max_tokens=2000,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{photo_b64}"},
-                    },
-                    {
-                        "type": "text",
-                        "text": f"Ниша: {niche}\n\nОпиши 3 варианта рекламного баннера.",
-                    },
-                ]},
-            ],
-        )
 
-        result = response.choices[0].message.content
-        chunks = [result[i:i+4000] for i in range(0, len(result), 4000)]
-        for chunk in chunks:
-            await update.message.reply_text(chunk)
+        copy = await generate_ad_copy(niche, "", photo_b64)
+        headlines = copy.get("headlines", [niche] * 3)
+        bullets   = copy.get("bullets", [])
+        cta       = copy.get("cta", "Узнать больше")
+
+        banners = create_banners(photo_bytes, headlines, bullets, cta)
+
+        media = []
+        for i, b in enumerate(banners):
+            img_data = base64.b64decode(b["image"].split(",")[1])
+            buf = io.BytesIO(img_data)
+            buf.name = f"banner_{i+1}.png"
+            caption = b["label"] if i == 0 else ""
+            media.append(InputMediaPhoto(media=buf, caption=caption))
+
+        await update.message.reply_media_group(media=media)
+
+        caption_text = (
+            f"*Заголовки:*\n" +
+            "\n".join(f"{i+1}. {h}" for i, h in enumerate(headlines)) +
+            f"\n\n*CTA:* {cta}\n\n" +
+            "\n".join(f"• {b}" for b in bullets)
+        )
+        await update.message.reply_text(caption_text, parse_mode="Markdown")
 
     except Exception as e:
         logger.error("Creative generation error: %s", e)
