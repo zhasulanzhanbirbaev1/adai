@@ -1,16 +1,41 @@
 from PIL import Image, ImageDraw, ImageFont
-import io, base64
+import io, base64, os, sys
 
-SIZE   = 1080
-F_BOLD = r"C:\Windows\Fonts\arialbd.ttf"
-F_REG  = r"C:\Windows\Fonts\arial.ttf"
+SIZE = 1080
+
+_FONT_CANDIDATES_BOLD = [
+    r"C:\Windows\Fonts\arialbd.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+    "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
+    "/System/Library/Fonts/Helvetica.ttc",
+]
+_FONT_CANDIDATES_REG = [
+    r"C:\Windows\Fonts\arial.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+    "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+    "/System/Library/Fonts/Helvetica.ttc",
+]
+
+
+def _find_font(candidates):
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    return None
+
+F_BOLD = _find_font(_FONT_CANDIDATES_BOLD)
+F_REG  = _find_font(_FONT_CANDIDATES_REG)
 
 
 def _font(path, size):
     try:
-        return ImageFont.truetype(path, size)
-    except:
-        return ImageFont.load_default()
+        if path:
+            return ImageFont.truetype(path, size)
+    except Exception:
+        pass
+    return ImageFont.load_default()
 
 
 def _wrap(text, font, max_w, draw):
