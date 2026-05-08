@@ -13,9 +13,9 @@ from database import (
 from kaspi_handlers import show_plans, register_kaspi_handlers
 
 load_dotenv()
-BOT_TOKEN       = os.getenv("BOT_TOKEN", "")
+BOT_TOKEN       = os.getenv("BOT_TOKEN", "").strip()
 OWNER_ID        = int(os.getenv("OWNER_ID", "0"))
-WEBAPP_URL      = os.getenv("WEBAPP_URL", "")
+WEBAPP_URL      = os.getenv("WEBAPP_URL", "").strip()
 # Состояния для /creative
 CREATIVE_STATES = {}  # user_id -> {"photo": bytes}
 
