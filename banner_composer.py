@@ -3,19 +3,18 @@ import io, base64, os, sys
 
 SIZE = 1080
 
+_BASE = os.path.join(os.path.dirname(__file__), "fonts")
 _FONT_CANDIDATES_BOLD = [
+    os.path.join(_BASE, "arialbd.ttf"),
     r"C:\Windows\Fonts\arialbd.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-    "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
-    "/System/Library/Fonts/Helvetica.ttc",
 ]
 _FONT_CANDIDATES_REG = [
+    os.path.join(_BASE, "arial.ttf"),
     r"C:\Windows\Fonts\arial.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-    "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
-    "/System/Library/Fonts/Helvetica.ttc",
 ]
 
 

@@ -1,5 +1,6 @@
 .env
 *.db
+# fonts tracked intentionally
 __pycache__/
 *.pyc
 *.pyo
