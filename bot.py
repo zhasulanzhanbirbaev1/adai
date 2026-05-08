@@ -1,7 +1,7 @@
 import os
 import logging
 import base64
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv
 
@@ -24,14 +24,23 @@ logger = logging.getLogger(__name__)
 
 
 def _main_keyboard(user_id: int):
-    buttons = []
+    inline_buttons = []
     if WEBAPP_URL:
-        buttons.append([InlineKeyboardButton("📊 Открыть кабинет", web_app=WebAppInfo(url=WEBAPP_URL))])
-    buttons.append([
+        inline_buttons.append([InlineKeyboardButton("📊 Открыть кабинет", web_app=WebAppInfo(url=WEBAPP_URL))])
+    inline_buttons.append([
         InlineKeyboardButton("💳 Подписка", callback_data="open_plans"),
         InlineKeyboardButton("🤖 Лог ИИ", callback_data="open_ailog"),
     ])
-    return InlineKeyboardMarkup(buttons)
+    return InlineKeyboardMarkup(inline_buttons)
+
+
+def _reply_keyboard():
+    buttons = [
+        [KeyboardButton("🎨 Креатив"), KeyboardButton("💳 Подписка")],
+        [KeyboardButton("🤖 Лог ИИ"), KeyboardButton("🔗 Facebook")],
+        [KeyboardButton("🔄 Синхронизация"), KeyboardButton("📊 Статус")],
+    ]
+    return ReplyKeyboardMarkup(buttons, resize_keyboard=True, persistent=True)
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -75,6 +84,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=_main_keyboard(user.id))
+    await update.message.reply_text("Выберите действие:", reply_markup=_reply_keyboard())
 
 
 async def cmd_pay(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -211,6 +221,24 @@ async def cmd_creative(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def handle_menu_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    if text == "🎨 Креатив":
+        await cmd_creative(update, context)
+    elif text == "💳 Подписка":
+        await show_plans(update, context)
+    elif text == "🤖 Лог ИИ":
+        await cmd_ailog(update, context)
+    elif text == "🔗 Facebook":
+        await cmd_token(update, context)
+    elif text == "🔄 Синхронизация":
+        await cmd_sync(update, context)
+    elif text == "📊 Статус":
+        await cmd_start(update, context)
+    else:
+        await handle_creative_niche(update, context)
+
+
 async def handle_creative_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     if not has_access(user.id):
@@ -299,7 +327,7 @@ def build_app() -> Application:
     app.add_handler(CommandHandler("creative", cmd_creative))
     app.add_handler(CallbackQueryHandler(handle_inline, pattern=r"^open_"))
     app.add_handler(MessageHandler(filters.PHOTO, handle_creative_photo))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_creative_niche))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_menu_buttons))
     register_kaspi_handlers(app)
     return app
 
