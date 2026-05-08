@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>like.ai — Личный кабинет</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;900&family=Onest:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#05070f;--surface:#0c1120;--surface2:#111827;--border:#1c2638;
+  --accent:#3b82f6;--accent2:#93c5fd;--green:#10d9a0;--red:#f4546a;--yellow:#fbbf24;
+  --text:#eef2ff;--muted:#6b7a99;--sidebar:220px;--r:12px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Onest',sans-serif;font-size:14px;display:flex}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:fixed;left:0;top:0;z-index:50}
+.sidebar-logo{padding:24px 20px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.sidebar-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#3b82f6,#10d9a0);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sidebar-logo-text{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;line-height:1.2}
+.sidebar-logo-text span{display:block;font-size:10px;font-weight:400;color:var(--muted)}
+.nav-items{padding:12px 0;flex:1;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--muted);cursor:pointer;transition:color .2s,background .2s;font-size:14px;font-weight:500;text-decoration:none;border-left:3px solid transparent;margin:2px 0}
+.nav-item:hover{color:var(--text);background:rgba(59,130,246,.06)}
+.nav-item.active{color:var(--text);background:rgba(59,130,246,.1);border-left-color:var(--accent)}
+.nav-item .icon{font-size:18px;width:22px;text-align:center;flex-shrink:0}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
+.user-chip{display:flex;align-items:center;gap:10px}
+.user-avatar{width:32px;height:32px;background:linear-gradient(135deg,#3b82f6,#10d9a0);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{font-size:13px;font-weight:500}
+.user-plan{font-size:11px;color:var(--muted)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar);flex:1;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.topbar{padding:20px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:40}
+.topbar-title{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700}
+.topbar-actions{display:flex;gap:12px;align-items:center}
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;font-size:12px;font-weight:600}
+.status-active{background:rgba(16,217,160,.12);color:var(--green)}
+.status-trial{background:rgba(251,191,36,.12);color:var(--yellow)}
+.status-expired{background:rgba(244,84,106,.12);color:var(--red)}
+.content{padding:28px 32px;flex:1}
+
+/* PAGE */
+.page{display:none}
+.page.active{display:block}
+
+/* CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px}
+.stat-label{font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.stat-value{font-family:'Unbounded',sans-serif;font-size:24px;font-weight:700}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.stat-up{color:var(--green)}
+.stat-down{color:var(--red)}
+
+/* CHART */
+.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:24px}
+.box-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.box-title{font-weight:600;font-size:15px}
+.chart-wrap{height:200px;position:relative}
+
+/* TABLE */
+.table-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:24px}
+table{width:100%;border-collapse:collapse}
+thead th{padding:12px 16px;text-align:left;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+tbody td{padding:12px 16px;font-size:14px;border-bottom:1px solid rgba(28,38,56,.5)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(59,130,246,.04)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:600}
+.badge-active{background:rgba(16,217,160,.12);color:var(--green)}
+.badge-paused{background:rgba(100,116,153,.12);color:var(--muted)}
+.badge-ai{background:rgba(244,84,106,.12);color:var(--red)}
+.badge-scale{background:rgba(59,130,246,.12);color:var(--accent2)}
+
+/* AI LOG */
+.ai-log{display:flex;flex-direction:column;gap:10px}
+.ai-entry{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start}
+.ai-entry-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.ai-entry-body{flex:1}
+.ai-entry-title{font-weight:600;font-size:14px;margin-bottom:3px}
+.ai-entry-sub{color:var(--muted);font-size:13px}
+.ai-entry-time{font-size:11px;color:var(--muted);flex-shrink:0;margin-top:2px}
+
+/* TOGGLE */
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:var(--surface2);border:1px solid var(--border);border-radius:50px;cursor:pointer;transition:background .2s}
+.toggle input:checked + .toggle-track{background:var(--accent)}
+.toggle-track::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s}
+.toggle input:checked + .toggle-track::after{transform:translateX(18px)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.modal-title{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px;transition:color .2s}
+.modal-close:hover{color:var(--text)}
+
+/* FORM */
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:8px}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-family:'Onest',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--accent)}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.type-opt{border:1.5px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;font-size:13px}
+.type-opt:hover{border-color:rgba(59,130,246,.5)}
+.type-opt.active{border-color:var(--accent);background:rgba(59,130,246,.1)}
+.type-opt .t-icon{font-size:22px;margin-bottom:4px}
+.type-opt .t-label{font-size:11px;font-weight:500}
+
+/* BUTTONS */
+.btn{padding:10px 20px;border-radius:50px;border:none;cursor:pointer;font-family:'Onest',sans-serif;font-size:14px;font-weight:600;transition:opacity .2s,transform .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:linear-gradient(135deg,#3b82f6,#1d6eec);color:#fff;box-shadow:0 4px 20px rgba(59,130,246,.4)}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent)}
+.btn-sm{padding:6px 14px;font-size:13px}
+
+/* FUNNEL */
+.funnel{display:flex;flex-direction:column;gap:8px;margin-top:24px}
+.funnel-step{display:flex;align-items:center;gap:16px}
+.funnel-bar-wrap{flex:1;background:var(--surface2);border-radius:50px;height:36px;overflow:hidden}
+.funnel-bar{height:100%;border-radius:50px;display:flex;align-items:center;padding:0 16px;font-size:12px;font-weight:600;transition:width .8s ease}
+.funnel-label{width:110px;font-size:13px;color:var(--muted);text-align:right}
+.funnel-val{width:80px;font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;text-align:right}
+
+/* AI STUDIO */
+.studio-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.upload-area{background:var(--surface2);border:2px dashed var(--border);border-radius:14px;padding:48px 24px;text-align:center;cursor:pointer;transition:border-color .2s}
+.upload-area:hover{border-color:var(--accent)}
+.upload-icon{font-size:48px;margin-bottom:12px;opacity:.5}
+.upload-area p{color:var(--muted);font-size:14px}
+.upload-area strong{display:block;margin-bottom:6px;color:var(--text)}
+.banners-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+.banner-preview{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .3s,transform .2s}
+.banner-preview:hover{border-color:var(--accent);transform:translateY(-2px)}
+.banner-preview.selected{border-color:var(--accent);box-shadow:0 0 20px rgba(59,130,246,.3)}
+.banner-img{width:100%;aspect-ratio:1/1;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:32px;position:relative;overflow:hidden}
+.banner-style-1{background:linear-gradient(135deg,#0f2027,#203a43,#2c5364)}
+.banner-style-2{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}
+.banner-style-3{background:linear-gradient(135deg,#0c0c1d,#111132,#0f0f23)}
+.banner-text-overlay{position:absolute;bottom:0;left:0;right:0;padding:12px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:11px;color:#fff;font-weight:600}
+.banner-info{padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
+.banner-style-name{font-size:11px;color:var(--muted)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* PERIOD FILTER */
+.period-filter{display:flex;gap:4px;background:var(--surface2);padding:4px;border-radius:10px}
+.pf-btn{padding:6px 16px;border-radius:8px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:'Onest',sans-serif;font-size:13px;font-weight:500;transition:all .2s}
+.pf-btn.active{background:var(--accent);color:#fff}
+
+/* SETTINGS */
+.settings-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:20px}
+.settings-section h3{font-weight:600;font-size:15px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.fb-status{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface2);border-radius:10px;margin-bottom:16px}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state .empty-icon{font-size:48px;margin-bottom:16px;opacity:.4}
+.empty-state p{font-size:15px}
+
+/* DIVIDER */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(-100%);transition:transform .3s}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .studio-grid{grid-template-columns:1fr}
+  .two-col{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .topbar{padding:16px 20px}
+  .content{padding:20px}
+  .mob-menu-btn{display:flex!important}
+}
+.mob-menu-btn{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:4px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">🎯</div>
+    <div class="sidebar-logo-text">like.ai<span>Личный кабинет</span></div>
+  </div>
+  <nav class="nav-items">
+    <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')"><span class="icon">📊</span>Дашборд</a>
+    <a class="nav-item" data-page="campaigns" onclick="navigate('campaigns')"><span class="icon">🎯</span>Кампании</a>
+    <a class="nav-item" data-page="studio" onclick="navigate('studio')"><span class="icon">✨</span>AI Studio</a>
+    <a class="nav-item" data-page="analytics" onclick="navigate('analytics')"><span class="icon">📈</span>Аналитика</a>
+    <a class="nav-item" data-page="settings" onclick="navigate('settings')"><span class="icon">⚙️</span>Настройки</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div><div class="user-name" id="userName">Загрузка...</div><div class="user-plan" id="userPlan">—</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:16px">
+      <button class="mob-menu-btn" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title" id="topbarTitle">Дашборд</div>
+    </div>
+    <div class="topbar-actions">
+      <span class="status-badge status-trial" id="statusBadge">Загрузка...</span>
+      <button class="btn btn-primary btn-sm" onclick="navigate('settings')">⚙️ Настройки</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">👁 Показы</div><div class="stat-value" id="d-impressions">—</div><div class="stat-sub">за 30 дней</div></div>
+        <div class="stat-card"><div class="stat-label">🖱 Клики</div><div class="stat-value" id="d-clicks">—</div><div class="stat-sub" id="d-ctr">CTR —</div></div>
+        <div class="stat-card"><div class="stat-label">🎯 Заявки</div><div class="stat-value" id="d-leads">—</div><div class="stat-sub" id="d-cpl">CPL —</div></div>
+        <div class="stat-card"><div class="stat-label">💰 Потрачено</div><div class="stat-value" id="d-spent">—</div><div class="stat-sub">за 30 дней</div></div>
+      </div>
+      <div class="two-col">
+        <div>
+          <div class="chart-box">
+            <div class="box-header"><div class="box-title">Расходы по дням</div></div>
+            <div class="chart-wrap"><canvas id="spendChart"></canvas></div>
+          </div>
+        </div>
+        <div>
+          <div class="chart-box" style="height:100%">
+            <div class="box-header"><div class="box-title">🤖 Решения ИИ сегодня</div></div>
+            <div class="ai-log" id="d-ailog"><div class="empty-state"><div class="empty-icon">🤖</div><p>Пока нет решений сегодня</p></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="table-box">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <div class="box-title">Последние кампании</div>
+          <button class="btn btn-primary btn-sm" onclick="navigate('campaigns')">Все кампании</button>
+        </div>
+        <table>
+          <thead><tr><th>Кампания</th><th>Статус</th><th>CTR</th><th>Бюджет</th></tr></thead>
+          <tbody id="d-campaigns"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CAMPAIGNS -->
+    <div class="page" id="page-campaigns">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="font-size:13px;color:var(--muted)" id="camp-count">0 кампаний</div>
+        <button class="btn btn-primary" onclick="openModal('modal-campaign')">+ Создать кампанию</button>
+      </div>
+      <div class="table-box">
+        <table>
+          <thead><tr><th>Название</th><th>Тип</th><th>Цель</th><th>Бюджет/день</th><th>CTR</th><th>Заявок</th><th>Потрачено</th><th>Статус</th><th></th></tr></thead>
+          <tbody id="camps-table"><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AI STUDIO -->
+    <div class="page" id="page-studio">
+      <div class="studio-grid">
+        <div>
+          <div class="form-group">
+            <label class="form-label">Загрузите фото товара или услуги</label>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+              <div class="upload-icon" id="uploadIcon">📷</div>
+              <strong id="uploadText">Нажмите для загрузки</strong>
+              <p>JPG, PNG до 10 МБ</p>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(this)"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Описание оффера</label>
+            <textarea class="form-input" id="offerText" rows="4" placeholder="Опишите ваш товар/услугу и главное преимущество для клиента..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Целевая аудитория</label>
+            <input class="form-input" id="targetAudience" placeholder="Например: женщины 25-40, Алматы, интересы — мода"/>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="generateBanners()">✨ Сгенерировать 3 варианта</button>
+        </div>
+        <div>
+          <div class="box-title" style="margin-bottom:16px">Варианты баннеров</div>
+          <div id="banners-wrap">
+            <div class="empty-state"><div class="empty-icon">✨</div><p>Заполните форму слева и нажмите «Сгенерировать»</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:20px">
+        <div class="period-filter">
+          <button class="pf-btn" onclick="setPeriod('1',this)">Сегодня</button>
+          <button class="pf-btn active" onclick="setPeriod('7',this)">7 дней</button>
+          <button class="pf-btn" onclick="setPeriod('30',this)">30 дней</button>
+        </div>
+      </div>
+      <div style="margin-bottom:24px">
+        <div class="box-title" style="margin-bottom:20px">Воронка конверсий</div>
+        <div class="funnel" id="funnel">
+          <div class="funnel-step"><div class="funnel-label">Показы</div><div class="funnel-bar-wrap"><div class="funnel-bar" id="fb-imp" style="width:100%;background:linear-gradient(90deg,#3b82f6,#1d6eec)"><span id="fb-imp-v">0</span></div></div><div class="funnel-val" id="fb-imp-p">—</div></div>
+          <div class="funnel-step"><div class="funnel-label">Клики</div><div class="funnel-bar-wrap"><div class="funnel-bar" id="fb-cl" style="width:60%;background:linear-gradient(90deg,#a78bfa,#7c3aed)"><span id="fb-cl-v">0</span></div></div><div class="funnel-val" id="fb-cl-p">—</div></div>
+          <div class="funnel-step"><div class="funnel-label">Заявки</div><div class="funnel-bar-wrap"><div class="funnel-bar" id="fb-ld" style="width:30%;background:linear-gradient(90deg,#10d9a0,#059669)"><span id="fb-ld-v">0</span></div></div><div class="funnel-val" id="fb-ld-p">—</div></div>
+        </div>
+      </div>
+      <div class="table-box">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border)"><div class="box-title">По кампаниям</div></div>
+        <table>
+          <thead><tr><th>Кампания</th><th>Показы</th><th>Клики</th><th>CTR</th><th>Заявки</th><th>CPL</th><th>Потрачено</th></tr></thead>
+          <tbody id="analytics-table"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="two-col">
+        <div>
+          <div class="settings-section">
+            <h3>🔗 Facebook Ads</h3>
+            <div class="fb-status" id="fb-status-block">
+              <span style="font-size:20px">❌</span>
+              <div><strong>Не подключён</strong><div style="color:var(--muted);font-size:12px">Введите токен для подключения</div></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Access Token</label>
+              <input class="form-input" id="fb-token" placeholder="EAAxxxxxxxxxxxxxxxxxxxxxxx"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ID рекламного аккаунта</label>
+              <input class="form-input" id="fb-account" placeholder="act_123456789"/>
+            </div>
+            <button class="btn btn-primary" onclick="saveFacebook()">Сохранить и подключить</button>
+          </div>
+          <div class="settings-section">
+            <h3>🎯 Цели ИИ-менеджера</h3>
+            <div class="form-group">
+              <label class="form-label">Целевая цена заявки (CPL), ₸</label>
+              <input class="form-input" type="number" id="target-cpl" placeholder="1500"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">WhatsApp для заявок</label>
+              <input class="form-input" id="whatsapp" placeholder="+7 777 123 45 67"/>
+            </div>
+            <button class="btn btn-primary" onclick="saveProfile()">Сохранить</button>
+          </div>
+        </div>
+        <div>
+          <div class="settings-section">
+            <h3>💳 Подписка</h3>
+            <div id="sub-info" style="color:var(--muted);font-size:14px">Загрузка...</div>
+            <button class="btn btn-primary" style="margin-top:16px" onclick="openTelegram()">Управление подпиской в Telegram</button>
+          </div>
+          <div class="settings-section">
+            <h3>📱 Telegram-бот</h3>
+            <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Ежедневные отчёты и уведомления ИИ приходят в Telegram.</p>
+            <button class="btn btn-secondary" onclick="openTelegram()">Открыть бот</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- MODAL: Create Campaign -->
+<div class="modal-overlay" id="modal-campaign" onclick="closeModalOut(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Новая кампания</div>
+      <button class="modal-close" onclick="closeModal('modal-campaign')">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Название кампании</label>
+      <input class="form-input" id="nc-name" placeholder="Доставка еды — Алматы"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Тип рекламы</label>
+      <div class="type-grid">
+        <div class="type-opt active" data-val="photo" onclick="selectType(this)"><div class="t-icon">🖼</div><div class="t-label">Фото</div></div>
+        <div class="type-opt" data-val="video" onclick="selectType(this)"><div class="t-icon">🎬</div><div class="t-label">Видео</div></div>
+        <div class="type-opt" data-val="reels" onclick="selectType(this)"><div class="t-icon">📱</div><div class="t-label">Reels</div></div>
+        <div class="type-opt" data-val="ai" onclick="selectType(this)"><div class="t-icon">✨</div><div class="t-label">ИИ</div></div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Цель рекламы</label>
+        <select class="form-input form-select" id="nc-goal">
+          <option value="whatsapp">WhatsApp заявки</option>
+          <option value="instagram">Instagram DM</option>
+          <option value="website">На сайт</option>
+          <option value="leads">Лид-форма</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Гео</label>
+        <select class="form-input form-select" id="nc-geo">
+          <option value="Алматы">Алматы</option>
+          <option value="Астана">Астана</option>
+          <option value="KZ">Весь Казахстан</option>
+          <option value="Другое">Другое</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Бюджет в день, ₸</label>
+        <input class="form-input" type="number" id="nc-budget" placeholder="5000"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Целевой CPL, ₸</label>
+        <input class="form-input" type="number" id="nc-cpl" placeholder="1500"/>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal('modal-campaign')">Отмена</button>
+      <button class="btn btn-primary" onclick="createCampaign()">Создать кампанию</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const API = window.location.origin;
+const UID = new URLSearchParams(location.search).get('user_id')
+         || window.Telegram?.WebApp?.initDataUnsafe?.user?.id
+         || null;
+
+// ── MOCK DATA ────────────────────────────────────────────────────────────────
+const MOCK = {
+  dashboard: {
+    stats:{impressions:45234,clicks:1847,leads:234,spent:87500,
+      daily:[
+        {date:'01.04',spent:2800},{date:'02.04',spent:3200},{date:'03.04',spent:2950},
+        {date:'04.04',spent:3800},{date:'05.04',spent:4100},{date:'06.04',spent:3600},
+        {date:'07.04',spent:2200},{date:'08.04',spent:3100},{date:'09.04',spent:4500},
+        {date:'10.04',spent:3900},{date:'11.04',spent:2700},{date:'12.04',spent:3300},
+        {date:'13.04',spent:4200},{date:'14.04',spent:3800}
+      ]
+    },
+    campaigns:[
+      {id:1,name:'Доставка еды — Алматы',active:true,budget:5000,ctr:4.2,paused_by_ai:false,ai_scenario:null},
+      {id:2,name:'Летние платья',active:false,budget:3000,ctr:0.3,paused_by_ai:true,ai_scenario:'🧛 Вампир'},
+      {id:3,name:'Курсы — Инстаграм',active:true,budget:7000,ctr:3.8,paused_by_ai:false,ai_scenario:null},
+    ],
+    ai_today:[
+      {scenario:'🧛 Вампир',decision:'Кампания поставлена на паузу',campaign:'Летние платья',created_at:'2025-01-15T06:02:00'},
+      {scenario:'🚀 Масштаб',decision:'Бюджет увеличен на 20%',campaign:'Доставка еды',created_at:'2025-01-15T06:05:00'},
+    ],
+    subscription:{active:true,plan:'trial',expires:null}
+  },
+  campaigns:[
+    {id:1,name:'Доставка еды — Алматы',type:'reels',goal:'whatsapp',geo:'Алматы',budget:5000,active:true,paused_by_ai:false,ai_scenario:null,stats:{impressions:18400,clicks:770,leads:98,spent:34500,ctr:4.2,cpl:352}},
+    {id:2,name:'Летние платья',type:'photo',goal:'instagram',geo:'Алматы',budget:3000,active:false,paused_by_ai:true,ai_scenario:'🧛 Вампир',stats:{impressions:9200,clicks:27,leads:2,spent:8900,ctr:0.3,cpl:4450}},
+    {id:3,name:'Онлайн-курсы English',type:'video',goal:'leads',geo:'KZ',budget:7000,active:true,paused_by_ai:false,ai_scenario:null,stats:{impressions:17634,clicks:1050,leads:134,spent:44100,ctr:5.9,cpl:329}},
+  ],
+  analytics:{
+    summary:{impressions:45234,clicks:1847,leads:234,spent:87500,daily:[]},
+    table:[
+      {name:'Доставка еды',impressions:18400,clicks:770,leads:98,spent:34500,ctr:4.2,cpl:352},
+      {name:'Летние платья',impressions:9200,clicks:27,leads:2,spent:8900,ctr:0.3,cpl:4450},
+      {name:'Курсы English',impressions:17634,clicks:1050,leads:134,spent:44100,ctr:5.9,cpl:329},
+    ]
+  },
+  settings:{
+    user:{first_name:'Иван',username:'ivan',target_cpl:1500,whatsapp:'+7 777 123 45 67'},
+    facebook:{connected:false,ad_account_id:null,connected_at:null},
+    subscription:{active:true,plan:'trial',expires:null,trial_ends:'2025-01-22'}
+  }
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let currentPage = 'dashboard';
+let spendChart  = null;
+let selectedCampType = 'photo';
+
+// ── API HELPERS ───────────────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  if (!UID) return null;
+  try {
+    const sep = path.includes('?') ? '&' : '?';
+    const r = await fetch(`${API}${path}${sep}user_id=${UID}`, {
+      headers: {'Content-Type':'application/json'}, ...opts
+    });
+    return r.ok ? r.json() : null;
+  } catch { return null; }
+}
+
+function useMock(key) { return !UID; }
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+const PAGE_TITLES = {dashboard:'Дашборд',campaigns:'Кампании',studio:'AI Creative Studio',analytics:'Аналитика',settings:'Настройки'};
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+  document.getElementById('topbarTitle').textContent = PAGE_TITLES[page];
+  currentPage = page;
+  loadPage(page);
+  if (window.innerWidth < 900) closeSidebar();
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function closeSidebar()   { document.getElementById('sidebar').classList.remove('open'); }
+
+// ── LOAD PAGES ────────────────────────────────────────────────────────────────
+function loadPage(page) {
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'campaigns') loadCampaigns();
+  if (page === 'analytics') loadAnalytics('7');
+  if (page === 'settings')  loadSettings();
+}
+
+// DASHBOARD
+async function loadDashboard() {
+  const data = useMock() ? MOCK.dashboard : await api('/api/dashboard');
+  if (!data) return;
+
+  const s = data.stats;
+  const ctr = s.impressions > 0 ? (s.clicks/s.impressions*100).toFixed(2) : 0;
+  const cpl = s.leads > 0 ? Math.round(s.spent/s.leads) : 0;
+
+  document.getElementById('d-impressions').textContent = fmt(s.impressions);
+  document.getElementById('d-clicks').textContent = fmt(s.clicks);
+  document.getElementById('d-leads').textContent = s.leads;
+  document.getElementById('d-spent').textContent = fmtKZT(s.spent);
+  document.getElementById('d-ctr').textContent = `CTR ${ctr}%`;
+  document.getElementById('d-cpl').textContent = cpl > 0 ? `CPL ${fmtKZT(cpl)}` : 'Нет заявок';
+
+  // Chart
+  if (s.daily && s.daily.length) renderSpendChart(s.daily);
+
+  // Campaigns
+  const tbody = document.getElementById('d-campaigns');
+  tbody.innerHTML = data.campaigns.length
+    ? data.campaigns.map(c => `
+      <tr>
+        <td><strong>${c.name}</strong></td>
+        <td>${campaignBadge(c)}</td>
+        <td>${c.ctr}%</td>
+        <td>${fmtKZT(c.budget)}/день</td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Нет кампаний. <a onclick="navigate(\'campaigns\')" style="color:var(--accent);cursor:pointer">Создать</a></td></tr>';
+
+  // AI Log
+  const aiDiv = document.getElementById('d-ailog');
+  if (data.ai_today && data.ai_today.length) {
+    aiDiv.innerHTML = data.ai_today.map(e => `
+      <div class="ai-entry">
+        <div class="ai-entry-icon">${scenarioIcon(e.scenario)}</div>
+        <div class="ai-entry-body">
+          <div class="ai-entry-title">${e.campaign}</div>
+          <div class="ai-entry-sub">${e.decision}</div>
+        </div>
+        <div class="ai-entry-time">${e.created_at.slice(11,16)}</div>
+      </div>`).join('');
+  }
+
+  // Status badge
+  const sub = data.subscription;
+  const badge = document.getElementById('statusBadge');
+  if (sub.active && sub.plan === 'trial') {
+    badge.className='status-badge status-trial'; badge.textContent='🟡 Пробный период';
+  } else if (sub.active) {
+    badge.className='status-badge status-active'; badge.textContent=`🟢 ${sub.plan}`;
+  } else {
+    badge.className='status-badge status-expired'; badge.textContent='🔴 Нет подписки';
+  }
+
+  // User
+  document.getElementById('userAvatar').textContent = '👤';
+  document.getElementById('userName').textContent = 'Пользователь';
+  document.getElementById('userPlan').textContent = sub.plan === 'trial' ? 'Пробный период' : sub.plan;
+}
+
+function renderSpendChart(daily) {
+  const ctx = document.getElementById('spendChart').getContext('2d');
+  if (spendChart) spendChart.destroy();
+  spendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: daily.map(d => d.date),
+      datasets: [{
+        data: daily.map(d => d.spent),
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,.08)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#3b82f6',
+        pointRadius: 3,
+        pointHoverRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {legend:{display:false},tooltip:{callbacks:{label:v=>`${fmtKZT(v.parsed.y)}`}}},
+      scales: {
+        x:{grid:{color:'rgba(28,38,56,.6)'},ticks:{color:'#6b7a99',font:{size:10}}},
+        y:{grid:{color:'rgba(28,38,56,.6)'},ticks:{color:'#6b7a99',font:{size:10},callback:v=>fmtKZT(v)}}
+      }
+    }
+  });
+}
+
+// CAMPAIGNS
+async function loadCampaigns() {
+  const data = useMock() ? MOCK.campaigns : await api('/api/campaigns');
+  if (!data) return;
+
+  document.getElementById('camp-count').textContent = `${data.length} кампаний`;
+  const tbody = document.getElementById('camps-table');
+
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px">Нет кампаний. Нажмите «+ Создать»</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(c => `
+    <tr>
+      <td><strong>${c.name}</strong><div style="font-size:11px;color:var(--muted)">${c.geo}</div></td>
+      <td>${typeIcon(c.type)} ${c.type}</td>
+      <td>${goalLabel(c.goal)}</td>
+      <td>${fmtKZT(c.budget)}</td>
+      <td style="font-weight:600;color:${c.stats.ctr>2?'var(--green)':c.stats.ctr<0.5?'var(--red)':'var(--text)'}">${c.stats.ctr}%</td>
+      <td>${c.stats.leads}</td>
+      <td>${fmtKZT(c.stats.spent)}</td>
+      <td>${campaignBadge(c)}</td>
+      <td>
+        <label class="toggle">
+          <input type="checkbox" ${c.active?'checked':''} onchange="toggleCamp(${c.id},this)"/>
+          <div class="toggle-track"></div>
+        </label>
+      </td>
+    </tr>`).join('');
+}
+
+async function toggleCamp(id, checkbox) {
+  if (useMock()) { return; }
+  const res = await api(`/api/campaigns/${id}/toggle`, {method:'PATCH'});
+  if (!res) checkbox.checked = !checkbox.checked;
+}
+
+// ANALYTICS
+async function loadAnalytics(period) {
+  const data = useMock() ? MOCK.analytics : await api(`/api/analytics?period=${period}`);
+  if (!data) return;
+
+  const s = data.summary;
+  const ctr = s.impressions>0 ? s.clicks/s.impressions*100 : 0;
+  const cld = s.clicks>0 ? s.leads/s.clicks*100 : 0;
+
+  document.getElementById('fb-imp').style.width = '100%';
+  document.getElementById('fb-cl').style.width  = ctr > 0 ? Math.min(100,ctr*10)+'%' : '0%';
+  document.getElementById('fb-ld').style.width  = cld > 0 ? Math.min(100,cld*5)+'%' : '0%';
+  document.getElementById('fb-imp-v').textContent = fmt(s.impressions);
+  document.getElementById('fb-cl-v').textContent  = fmt(s.clicks);
+  document.getElementById('fb-ld-v').textContent  = s.leads;
+  document.getElementById('fb-imp-p').textContent = '100%';
+  document.getElementById('fb-cl-p').textContent  = ctr.toFixed(2)+'%';
+  document.getElementById('fb-ld-p').textContent  = cld.toFixed(2)+'%';
+
+  const tbody = document.getElementById('analytics-table');
+  tbody.innerHTML = data.table.map(r => `
+    <tr>
+      <td><strong>${r.name}</strong></td>
+      <td>${fmt(r.impressions)}</td>
+      <td>${fmt(r.clicks)}</td>
+      <td style="color:${r.ctr>2?'var(--green)':r.ctr<0.5?'var(--red)':'inherit'}">${r.ctr}%</td>
+      <td>${r.leads}</td>
+      <td>${r.cpl>0?fmtKZT(r.cpl):'—'}</td>
+      <td>${fmtKZT(r.spent)}</td>
+    </tr>`).join('');
+}
+
+function setPeriod(p, btn) {
+  document.querySelectorAll('.pf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadAnalytics(p);
+}
+
+// SETTINGS
+async function loadSettings() {
+  const data = useMock() ? MOCK.settings : await api('/api/settings');
+  if (!data) return;
+
+  document.getElementById('fb-token').value   = '';
+  document.getElementById('fb-account').value = data.facebook.ad_account_id || '';
+  document.getElementById('target-cpl').value = data.user.target_cpl || '';
+  document.getElementById('whatsapp').value   = data.user.whatsapp || '';
+
+  const fbBlock = document.getElementById('fb-status-block');
+  if (data.facebook.connected) {
+    fbBlock.innerHTML = `<span style="font-size:20px">✅</span><div><strong>Подключён</strong><div style="color:var(--muted);font-size:12px">Аккаунт ${data.facebook.ad_account_id}</div></div>`;
+  }
+
+  const sub = data.subscription;
+  const subDiv = document.getElementById('sub-info');
+  if (sub.active && sub.plan === 'trial') {
+    subDiv.innerHTML = `<div class="status-badge status-trial" style="margin-bottom:8px">🟡 Пробный период</div><br/>Доступ до: <strong>${sub.trial_ends||'—'}</strong>`;
+  } else if (sub.active) {
+    subDiv.innerHTML = `<div class="status-badge status-active" style="margin-bottom:8px">🟢 Подписка активна</div><br/>Тариф: <strong>${sub.plan}</strong><br/>До: <strong>${sub.expires||'—'}</strong>`;
+  } else {
+    subDiv.innerHTML = `<div class="status-badge status-expired" style="margin-bottom:8px">🔴 Нет подписки</div><br/>Оформите подписку в Telegram.`;
+  }
+
+  document.getElementById('userAvatar').textContent = data.user.first_name?.[0] || '👤';
+  document.getElementById('userName').textContent = data.user.first_name || 'Пользователь';
+  document.getElementById('userPlan').textContent = sub.plan === 'trial' ? 'Пробный период' : sub.plan;
+}
+
+async function saveFacebook() {
+  const t = document.getElementById('fb-token').value.trim();
+  const a = document.getElementById('fb-account').value.trim();
+  if (!t || !a) { alert('Заполните токен и ID аккаунта'); return; }
+  if (!a.startsWith('act_')) { alert('ID должен начинаться с act_'); return; }
+  if (!useMock()) {
+    const res = await api('/api/settings/facebook', {method:'PUT',body:JSON.stringify({access_token:t,ad_account_id:a})});
+    if (!res) { alert('Ошибка сохранения'); return; }
+  }
+  document.getElementById('fb-status-block').innerHTML = `<span style="font-size:20px">✅</span><div><strong>Подключён</strong><div style="color:var(--muted);font-size:12px">Аккаунт ${a}</div></div>`;
+  showToast('Facebook подключён!');
+}
+
+async function saveProfile() {
+  const cpl = parseFloat(document.getElementById('target-cpl').value) || 0;
+  const wa  = document.getElementById('whatsapp').value.trim();
+  if (!useMock()) {
+    await api('/api/settings/profile', {method:'PUT', body:JSON.stringify({target_cpl:cpl,whatsapp:wa})});
+  }
+  showToast('Настройки сохранены');
+}
+
+// MODAL
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModalOut(e) { if (e.target.classList.contains('modal-overlay')) closeModal(e.target.id); }
+
+function selectType(el) {
+  document.querySelectorAll('.type-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  selectedCampType = el.dataset.val;
+}
+
+async function createCampaign() {
+  const name   = document.getElementById('nc-name').value.trim();
+  const goal   = document.getElementById('nc-goal').value;
+  const geo    = document.getElementById('nc-geo').value;
+  const budget = parseFloat(document.getElementById('nc-budget').value) || 0;
+  const cpl    = parseFloat(document.getElementById('nc-cpl').value) || 0;
+  if (!name) { alert('Введите название'); return; }
+
+  if (!useMock()) {
+    const res = await api('/api/campaigns', {method:'POST',body:JSON.stringify({name,type:selectedCampType,goal,geo,budget,target_cpl:cpl})});
+    if (!res) { alert('Ошибка создания'); return; }
+  }
+  closeModal('modal-campaign');
+  showToast('Кампания создана!');
+  loadCampaigns();
+}
+
+// AI STUDIO
+let _uploadedBase64 = null;
+
+function handleUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _uploadedBase64 = e.target.result.split(',')[1]; // base64 без префикса
+    document.getElementById('uploadIcon').innerHTML =
+      `<img src="${e.target.result}" style="width:100%;height:120px;object-fit:cover;border-radius:8px"/>`;
+    document.getElementById('uploadText').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function generateBanners() {
+  const offer    = document.getElementById('offerText').value.trim();
+  const audience = document.getElementById('targetAudience').value.trim();
+  const wrap     = document.getElementById('banners-wrap');
+
+  if (!offer) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Опишите ваш оффер</p></div>';
+    return;
+  }
+  if (!_uploadedBase64) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">📷</div><p>Загрузите фото товара или услуги</p></div>';
+    return;
+  }
+
+  wrap.innerHTML = `<div style="text-align:center;padding:48px 0">
+    <div style="font-size:36px;display:inline-block;animation:spin 1.2s linear infinite">⏳</div>
+    <div style="color:var(--muted);margin-top:16px;font-size:14px">GPT-4o пишет текст,<br/>накладываем на фото...</div>
+  </div>`;
+
+  try {
+    const resp = await fetch(`${API}/api/generate-banner`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({offer, audience, image_base64: _uploadedBase64})
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><p>${data.detail || 'Ошибка'}</p></div>`;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <div style="margin-bottom:12px;padding:12px 16px;background:var(--surface2);border-radius:12px;font-size:13px;color:var(--muted)">
+        ✍️ <strong style="color:var(--text)">${data.copy.headline}</strong>
+      </div>
+      <div class="banners-grid">
+        ${data.banners.map((b, i) => `
+        <div class="banner-preview" id="banner-${i}" onclick="selectBanner(${i})">
+          <div class="banner-img" style="cursor:pointer">
+            <img src="${b.image}" style="width:100%;height:100%;object-fit:cover" alt="${b.label}"/>
+          </div>
+          <div class="banner-info">
+            <span class="banner-style-name">${b.label}</span>
+            <a class="btn btn-primary btn-sm" href="${b.image}" download="banner-${i+1}.png">⬇ Скачать</a>
+          </div>
+        </div>`).join('')}
+      </div>`;
+  } catch(e) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><p>Сервер недоступен</p></div>`;
+  }
+}
+
+function selectBanner(i) {
+  document.querySelectorAll('.banner-preview').forEach(b => b.classList.remove('selected'));
+  document.getElementById('banner-'+i).classList.add('selected');
+}
+
+function launchBanner(i) {
+  navigate('campaigns');
+  setTimeout(() => openModal('modal-campaign'), 300);
+}
+
+// UTILS
+function campaignBadge(c) {
+  if (c.paused_by_ai)  return `<span class="badge badge-ai">${c.ai_scenario||'ИИ'} пауза</span>`;
+  if (c.active)        return `<span class="badge badge-active">🟢 Активна</span>`;
+  return `<span class="badge badge-paused">⏸ Пауза</span>`;
+}
+
+function scenarioIcon(s) {
+  if (!s) return '🤖';
+  if (s.includes('Вампир')) return '🧛';
+  if (s.includes('Просадка')) return '⚠️';
+  if (s.includes('Масштаб')) return '🚀';
+  return '✅';
+}
+
+function typeIcon(t) {
+  return {photo:'🖼',video:'🎬',reels:'📱',ai:'✨'}[t] || '📢';
+}
+
+function goalLabel(g) {
+  return {whatsapp:'WhatsApp',instagram:'Instagram',website:'Сайт',leads:'Лид-форма'}[g] || g;
+}
+
+function fmt(n) { return Number(n).toLocaleString('ru'); }
+function fmtKZT(n) { return Number(n).toLocaleString('ru') + ' ₸'; }
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText='position:fixed;bottom:24px;right:24px;background:#10d9a0;color:#000;padding:12px 20px;border-radius:50px;font-weight:600;z-index:999;animation:fadeIn .3s';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+function openTelegram() {
+  const bot = 'zhasclaude_bot';
+  window.open(`https://t.me/${bot}`, '_blank');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  if (window.Telegram?.WebApp) {
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
+  }
+  loadDashboard();
+});
+</script>
+</body>
+</html>

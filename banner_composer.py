@@ -1,0 +1,134 @@
+from PIL import Image, ImageDraw, ImageFont
+import io, base64
+
+SIZE   = 1080
+F_BOLD = r"C:\Windows\Fonts\arialbd.ttf"
+F_REG  = r"C:\Windows\Fonts\arial.ttf"
+
+
+def _font(path, size):
+    try:
+        return ImageFont.truetype(path, size)
+    except:
+        return ImageFont.load_default()
+
+
+def _wrap(text, font, max_w, draw):
+    words = text.split()
+    lines, cur = [], []
+    for w in words:
+        test = ' '.join(cur + [w])
+        if draw.textbbox((0, 0), test, font=font)[2] > max_w and cur:
+            lines.append(' '.join(cur))
+            cur = [w]
+        else:
+            cur.append(w)
+    if cur:
+        lines.append(' '.join(cur))
+    return lines
+
+
+def _cta_btn(draw, x, y, text, font):
+    w = draw.textbbox((0, 0), text, font=font)[2] + 72
+    draw.rounded_rectangle([x, y, x + w, y + 58], radius=29, fill=(59, 130, 246))
+    draw.text((x + 36, y + 12), text, font=font, fill=(255, 255, 255))
+
+
+def _prepare(image_bytes: bytes) -> Image.Image:
+    img  = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    w, h = img.size
+    side = min(w, h)
+    img  = img.crop(((w-side)//2, (h-side)//2, (w+side)//2, (h+side)//2))
+    return img.resize((SIZE, SIZE), Image.LANCZOS)
+
+
+def _gradient(img, from_bottom=True, strength=238):
+    overlay = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    d = ImageDraw.Draw(overlay)
+    zone = int(SIZE * 0.52)
+    for i in range(zone):
+        a = int(strength * i / zone)
+        if from_bottom:
+            d.line([(0, SIZE-zone+i), (SIZE, SIZE-zone+i)], fill=(6, 12, 28, a))
+        else:
+            d.line([(0, zone-i-1), (SIZE, zone-i-1)], fill=(6, 12, 28, a))
+    return Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
+
+
+# ── Стиль 1: текст снизу ─────────────────────────────────────────────────────
+
+def style_bottom(img, headline, bullets, cta):
+    img  = _gradient(img, from_bottom=True)
+    draw = ImageDraw.Draw(img)
+    fh, fb, fc = _font(F_BOLD, 68), _font(F_REG, 37), _font(F_BOLD, 39)
+    y = int(SIZE * 0.50) + 10
+    for line in _wrap(headline, fh, SIZE - 80, draw)[:2]:
+        draw.text((40, y), line, font=fh, fill=(255, 255, 255))
+        y += 80
+    y += 6
+    for b in bullets[:3]:
+        draw.text((40, y), f"• {b}", font=fb, fill=(185, 215, 255))
+        y += 46
+    y += 10
+    _cta_btn(draw, 40, y, cta, fc)
+    return img
+
+
+# ── Стиль 2: синяя полоска + текст снизу ─────────────────────────────────────
+
+def style_accent(img, headline, bullets, cta):
+    img  = _gradient(img, from_bottom=True)
+    ov   = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    ImageDraw.Draw(ov).rectangle([0, 0, SIZE, 80], fill=(59, 130, 246, 230))
+    img  = Image.alpha_composite(img.convert("RGBA"), ov).convert("RGB")
+    draw = ImageDraw.Draw(img)
+    fa, fh, fb, fc = _font(F_BOLD, 34), _font(F_BOLD, 68), _font(F_REG, 37), _font(F_BOLD, 39)
+    draw.text((44, 22), bullets[0] if bullets else "", font=fa, fill=(255, 255, 255))
+    y = int(SIZE * 0.50) + 10
+    for line in _wrap(headline, fh, SIZE - 80, draw)[:2]:
+        draw.text((40, y), line, font=fh, fill=(255, 255, 255))
+        y += 80
+    y += 6
+    for b in bullets[1:3]:
+        draw.text((40, y), f"✓  {b}", font=fb, fill=(185, 215, 255))
+        y += 46
+    y += 10
+    _cta_btn(draw, 40, y, cta, fc)
+    return img
+
+
+# ── Стиль 3: текст сверху ─────────────────────────────────────────────────────
+
+def style_top(img, headline, bullets, cta):
+    img  = _gradient(img, from_bottom=False)
+    draw = ImageDraw.Draw(img)
+    fh, fb, fc = _font(F_BOLD, 68), _font(F_REG, 37), _font(F_BOLD, 39)
+    y = 30
+    for line in _wrap(headline, fh, SIZE - 80, draw)[:2]:
+        draw.text((40, y), line, font=fh, fill=(255, 255, 255))
+        y += 80
+    y += 6
+    for b in bullets[:3]:
+        draw.text((40, y), f"• {b}", font=fb, fill=(185, 215, 255))
+        y += 46
+    y += 10
+    _cta_btn(draw, 40, y, cta, fc)
+    return img
+
+
+# ── Публичная функция ─────────────────────────────────────────────────────────
+
+def create_banners(image_bytes, headlines, bullets, cta):
+    img = _prepare(image_bytes)
+    variants = [
+        ("Текст снизу",   style_bottom(img.copy(), headlines[0], bullets, cta)),
+        ("Акцент сверху", style_accent(img.copy(), headlines[1], bullets, cta)),
+        ("Текст сверху",  style_top(img.copy(),    headlines[2], bullets, cta)),
+    ]
+    result = []
+    for label, composed in variants:
+        buf = io.BytesIO()
+        composed.save(buf, format="PNG")
+        b64 = base64.b64encode(buf.getvalue()).decode()
+        result.append({"label": label, "image": f"data:image/png;base64,{b64}"})
+    return result
