@@ -114,24 +114,25 @@ async def cmd_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
+    webapp_url = os.getenv("WEBAPP_URL", "https://like-ai-production.up.railway.app").rstrip("/")
+    oauth_link = f"{webapp_url}/fb/connect?user_id={user.id}"
     existing = get_fb_token(user.id)
     if existing:
         text = (
             f"🔗 *Facebook подключён*\n\n"
             f"Аккаунт: `{existing['ad_account_id']}`\n"
             f"Дата: {existing['connected_at'][:10]}\n\n"
-            "Обновить: `/token EAAxxxxxxx act_123456`"
+            f"Переподключить: [нажми здесь]({oauth_link})"
         )
     else:
         text = (
             "🔗 *Подключение Facebook Ads*\n\n"
-            "Команда:\n`/token EAAxxxxxxx act_123456789`\n\n"
-            "Где взять токен:\n"
-            "1. Graph API Explorer → Generate Token\n"
-            "2. Права: `ads_management`, `ads_read`\n"
-            "3. ID аккаунта: Business Manager → Рекламные аккаунты"
+            "Нажми кнопку ниже — авторизуйся через Facebook.\n"
+            "Токен сохранится автоматически."
         )
-    await update.message.reply_text(text, parse_mode="Markdown")
+    from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+    kb = InlineKeyboardMarkup([[InlineKeyboardButton("🔗 Подключить Facebook", url=oauth_link)]])
+    await update.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
 
 
 async def cmd_sync(update: Update, context: ContextTypes.DEFAULT_TYPE):

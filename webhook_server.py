@@ -3,7 +3,7 @@ import logging
 import httpx
 from fastapi import FastAPI, Request, HTTPException, Header, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, HTMLResponse, RedirectResponse
 from dotenv import load_dotenv
 
 from database import (
@@ -17,9 +17,13 @@ from database import (
 from kaspi_pay import verify_webhook_signature, parse_webhook_payload
 
 load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-ADMIN_KEY = os.getenv("ADMIN_KEY", "changeme")
-TG_API    = f"https://api.telegram.org/bot{BOT_TOKEN}"
+BOT_TOKEN     = os.getenv("BOT_TOKEN", "")
+ADMIN_KEY     = os.getenv("ADMIN_KEY", "changeme")
+TG_API        = f"https://api.telegram.org/bot{BOT_TOKEN}"
+FB_APP_ID     = os.getenv("FB_APP_ID", "")
+FB_APP_SECRET = os.getenv("FB_APP_SECRET", "")
+_BASE_URL     = os.getenv("WEBAPP_URL", "https://like-ai-production.up.railway.app").rstrip("/")
+FB_REDIRECT   = f"{_BASE_URL}/fb/callback"
 
 logger = logging.getLogger(__name__)
 
@@ -268,6 +272,89 @@ async def api_save_profile(request: Request, user_id: int = Depends(_get_uid)):
         whatsapp=body.get("whatsapp"),
     )
     return {"status": "saved"}
+
+
+# ── Facebook OAuth ─────────────────────────────────────────────────────────────
+
+_FB_SUCCESS = """<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>*{{box-sizing:border-box}}body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}.card{{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;text-align:center;max-width:400px}}.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:22px;font-weight:700;margin-bottom:8px}}.sub{{color:#64748b;font-size:15px;line-height:1.5}}</style></head>
+<body><div class="card"><div class="icon">✅</div><div class="title">Facebook подключён!</div>
+<div class="sub">Вернитесь в Telegram и нажмите<br>🔄 Синхронизация для загрузки кампаний.</div></div></body></html>"""
+
+_FB_ERROR = """<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>*{{box-sizing:border-box}}body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}.card{{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;text-align:center;max-width:400px}}.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:22px;font-weight:700;margin-bottom:8px}}.sub{{color:#64748b;font-size:15px}}</style></head>
+<body><div class="card"><div class="icon">❌</div><div class="title">{title}</div><div class="sub">{msg}</div></div></body></html>"""
+
+
+@app.get("/fb/connect")
+async def fb_connect(user_id: int = Query(...)):
+    if not get_user(user_id):
+        raise HTTPException(404, "User not found")
+    if not FB_APP_ID:
+        raise HTTPException(503, "Facebook App not configured")
+    from urllib.parse import urlencode
+    params = urlencode({
+        "client_id": FB_APP_ID,
+        "redirect_uri": FB_REDIRECT,
+        "scope": "ads_management,ads_read,business_management",
+        "state": str(user_id),
+        "response_type": "code",
+    })
+    return RedirectResponse(f"https://www.facebook.com/v19.0/dialog/oauth?{params}")
+
+
+@app.get("/fb/callback")
+async def fb_callback(code: str = Query(None), state: str = Query(None),
+                      error: str = Query(None), error_description: str = Query(None)):
+    if error:
+        return HTMLResponse(_FB_ERROR.format(title="Отмена", msg="Вы отменили подключение Facebook."))
+    if not code or not state:
+        return HTMLResponse(_FB_ERROR.format(title="Ошибка", msg="Неверный запрос."))
+
+    try:
+        user_id = int(state)
+    except ValueError:
+        return HTMLResponse(_FB_ERROR.format(title="Ошибка", msg="Неверный state."))
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.get("https://graph.facebook.com/v19.0/oauth/access_token", params={
+            "client_id": FB_APP_ID, "client_secret": FB_APP_SECRET,
+            "redirect_uri": FB_REDIRECT, "code": code,
+        })
+        token_data = r.json()
+
+    if "error" in token_data:
+        msg = token_data["error"].get("message", "Ошибка Facebook")
+        return HTMLResponse(_FB_ERROR.format(title="Ошибка Facebook", msg=msg))
+
+    short_token = token_data["access_token"]
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.get("https://graph.facebook.com/v19.0/oauth/access_token", params={
+            "grant_type": "fb_exchange_token", "client_id": FB_APP_ID,
+            "client_secret": FB_APP_SECRET, "fb_exchange_token": short_token,
+        })
+        ll = r.json()
+    long_token = ll.get("access_token", short_token)
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.get("https://graph.facebook.com/v19.0/me/adaccounts", params={
+            "access_token": long_token, "fields": "id,name,account_status",
+        })
+        accounts = r.json().get("data", [])
+
+    if not accounts:
+        return HTMLResponse(_FB_ERROR.format(title="Аккаунты не найдены",
+                            msg="Рекламные аккаунты Facebook не найдены."))
+
+    ad_account_id = accounts[0]["id"]
+    save_fb_token(user_id, long_token, ad_account_id)
+    await _notify(user_id,
+        f"✅ *Facebook подключён!*\n\n"
+        f"Аккаунт: `{ad_account_id}`\n\n"
+        "Нажми 🔄 *Синхронизация* чтобы загрузить кампании.")
+    return HTMLResponse(_FB_SUCCESS)
 
 
 # ── Banner Generation ──────────────────────────────────────────────────────────
