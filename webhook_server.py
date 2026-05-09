@@ -22,7 +22,7 @@ ADMIN_KEY     = os.getenv("ADMIN_KEY", "changeme")
 TG_API        = f"https://api.telegram.org/bot{BOT_TOKEN}"
 FB_APP_ID     = os.getenv("FB_APP_ID", "")
 FB_APP_SECRET = os.getenv("FB_APP_SECRET", "")
-_BASE_URL     = os.getenv("WEBAPP_URL", "https://like-ai-production.up.railway.app").rstrip("/")
+_BASE_URL     = os.getenv("BASE_URL", "https://like-ai-production.up.railway.app").rstrip("/")
 FB_REDIRECT   = f"{_BASE_URL}/fb/callback"
 
 logger = logging.getLogger(__name__)
