@@ -114,8 +114,8 @@ async def cmd_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    webapp_url = os.getenv("WEBAPP_URL", "https://like-ai-production.up.railway.app").rstrip("/")
-    oauth_link = f"{webapp_url}/fb/connect?user_id={user.id}"
+    base_url = os.getenv("BASE_URL", "https://like-ai-production.up.railway.app").rstrip("/")
+    oauth_link = f"{base_url}/fb/connect?user_id={user.id}"
     existing = get_fb_token(user.id)
     if existing:
         text = (
