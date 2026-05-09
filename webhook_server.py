@@ -45,6 +45,10 @@ def _get_uid(user_id: int = Query(..., description="Telegram user ID")) -> int:
 # ── Health / App ───────────────────────────────────────────────────────────────
 
 @app.get("/")
+async def landing():
+    return FileResponse(os.path.join(os.path.dirname(__file__), "landing.html"))
+
+@app.get("/health")
 async def health():
     return {"status": "ok", "service": "like.ai"}
 
