@@ -70,7 +70,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 status = "🔴 Подписка истекла"
 
         fb = get_fb_token(user.id)
-        fb_status = f"✅ {fb['ad_account_id']}" if fb else "❌ не подключён"
+        fb_status = f"✅ `{fb['ad_account_id']}`" if fb else "❌ не подключён"
 
         text = (
             f"👋 С возвращением, *{user.first_name}*!\n\n"
