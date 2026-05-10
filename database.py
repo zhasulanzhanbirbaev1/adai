@@ -117,6 +117,42 @@ def init_db():
                 created_at TEXT DEFAULT (NOW()::TEXT)
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS directions (
+                id SERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL REFERENCES users(id),
+                name TEXT NOT NULL,
+                niche TEXT,
+                description TEXT,
+                utp TEXT,
+                audience TEXT,
+                pains TEXT,
+                offers TEXT,
+                geo TEXT DEFAULT 'Казахстан',
+                gender TEXT DEFAULT 'all',
+                traffic_dest TEXT DEFAULT 'whatsapp',
+                whatsapp_number TEXT,
+                daily_budget REAL DEFAULT 5000,
+                target_cpl REAL DEFAULT 1500,
+                welcome_message TEXT,
+                pre_message TEXT,
+                ad_text TEXT,
+                status TEXT DEFAULT 'draft',
+                fb_campaign_id TEXT,
+                created_at TEXT DEFAULT (NOW()::TEXT)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS direction_creatives (
+                id SERIAL PRIMARY KEY,
+                direction_id INTEGER NOT NULL REFERENCES directions(id),
+                fb_image_hash TEXT,
+                fb_video_id TEXT,
+                filename TEXT,
+                file_type TEXT DEFAULT 'image',
+                created_at TEXT DEFAULT (NOW()::TEXT)
+            )
+        """)
         for col_sql in [
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS target_cpl REAL DEFAULT 0",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp TEXT",
@@ -411,6 +447,60 @@ def get_admin_stats() -> dict:
             "FROM subscriptions WHERE active=1 AND expires_at > NOW()::TEXT"
         ).fetchone()["r"]
     return {"total_users": total, "paying": paying, "trial": trial, "campaigns": camps, "mrr": revenue}
+
+
+# ── Directions ─────────────────────────────────────────────────────────────────
+
+def create_direction(user_id: int, name: str) -> int:
+    with get_conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO directions (user_id, name) VALUES (%s, %s) RETURNING id",
+            (user_id, name),
+        )
+        return cur.fetchone()["id"]
+
+
+def get_directions(user_id: int):
+    with get_conn() as conn:
+        return conn.execute(
+            "SELECT * FROM directions WHERE user_id=%s ORDER BY created_at DESC",
+            (user_id,),
+        ).fetchall()
+
+
+def get_direction(direction_id: int, user_id: int):
+    with get_conn() as conn:
+        return conn.execute(
+            "SELECT * FROM directions WHERE id=%s AND user_id=%s",
+            (direction_id, user_id),
+        ).fetchone()
+
+
+def update_direction(direction_id: int, **kwargs):
+    fields = [f"{k}=%s" for k in kwargs]
+    vals = list(kwargs.values()) + [direction_id]
+    with get_conn() as conn:
+        conn.execute(f"UPDATE directions SET {', '.join(fields)} WHERE id=%s", vals)
+
+
+def add_direction_creative(direction_id: int, filename: str,
+                            fb_image_hash: str = None, fb_video_id: str = None,
+                            file_type: str = "image") -> int:
+    with get_conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO direction_creatives (direction_id, filename, fb_image_hash, fb_video_id, file_type) "
+            "VALUES (%s,%s,%s,%s,%s) RETURNING id",
+            (direction_id, filename, fb_image_hash, fb_video_id, file_type),
+        )
+        return cur.fetchone()["id"]
+
+
+def get_direction_creatives(direction_id: int):
+    with get_conn() as conn:
+        return conn.execute(
+            "SELECT * FROM direction_creatives WHERE direction_id=%s ORDER BY created_at DESC",
+            (direction_id,),
+        ).fetchall()
 
 
 if __name__ == "__main__":

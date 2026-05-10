@@ -14,6 +14,8 @@ from database import (
     get_user_stats_summary, get_ai_log, get_today_ai_log,
     get_active_subscription, is_trial_active, update_user_settings,
     get_campaign_stats,
+    create_direction, get_directions, get_direction, update_direction,
+    add_direction_creative, get_direction_creatives,
 )
 from kaspi_pay import verify_webhook_signature, parse_webhook_payload
 
@@ -393,6 +395,144 @@ async def fb_select(user_id: int = Query(...), token: str = Query(...), account_
         f"✅ *Facebook подключён!*\n\nАккаунт: `{account_id}`\n{sync_text}")
     dashboard_url = f"{_BASE_URL}/app?user_id={user_id}"
     return HTMLResponse(_FB_SUCCESS_TMPL.format(dashboard_url=dashboard_url))
+
+
+# ── Directions API ─────────────────────────────────────────────────────────────
+
+@app.get("/api/directions")
+async def api_get_directions(user_id: int = Depends(_get_uid)):
+    dirs = get_directions(user_id)
+    result = []
+    for d in dirs:
+        creatives = get_direction_creatives(d["id"])
+        result.append({**dict(d), "creatives_count": len(creatives)})
+    return result
+
+
+@app.post("/api/directions")
+async def api_create_direction(request: Request, user_id: int = Depends(_get_uid)):
+    body = await request.json()
+    name = body.get("name", "Новое направление")
+    did = create_direction(user_id, name)
+    fields = {k: v for k, v in body.items()
+              if k in ("niche","description","utp","audience","pains","offers",
+                       "geo","gender","traffic_dest","whatsapp_number",
+                       "daily_budget","target_cpl","welcome_message","pre_message")}
+    if fields:
+        update_direction(did, **fields)
+    return {"id": did, "status": "created"}
+
+
+@app.get("/api/directions/{did}")
+async def api_get_direction(did: int, user_id: int = Depends(_get_uid)):
+    d = get_direction(did, user_id)
+    if not d:
+        raise HTTPException(404, "Direction not found")
+    creatives = get_direction_creatives(did)
+    return {**dict(d), "creatives": [dict(c) for c in creatives]}
+
+
+@app.put("/api/directions/{did}")
+async def api_update_direction(did: int, request: Request, user_id: int = Depends(_get_uid)):
+    if not get_direction(did, user_id):
+        raise HTTPException(404, "Direction not found")
+    body = await request.json()
+    fields = {k: v for k, v in body.items()
+              if k in ("name","niche","description","utp","audience","pains","offers",
+                       "geo","gender","traffic_dest","whatsapp_number",
+                       "daily_budget","target_cpl","welcome_message","pre_message","ad_text")}
+    if fields:
+        update_direction(did, **fields)
+    return {"status": "updated"}
+
+
+@app.post("/api/directions/{did}/generate-strategy")
+async def api_generate_strategy(did: int, user_id: int = Depends(_get_uid)):
+    d = get_direction(did, user_id)
+    if not d:
+        raise HTTPException(404, "Direction not found")
+    from fb_launcher import generate_brief_strategy
+    strategy = await generate_brief_strategy(dict(d))
+    update_direction(did, ad_text=strategy["ad_texts"]["urgent"], status="brief_ready")
+    return strategy
+
+
+@app.post("/api/directions/{did}/upload-creative")
+async def api_upload_creative(did: int, request: Request, user_id: int = Depends(_get_uid)):
+    import base64 as b64mod
+    d = get_direction(did, user_id)
+    if not d:
+        raise HTTPException(404, "Direction not found")
+    fb = get_fb_token(user_id)
+    if not fb:
+        raise HTTPException(400, "Facebook not connected")
+    body = await request.json()
+    image_b64 = body.get("image_base64", "")
+    filename = body.get("filename", "creative.jpg")
+    if not image_b64:
+        raise HTTPException(400, "image_base64 required")
+    img_bytes = b64mod.b64decode(image_b64)
+    from fb_launcher import upload_image_to_fb
+    img_hash = upload_image_to_fb(fb["access_token"], fb["ad_account_id"], img_bytes, filename)
+    cid = add_direction_creative(did, filename=filename, fb_image_hash=img_hash)
+    return {"id": cid, "fb_image_hash": img_hash}
+
+
+@app.post("/api/directions/{did}/launch")
+async def api_launch_direction(did: int, request: Request, user_id: int = Depends(_get_uid)):
+    d = get_direction(did, user_id)
+    if not d:
+        raise HTTPException(404, "Direction not found")
+    fb = get_fb_token(user_id)
+    if not fb:
+        raise HTTPException(400, "Facebook not connected")
+    creatives = get_direction_creatives(did)
+    if not creatives:
+        raise HTTPException(400, "Загрузите хотя бы один креатив")
+    body = await request.json()
+    ad_text = body.get("ad_text") or d["ad_text"] or d["description"] or "Свяжитесь с нами"
+    page_id = body.get("page_id", "")
+    if not page_id:
+        raise HTTPException(400, "page_id required")
+
+    from fb_launcher import create_fb_campaign, create_fb_adset, create_fb_ad, generate_brief_strategy
+    strategy = await generate_brief_strategy(dict(d))
+
+    camp_id = create_fb_campaign(
+        fb["access_token"], fb["ad_account_id"],
+        name=f"{d['name']} | like.ai",
+    )
+    adset_id = create_fb_adset(
+        fb["access_token"], fb["ad_account_id"], camp_id,
+        name=f"{d['name']} AdSet",
+        daily_budget_kzt=d["daily_budget"] or 5000,
+        geo=d["geo"] or "Казахстан",
+        age_min=strategy.get("age_min", 20),
+        age_max=strategy.get("age_max", 45),
+        gender=d["gender"] or "all",
+        whatsapp_number=d["whatsapp_number"] or "",
+    )
+    ad_ids = []
+    for cr in creatives[:3]:
+        if cr["fb_image_hash"]:
+            ad_id = create_fb_ad(
+                fb["access_token"], fb["ad_account_id"], adset_id,
+                name=f"{d['name']} Ad",
+                image_hash=cr["fb_image_hash"],
+                ad_text=ad_text,
+                page_id=page_id,
+                whatsapp_number=d["whatsapp_number"] or "",
+            )
+            ad_ids.append(ad_id)
+
+    update_direction(did, fb_campaign_id=camp_id, status="launched")
+    await _notify(user_id,
+        f"🚀 *Кампания запущена!*\n\n"
+        f"Направление: *{d['name']}*\n"
+        f"Кампания: `{camp_id}`\n"
+        f"Объявлений: {len(ad_ids)}\n\n"
+        f"Статус: на проверке Facebook")
+    return {"campaign_id": camp_id, "adset_id": adset_id, "ads": ad_ids, "strategy": strategy}
 
 
 # ── Banner Generation ──────────────────────────────────────────────────────────
