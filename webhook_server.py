@@ -350,10 +350,18 @@ async def fb_callback(code: str = Query(None), state: str = Query(None),
 
     ad_account_id = accounts[0]["id"]
     save_fb_token(user_id, long_token, ad_account_id)
+
+    from ai_manager import sync_fb_campaigns
+    import asyncio
+    count = await asyncio.get_event_loop().run_in_executor(
+        None, sync_fb_campaigns, user_id, long_token, ad_account_id
+    )
+    sync_text = f"📊 Синхронизировано кампаний: *{count}*" if count > 0 else "📊 Активных кампаний не найдено"
+
     await _notify(user_id,
-        f"✅ *Facebook подключён!*\n\n"
-        f"Аккаунт: `{ad_account_id}`\n\n"
-        "Нажми 🔄 *Синхронизация* чтобы загрузить кампании.")
+        f"✅ *Facebook подключён и синхронизирован!*\n\n"
+        f"Аккаунт: `{ad_account_id}`\n"
+        f"{sync_text}")
     return HTMLResponse(_FB_SUCCESS)
 
 
