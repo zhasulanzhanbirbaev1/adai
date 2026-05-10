@@ -170,6 +170,45 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
 .empty-state .empty-icon{font-size:48px;margin-bottom:16px;opacity:.4}
 .empty-state p{font-size:15px}
 
+/* DIRECTIONS */
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:4px}
+.dir-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;cursor:pointer;transition:border-color .2s,transform .2s;position:relative}
+.dir-card:hover{border-color:rgba(59,130,246,.5);transform:translateY(-2px)}
+.dir-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.dir-card-name{font-weight:700;font-size:15px;line-height:1.3;flex:1;margin-right:10px}
+.dir-status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:600;flex-shrink:0}
+.dir-status-draft{background:rgba(107,122,153,.15);color:var(--muted)}
+.dir-status-ready{background:rgba(251,191,36,.12);color:var(--yellow)}
+.dir-status-launched{background:rgba(16,217,160,.12);color:var(--green)}
+.dir-niche{font-size:13px;color:var(--muted);margin-bottom:14px}
+.dir-meta{display:flex;gap:16px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);padding-top:12px;margin-top:4px}
+.dir-meta span{display:flex;align-items:center;gap:4px}
+.dir-actions{display:flex;gap:8px;margin-top:14px}
+.dir-add-card{border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:160px;color:var(--muted);font-size:14px;font-weight:500}
+.dir-add-card:hover{border-color:var(--accent);color:var(--accent)}
+.dir-add-card .add-icon{font-size:32px;opacity:.5}
+
+/* WIZARD */
+.wizard-steps{display:flex;gap:0;margin-bottom:28px}
+.wiz-step{flex:1;text-align:center;position:relative}
+.wiz-step::after{content:'';position:absolute;top:14px;left:50%;width:100%;height:2px;background:var(--border);z-index:0}
+.wiz-step:last-child::after{display:none}
+.wiz-dot{width:28px;height:28px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;position:relative;z-index:1;transition:all .3s}
+.wiz-step.done .wiz-dot{background:var(--green);border-color:var(--green);color:#000}
+.wiz-step.active .wiz-dot{background:var(--accent);border-color:var(--accent);color:#fff}
+.wiz-label{font-size:11px;color:var(--muted);margin-top:6px;display:block}
+.wiz-step.active .wiz-label{color:var(--text)}
+
+/* STRATEGY */
+.strategy-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.strategy-card h4{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.strategy-card p{font-size:14px;line-height:1.6;color:var(--text)}
+.ad-variant{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color .2s}
+.ad-variant:hover{border-color:rgba(59,130,246,.5)}
+.ad-variant.selected{border-color:var(--accent);background:rgba(59,130,246,.07)}
+.ad-variant-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.ad-variant-text{font-size:14px;line-height:1.5}
+
 /* DIVIDER */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 
@@ -201,6 +240,7 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
   <nav class="nav-items">
     <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')"><span class="icon">📊</span>Дашборд</a>
     <a class="nav-item" data-page="campaigns" onclick="navigate('campaigns')"><span class="icon">🎯</span>Кампании</a>
+    <a class="nav-item" data-page="directions" onclick="navigate('directions')"><span class="icon">🗂</span>Направления</a>
     <a class="nav-item" data-page="studio" onclick="navigate('studio')"><span class="icon">✨</span>AI Studio</a>
     <a class="nav-item" data-page="analytics" onclick="navigate('analytics')"><span class="icon">📈</span>Аналитика</a>
     <a class="nav-item" data-page="settings" onclick="navigate('settings')"><span class="icon">⚙️</span>Настройки</a>
@@ -273,6 +313,20 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
           <thead><tr><th>Название</th><th>Тип</th><th>Цель</th><th>Бюджет/день</th><th>CTR</th><th>Заявок</th><th>Потрачено</th><th>Статус</th><th></th></tr></thead>
           <tbody id="camps-table"><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">Загрузка...</td></tr></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- DIRECTIONS -->
+    <div class="page" id="page-directions">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="font-size:13px;color:var(--muted)" id="dir-count">0 направлений</div>
+        <button class="btn btn-primary" onclick="openDirModal()">+ Создать направление</button>
+      </div>
+      <div class="dir-grid" id="dir-grid">
+        <div class="dir-card dir-add-card" onclick="openDirModal()">
+          <div class="add-icon">🗂</div>
+          <span>Новое направление</span>
+        </div>
       </div>
     </div>
 
@@ -479,6 +533,181 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
   </div>
 </div>
 
+<!-- MODAL: Direction Wizard -->
+<div class="modal-overlay" id="modal-direction" onclick="closeModalOut(event)">
+  <div class="modal" style="width:620px">
+    <div class="modal-header">
+      <div class="modal-title" id="dir-modal-title">Новое направление</div>
+      <button class="modal-close" onclick="closeModal('modal-direction')">×</button>
+    </div>
+
+    <!-- Wizard Steps -->
+    <div class="wizard-steps" id="wiz-steps">
+      <div class="wiz-step active" id="wstep-0">
+        <div class="wiz-dot">1</div><span class="wiz-label">Бриф</span>
+      </div>
+      <div class="wiz-step" id="wstep-1">
+        <div class="wiz-dot">2</div><span class="wiz-label">Стратегия ИИ</span>
+      </div>
+      <div class="wiz-step" id="wstep-2">
+        <div class="wiz-dot">3</div><span class="wiz-label">Запуск</span>
+      </div>
+    </div>
+
+    <!-- Step 1: Brief -->
+    <div id="wiz-pane-0">
+      <div class="form-group">
+        <label class="form-label">Название направления</label>
+        <input class="form-input" id="dir-name" placeholder="Например: Стоматология Алматы"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Ниша бизнеса</label>
+          <input class="form-input" id="dir-niche" placeholder="Стоматология, доставка, барбершоп..."/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Гео</label>
+          <select class="form-input form-select" id="dir-geo">
+            <option value="Весь Казахстан">🇰🇿 Весь Казахстан</option>
+            <option value="Алматы">Алматы</option>
+            <option value="Астана">Астана</option>
+            <option value="Шымкент">Шымкент</option>
+            <option value="Актобе">Актобе</option>
+            <option value="Атырау">Атырау</option>
+            <option value="Костанай">Костанай</option>
+            <option value="Павлодар">Павлодар</option>
+            <option value="Уральск">Уральск</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Описание бизнеса</label>
+        <textarea class="form-input" id="dir-desc" rows="2" placeholder="Чем занимается бизнес, что продаёт..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">УТП — уникальное торговое предложение</label>
+        <input class="form-input" id="dir-utp" placeholder="Что отличает от конкурентов?"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Целевая аудитория</label>
+        <input class="form-input" id="dir-audience" placeholder="Женщины 25-45, мамы, предприниматели..."/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Боли клиентов</label>
+          <textarea class="form-input" id="dir-pains" rows="2" placeholder="Что беспокоит клиента?"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Офферы / акции</label>
+          <textarea class="form-input" id="dir-offers" rows="2" placeholder="Скидки, бонусы, условия..."></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Трафик на</label>
+          <select class="form-input form-select" id="dir-traffic">
+            <option value="whatsapp">WhatsApp</option>
+            <option value="instagram">Instagram DM</option>
+            <option value="website">Сайт</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Пол аудитории</label>
+          <select class="form-input form-select" id="dir-gender">
+            <option value="all">Все</option>
+            <option value="female">Женщины</option>
+            <option value="male">Мужчины</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">WhatsApp номер</label>
+          <input class="form-input" id="dir-wa" placeholder="+77771234567"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Дневной бюджет, ₸</label>
+          <input class="form-input" type="number" id="dir-budget" placeholder="5000" value="5000"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Целевой CPL (цена заявки), ₸</label>
+        <input class="form-input" type="number" id="dir-cpl" placeholder="1500" value="1500"/>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-secondary" onclick="closeModal('modal-direction')">Отмена</button>
+        <button class="btn btn-primary" onclick="saveDirBrief()">Сохранить и создать стратегию ✨</button>
+      </div>
+    </div>
+
+    <!-- Step 2: AI Strategy -->
+    <div id="wiz-pane-1" style="display:none">
+      <div id="strategy-loading" style="text-align:center;padding:40px 0">
+        <div style="font-size:36px;display:inline-block;animation:spin 1.2s linear infinite">⚙️</div>
+        <div style="color:var(--muted);margin-top:16px">GPT-4o анализирует бриф...</div>
+      </div>
+      <div id="strategy-result" style="display:none">
+        <div class="strategy-card" id="sc-strategy">
+          <h4>Стратегия</h4>
+          <p id="st-text">—</p>
+        </div>
+        <div class="strategy-card">
+          <h4>Аудитория</h4>
+          <p id="st-audience">—</p>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Выберите вариант текста объявления</div>
+          <div id="ad-variants"></div>
+        </div>
+        <div class="strategy-card">
+          <h4>📅 День 1</h4>
+          <p id="st-day1">—</p>
+        </div>
+        <div class="strategy-card">
+          <h4>⚠️ Риски</h4>
+          <p id="st-risks">—</p>
+        </div>
+      </div>
+      <div id="strategy-error" style="display:none;text-align:center;padding:24px;color:var(--red)">
+        Ошибка генерации стратегии. Проверьте OPENAI_API_KEY.
+      </div>
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px" id="wiz-nav-1" style="display:none">
+        <button class="btn btn-secondary" onclick="wizGo(0)">← Назад</button>
+        <button class="btn btn-primary" onclick="wizGo(2)">Далее →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Creative + Launch -->
+    <div id="wiz-pane-2" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Загрузите рекламное фото / баннер</label>
+        <div class="upload-area" id="dir-upload-area" onclick="document.getElementById('dir-file-input').click()">
+          <div class="upload-icon" id="dir-upload-icon">🖼</div>
+          <strong id="dir-upload-text">Нажмите для загрузки</strong>
+          <p>JPG, PNG до 10 МБ</p>
+        </div>
+        <input type="file" id="dir-file-input" accept="image/*" style="display:none" onchange="handleDirUpload(this)"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Facebook Page ID</label>
+        <input class="form-input" id="dir-page-id" placeholder="Ваш Page ID из Facebook Business"/>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">Найти: facebook.com/settings → Page Info → Page ID</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Текст объявления</label>
+        <textarea class="form-input" id="dir-ad-text" rows="4" placeholder="Текст объявления (можно взять из стратегии)"></textarea>
+      </div>
+      <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--accent2)">
+        ℹ️ Кампания создаётся в статусе <strong>PAUSED</strong>. После проверки в Facebook Ads Manager — включите вручную.
+      </div>
+      <div style="display:flex;gap:12px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="wizGo(1)">← Назад</button>
+        <button class="btn btn-primary" id="launch-btn" onclick="launchDirection()">🚀 Создать кампанию в Facebook</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────────────────
 const API = window.location.origin;
@@ -549,7 +778,7 @@ async function api(path, opts = {}) {
 function useMock(key) { return !UID; }
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
-const PAGE_TITLES = {dashboard:'Дашборд',campaigns:'Кампании',studio:'AI Creative Studio',analytics:'Аналитика',settings:'Настройки'};
+const PAGE_TITLES = {dashboard:'Дашборд',campaigns:'Кампании',directions:'Направления',studio:'AI Creative Studio',analytics:'Аналитика',settings:'Настройки'};
 
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -567,10 +796,11 @@ function closeSidebar()   { document.getElementById('sidebar').classList.remove(
 
 // ── LOAD PAGES ────────────────────────────────────────────────────────────────
 function loadPage(page) {
-  if (page === 'dashboard') loadDashboard();
-  if (page === 'campaigns') loadCampaigns();
-  if (page === 'analytics') loadAnalytics('7');
-  if (page === 'settings')  loadSettings();
+  if (page === 'dashboard')  loadDashboard();
+  if (page === 'campaigns')  loadCampaigns();
+  if (page === 'directions') loadDirections();
+  if (page === 'analytics')  loadAnalytics('7');
+  if (page === 'settings')   loadSettings();
 }
 
 // DASHBOARD
@@ -936,6 +1166,267 @@ function showToast(msg) {
 function openTelegram() {
   const bot = 'zhasclaude_bot';
   window.open(`https://t.me/${bot}`, '_blank');
+}
+
+// ── DIRECTIONS ────────────────────────────────────────────────────────────────
+let _currentDirId = null;
+let _currentStrategy = null;
+let _selectedAdText = null;
+let _dirCreativeB64 = null;
+let _wizStep = 0;
+
+const DIR_STATUS_LABELS = {
+  draft: ['dir-status-draft', '📝 Черновик'],
+  brief_ready: ['dir-status-ready', '✨ Стратегия готова'],
+  launched: ['dir-status-launched', '🚀 Запущена'],
+};
+
+async function loadDirections() {
+  const data = useMock() ? [] : await api('/api/directions');
+  if (!data) return;
+  document.getElementById('dir-count').textContent = `${data.length} направлений`;
+  const grid = document.getElementById('dir-grid');
+  const addCard = `<div class="dir-card dir-add-card" onclick="openDirModal()"><div class="add-icon">🗂</div><span>Новое направление</span></div>`;
+  if (!data.length) { grid.innerHTML = addCard; return; }
+  const cards = data.map(d => {
+    const [cls, label] = DIR_STATUS_LABELS[d.status] || DIR_STATUS_LABELS.draft;
+    return `
+    <div class="dir-card" onclick="editDirection(${d.id})">
+      <div class="dir-card-head">
+        <div class="dir-card-name">${d.name}</div>
+        <span class="dir-status ${cls}">${label}</span>
+      </div>
+      <div class="dir-niche">${d.niche || '—'} · ${d.geo || 'Казахстан'}</div>
+      <div class="dir-meta">
+        <span>💰 ${fmtKZT(d.daily_budget || 5000)}/день</span>
+        <span>🎯 CPL ${fmtKZT(d.target_cpl || 1500)}</span>
+        <span>🖼 ${d.creatives_count || 0} фото</span>
+      </div>
+      <div class="dir-actions" onclick="event.stopPropagation()">
+        ${d.status === 'draft'
+          ? `<button class="btn btn-primary btn-sm" onclick="editDirection(${d.id})">Заполнить бриф</button>`
+          : `<button class="btn btn-secondary btn-sm" onclick="editDirection(${d.id})">Редактировать</button>`}
+        ${d.status !== 'launched'
+          ? `<button class="btn btn-primary btn-sm" onclick="quickLaunchDir(${d.id})">🚀 Запустить</button>`
+          : `<button class="btn btn-secondary btn-sm" style="color:var(--green)">✅ Запущена</button>`}
+      </div>
+    </div>`;
+  }).join('');
+  grid.innerHTML = cards + addCard;
+}
+
+function openDirModal(dir) {
+  _currentDirId = null;
+  _currentStrategy = null;
+  _selectedAdText = null;
+  _dirCreativeB64 = null;
+  document.getElementById('dir-modal-title').textContent = 'Новое направление';
+  // Clear fields
+  ['dir-name','dir-niche','dir-desc','dir-utp','dir-audience','dir-pains',
+   'dir-offers','dir-wa','dir-ad-text','dir-page-id'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('dir-budget').value = '5000';
+  document.getElementById('dir-cpl').value = '1500';
+  document.getElementById('dir-geo').value = 'Весь Казахстан';
+  document.getElementById('dir-traffic').value = 'whatsapp';
+  document.getElementById('dir-gender').value = 'all';
+  document.getElementById('dir-upload-icon').textContent = '🖼';
+  document.getElementById('dir-upload-text').textContent = 'Нажмите для загрузки';
+  wizGo(0, true);
+  openModal('modal-direction');
+}
+
+async function editDirection(id) {
+  const data = useMock() ? null : await api(`/api/directions/${id}`);
+  if (!data) { openModal('modal-direction'); return; }
+  _currentDirId = id;
+  document.getElementById('dir-modal-title').textContent = data.name;
+  document.getElementById('dir-name').value = data.name || '';
+  document.getElementById('dir-niche').value = data.niche || '';
+  document.getElementById('dir-desc').value = data.description || '';
+  document.getElementById('dir-utp').value = data.utp || '';
+  document.getElementById('dir-audience').value = data.audience || '';
+  document.getElementById('dir-pains').value = data.pains || '';
+  document.getElementById('dir-offers').value = data.offers || '';
+  document.getElementById('dir-wa').value = data.whatsapp_number || '';
+  document.getElementById('dir-budget').value = data.daily_budget || 5000;
+  document.getElementById('dir-cpl').value = data.target_cpl || 1500;
+  document.getElementById('dir-geo').value = data.geo || 'Весь Казахстан';
+  document.getElementById('dir-traffic').value = data.traffic_dest || 'whatsapp';
+  document.getElementById('dir-gender').value = data.gender || 'all';
+  document.getElementById('dir-ad-text').value = data.ad_text || '';
+  const step = data.status === 'launched' ? 2 : data.status === 'brief_ready' ? 1 : 0;
+  wizGo(step, true);
+  openModal('modal-direction');
+}
+
+function quickLaunchDir(id) {
+  editDirection(id).then(() => {
+    if (_wizStep < 2) wizGo(2, true);
+  });
+}
+
+async function saveDirBrief() {
+  const name = document.getElementById('dir-name').value.trim();
+  if (!name) { alert('Введите название направления'); return; }
+  const body = {
+    name,
+    niche: document.getElementById('dir-niche').value.trim(),
+    description: document.getElementById('dir-desc').value.trim(),
+    utp: document.getElementById('dir-utp').value.trim(),
+    audience: document.getElementById('dir-audience').value.trim(),
+    pains: document.getElementById('dir-pains').value.trim(),
+    offers: document.getElementById('dir-offers').value.trim(),
+    geo: document.getElementById('dir-geo').value,
+    gender: document.getElementById('dir-gender').value,
+    traffic_dest: document.getElementById('dir-traffic').value,
+    whatsapp_number: document.getElementById('dir-wa').value.trim(),
+    daily_budget: parseFloat(document.getElementById('dir-budget').value) || 5000,
+    target_cpl: parseFloat(document.getElementById('dir-cpl').value) || 1500,
+  };
+
+  if (!useMock()) {
+    let res;
+    if (_currentDirId) {
+      res = await api(`/api/directions/${_currentDirId}`, {method:'PUT', body:JSON.stringify(body)});
+    } else {
+      res = await api('/api/directions', {method:'POST', body:JSON.stringify(body)});
+      if (res) _currentDirId = res.id;
+    }
+    if (!res) { alert('Ошибка сохранения'); return; }
+  } else {
+    _currentDirId = 1;
+  }
+
+  wizGo(1);
+  generateStrategy();
+}
+
+async function generateStrategy() {
+  document.getElementById('strategy-loading').style.display = 'block';
+  document.getElementById('strategy-result').style.display = 'none';
+  document.getElementById('strategy-error').style.display = 'none';
+  document.getElementById('wiz-nav-1').style.display = 'none';
+
+  let strategy;
+  if (!useMock() && _currentDirId) {
+    const res = await api(`/api/directions/${_currentDirId}/generate-strategy`, {method:'POST'});
+    strategy = res;
+  } else {
+    strategy = {
+      strategy_text: 'Запускаем кампанию с упором на WhatsApp-заявки, таргет на активную аудиторию.',
+      audience_desc: 'Мужчины и женщины 25-45, интересы: бизнес, здоровье, семья',
+      age_min: 25, age_max: 45,
+      ad_texts: {
+        emotional: '❤️ Почувствуйте разницу уже сегодня! Запишитесь прямо сейчас.',
+        rational: '✅ Профессиональный подход, честные цены, гарантия результата.',
+        urgent: '⏰ Только 5 мест по акции! Пишите в WhatsApp сейчас.',
+      },
+      day1_plan: 'Запустить кампанию, следить за CTR первые 6 часов, при CTR<1% — менять креатив.',
+      risks: 'Высокий CPL в первые 3 дня — это нормально. Facebook обучает алгоритм.',
+    };
+  }
+
+  document.getElementById('strategy-loading').style.display = 'none';
+
+  if (!strategy) {
+    document.getElementById('strategy-error').style.display = 'block';
+    return;
+  }
+
+  _currentStrategy = strategy;
+  document.getElementById('st-text').textContent = strategy.strategy_text || '—';
+  document.getElementById('st-audience').textContent =
+    `${strategy.audience_desc || '—'} · Возраст ${strategy.age_min || 20}–${strategy.age_max || 45}`;
+  document.getElementById('st-day1').textContent = strategy.day1_plan || '—';
+  document.getElementById('st-risks').textContent = strategy.risks || '—';
+
+  const variants = strategy.ad_texts || {};
+  const labels = {emotional:'Эмоциональный 💛', rational:'Рациональный 🧠', urgent:'Срочный ⏰'};
+  document.getElementById('ad-variants').innerHTML = Object.entries(variants).map(([k, v]) => `
+    <div class="ad-variant" id="adv-${k}" onclick="selectAdVariant('${k}', \`${v.replace(/`/g,"'")}\`)">
+      <div class="ad-variant-label">${labels[k] || k}</div>
+      <div class="ad-variant-text">${v}</div>
+    </div>`).join('');
+
+  document.getElementById('strategy-result').style.display = 'block';
+  document.getElementById('wiz-nav-1').style.display = 'flex';
+}
+
+function selectAdVariant(key, text) {
+  document.querySelectorAll('.ad-variant').forEach(el => el.classList.remove('selected'));
+  document.getElementById('adv-'+key)?.classList.add('selected');
+  _selectedAdText = text;
+  document.getElementById('dir-ad-text').value = text;
+}
+
+function handleDirUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _dirCreativeB64 = e.target.result.split(',')[1];
+    document.getElementById('dir-upload-icon').innerHTML =
+      `<img src="${e.target.result}" style="width:100%;height:100px;object-fit:cover;border-radius:8px"/>`;
+    document.getElementById('dir-upload-text').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function launchDirection() {
+  if (!_currentDirId && !useMock()) { alert('Сначала сохраните бриф'); return; }
+  const pageId = document.getElementById('dir-page-id').value.trim();
+  const adText = document.getElementById('dir-ad-text').value.trim();
+
+  if (!pageId) { alert('Введите Facebook Page ID'); return; }
+  if (!adText) { alert('Введите текст объявления'); return; }
+
+  const btn = document.getElementById('launch-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Создаю кампанию...';
+
+  try {
+    if (!useMock()) {
+      if (_dirCreativeB64) {
+        await api(`/api/directions/${_currentDirId}/upload-creative`, {
+          method: 'POST',
+          body: JSON.stringify({image_base64: _dirCreativeB64, filename: 'creative.jpg'})
+        });
+      }
+      const res = await api(`/api/directions/${_currentDirId}/launch`, {
+        method: 'POST',
+        body: JSON.stringify({page_id: pageId, ad_text: adText})
+      });
+      if (!res) throw new Error('Launch failed');
+    }
+    closeModal('modal-direction');
+    showToast('🚀 Кампания создана! Проверьте Facebook Ads Manager.');
+    loadDirections();
+  } catch(e) {
+    alert('Ошибка запуска: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🚀 Создать кампанию в Facebook';
+  }
+}
+
+function wizGo(step, noAnim) {
+  _wizStep = step;
+  for (let i = 0; i < 3; i++) {
+    const pane = document.getElementById('wiz-pane-'+i);
+    const dot = document.getElementById('wstep-'+i);
+    if (pane) pane.style.display = i === step ? 'block' : 'none';
+    if (dot) {
+      dot.classList.remove('active','done');
+      if (i < step) dot.classList.add('done');
+      else if (i === step) dot.classList.add('active');
+    }
+  }
+  // scroll modal to top
+  const m = document.querySelector('#modal-direction .modal');
+  if (m) m.scrollTop = 0;
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
