@@ -276,11 +276,12 @@ async def api_save_profile(request: Request, user_id: int = Depends(_get_uid)):
 
 # ── Facebook OAuth ─────────────────────────────────────────────────────────────
 
-_FB_SUCCESS = """<!DOCTYPE html><html><head><meta charset="utf-8">
+_FB_SUCCESS_TMPL = """<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>*{box-sizing:border-box}body{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}.card{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;text-align:center;max-width:400px}.icon{font-size:56px;margin-bottom:16px}.title{font-size:22px;font-weight:700;margin-bottom:8px}.sub{color:#64748b;font-size:15px;line-height:1.6}</style></head>
+<style>*{{box-sizing:border-box}}body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}.card{{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;text-align:center;max-width:400px}}.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:22px;font-weight:700;margin-bottom:8px}}.sub{{color:#64748b;font-size:15px;line-height:1.6}}</style>
+<script>setTimeout(()=>location.href='{dashboard_url}',2000)</script></head>
 <body><div class="card"><div class="icon">✅</div><div class="title">Facebook подключён!</div>
-<div class="sub">Кампании синхронизированы автоматически.<br><br>Вернитесь в Telegram — бот уже начал работу.</div></div></body></html>"""
+<div class="sub">Кампании синхронизированы.<br><br>Открываю дашборд...</div></div></body></html>"""
 
 _FB_ERROR = """<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>*{{box-sizing:border-box}}body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}.card{{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;text-align:center;max-width:400px}}.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:22px;font-weight:700;margin-bottom:8px}}.sub{{color:#64748b;font-size:15px}}</style></head>
@@ -362,7 +363,8 @@ async def fb_callback(code: str = Query(None), state: str = Query(None),
         f"✅ *Facebook подключён и синхронизирован!*\n\n"
         f"Аккаунт: `{ad_account_id}`\n"
         f"{sync_text}")
-    return HTMLResponse(_FB_SUCCESS)
+    dashboard_url = f"{_BASE_URL}/app?user_id={user_id}"
+    return HTMLResponse(_FB_SUCCESS_TMPL.format(dashboard_url=dashboard_url))
 
 
 # ── Banner Generation ──────────────────────────────────────────────────────────
