@@ -1,4 +1,5 @@
 import os
+import asyncio
 import logging
 import httpx
 from fastapi import FastAPI, Request, HTTPException, Header, Depends, Query
@@ -349,8 +350,21 @@ async def fb_callback(code: str = Query(None), state: str = Query(None),
         return HTMLResponse(_FB_ERROR.format(title="Аккаунты не найдены",
                             msg="Рекламные аккаунты Facebook не найдены."))
 
-    ad_account_id = accounts[0]["id"]
-    save_fb_token(user_id, long_token, ad_account_id)
+    if len(accounts) == 1:
+        ad_account_id = accounts[0]["id"]
+        save_fb_token(user_id, long_token, ad_account_id)
+    else:
+        items = "".join(
+            f'<a href="/fb/select?user_id={user_id}&token={long_token}&account_id={a["id"]}" '
+            f'style="display:block;background:#1e293b;border:1px solid #334155;border-radius:10px;'
+            f'padding:16px;margin:8px 0;text-decoration:none;color:#fff;font-size:15px">'
+            f'<b>{a["name"]}</b><br><span style="color:#64748b;font-size:13px">{a["id"]}</span></a>'
+            for a in accounts
+        )
+        return HTMLResponse(f"""<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;padding:32px;max-width:480px;margin:0 auto}}</style></head>
+<body><h2>Выберите рекламный аккаунт</h2>{items}</body></html>""")
 
     from ai_manager import sync_fb_campaigns
     import asyncio
@@ -363,6 +377,20 @@ async def fb_callback(code: str = Query(None), state: str = Query(None),
         f"✅ *Facebook подключён и синхронизирован!*\n\n"
         f"Аккаунт: `{ad_account_id}`\n"
         f"{sync_text}")
+    dashboard_url = f"{_BASE_URL}/app?user_id={user_id}"
+    return HTMLResponse(_FB_SUCCESS_TMPL.format(dashboard_url=dashboard_url))
+
+
+@app.get("/fb/select")
+async def fb_select(user_id: int = Query(...), token: str = Query(...), account_id: str = Query(...)):
+    save_fb_token(user_id, token, account_id)
+    from ai_manager import sync_fb_campaigns
+    count = await asyncio.get_event_loop().run_in_executor(
+        None, sync_fb_campaigns, user_id, token, account_id
+    )
+    sync_text = f"📊 Синхронизировано кампаний: *{count}*" if count > 0 else "📊 Активных кампаний не найдено"
+    await _notify(user_id,
+        f"✅ *Facebook подключён!*\n\nАккаунт: `{account_id}`\n{sync_text}")
     dashboard_url = f"{_BASE_URL}/app?user_id={user_id}"
     return HTMLResponse(_FB_SUCCESS_TMPL.format(dashboard_url=dashboard_url))
 
