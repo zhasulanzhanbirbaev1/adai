@@ -16,9 +16,9 @@ from database import (
     get_campaign_stats,
     create_direction, get_directions, get_direction, update_direction,
     add_direction_creative, get_direction_creatives,
+    create_agent, get_agent, get_agents, update_agent,
+    get_agent_conversations, get_conversation_detail,
 )
-from kaspi_pay import verify_webhook_signature, parse_webhook_payload
-
 load_dotenv()
 BOT_TOKEN     = os.getenv("BOT_TOKEN", "")
 ADMIN_KEY     = os.getenv("ADMIN_KEY", "changeme")
@@ -30,7 +30,7 @@ FB_REDIRECT   = f"{_BASE_URL}/fb/callback"
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="like.ai API", docs_url="/docs", redoc_url=None)
+app = FastAPI(title="Adai API", docs_url="/docs", redoc_url=None)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
@@ -49,7 +49,7 @@ def _get_uid(user_id: int = Query(..., description="Telegram user ID")) -> int:
     return user_id
 
 
-# ── Health / App ───────────────────────────────────────────────────────────────
+# в”Ђв”Ђ Health / App в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 @app.get("/")
 async def landing():
@@ -57,41 +57,14 @@ async def landing():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "like.ai"}
+    return {"status": "ok", "service": "Adai"}
 
 @app.get("/app")
 async def serve_app():
     return FileResponse(os.path.join(os.path.dirname(__file__), "app.html"))
 
 
-# ── Kaspi Webhook ───────────────────────────────────────────────────────────────
-
-@app.post("/kaspi/webhook")
-async def kaspi_webhook(request: Request,
-                        x_kaspi_signature: str = Header(None, alias="X-Kaspi-Signature")):
-    body = await request.body()
-    if not verify_webhook_signature(body, x_kaspi_signature):
-        raise HTTPException(403, "Invalid signature")
-    try:
-        data = await request.json()
-    except Exception:
-        raise HTTPException(400, "Invalid JSON")
-
-    payment = parse_webhook_payload(data)
-    if not payment:
-        return JSONResponse({"status": "ignored"})
-
-    if payment["plan"] not in PLANS:
-        raise HTTPException(400, f"Unknown plan: {payment['plan']}")
-
-    activate_subscription(payment["user_id"], payment["plan"], payment["payment_id"])
-    plan_info = PLANS[payment["plan"]]
-    await _notify(payment["user_id"],
-                  f"✅ *Оплата получена!*\n\nПодписка *{plan_info['name']}* активирована.")
-    return JSONResponse({"status": "ok"})
-
-
-# ── Manual Activation ──────────────────────────────────────────────────────────
+# в”Ђв”Ђ Manual Activation в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 def _check_admin(x_admin_key: str = Header(None, alias="X-Admin-Key")):
     if x_admin_key != ADMIN_KEY:
@@ -110,11 +83,11 @@ async def admin_activate(request: Request):
     if not get_user(int(uid)):
         raise HTTPException(404, "User not found")
     activate_subscription(int(uid), plan, f"manual-{uid}")
-    await _notify(int(uid), f"✅ *Подписка активирована*\n\nПериод: *{PLANS[plan]['name']}*")
+    await _notify(int(uid), f"вњ… *РџРѕРґРїРёСЃРєР° Р°РєС‚РёРІРёСЂРѕРІР°РЅР°*\n\nРџРµСЂРёРѕРґ: *{PLANS[plan]['name']}*")
     return {"status": "ok"}
 
 
-# ── Dashboard API ──────────────────────────────────────────────────────────────
+# в”Ђв”Ђ Dashboard API в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 @app.get("/api/dashboard")
 async def api_dashboard(user_id: int = Depends(_get_uid)):
@@ -136,9 +109,18 @@ async def api_dashboard(user_id: int = Depends(_get_uid)):
             "ai_scenario": c["ai_scenario"],
         })
 
+    full_log = get_ai_log(user_id, limit=500)
+    # Saved = daily budget of campaigns paused by AI (approximate)
+    ai_saved = sum(
+        c.get("budget", 0) for c in camps if c.get("paused_by_ai")
+    ) * 3  # estimate: saved 3 days of wasted spend
+
     return {
         "stats": summary,
         "campaigns": camp_list,
+        "campaigns_managed": len([c for c in camps if c.get("active") or c.get("paused_by_ai")]),
+        "ai_saved": round(ai_saved),
+        "ai_decisions_count": len(full_log),
         "ai_today": [
             {"scenario": r["scenario"], "decision": r["decision"],
              "campaign": r["campaign_name"], "created_at": r["created_at"]}
@@ -152,7 +134,7 @@ async def api_dashboard(user_id: int = Depends(_get_uid)):
     }
 
 
-# ── Campaigns API ──────────────────────────────────────────────────────────────
+# в”Ђв”Ђ Campaigns API в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 @app.get("/api/campaigns")
 async def api_campaigns(user_id: int = Depends(_get_uid)):
@@ -182,10 +164,10 @@ async def api_create_campaign(request: Request, user_id: int = Depends(_get_uid)
     body = await request.json()
     cid = create_campaign(
         user_id,
-        name=body.get("name", "Новая кампания"),
+        name=body.get("name", "РќРѕРІР°СЏ РєР°РјРїР°РЅРёСЏ"),
         camp_type=body.get("type", "photo"),
         goal=body.get("goal", "whatsapp"),
-        geo=body.get("geo", "Алматы"),
+        geo=body.get("geo", "РђР»РјР°С‚С‹"),
         budget=float(body.get("budget", 0)),
         target_cpl=float(body.get("target_cpl", 0)),
     )
@@ -198,7 +180,7 @@ async def api_toggle(campaign_id: int, user_id: int = Depends(_get_uid)):
     return {"active": new_state}
 
 
-# ── Analytics API ──────────────────────────────────────────────────────────────
+# в”Ђв”Ђ Analytics API в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 @app.get("/api/analytics")
 async def api_analytics(user_id: int = Depends(_get_uid), period: str = "30"):
@@ -221,20 +203,20 @@ async def api_analytics(user_id: int = Depends(_get_uid), period: str = "30"):
     return {"summary": summary, "table": table}
 
 
-# ── AI Log API ─────────────────────────────────────────────────────────────────
+# в”Ђв”Ђ AI Log API в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 @app.get("/api/ai-log")
-async def api_ai_log(user_id: int = Depends(_get_uid)):
-    log = get_ai_log(user_id, limit=20)
+async def api_ai_log(user_id: int = Depends(_get_uid), limit: int = Query(50)):
+    log = get_ai_log(user_id, limit=min(limit, 200))
     return [
-        {"scenario": r["scenario"], "decision": r["decision"], "reason": r["reason"],
-         "campaign": r["campaign_name"], "old_value": r["old_value"],
-         "new_value": r["new_value"], "created_at": r["created_at"]}
-        for r in log
+        {"id": r.get("id", i), "scenario": r["scenario"],
+         "decision": r["decision"], "campaign": r["campaign_name"],
+         "created_at": r["created_at"]}
+        for i, r in enumerate(log)
     ]
 
 
-# ── Settings API ───────────────────────────────────────────────────────────────
+# в”Ђв”Ђ Settings API в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 @app.get("/api/settings")
 async def api_settings(user_id: int = Depends(_get_uid)):
@@ -277,18 +259,18 @@ async def api_save_profile(request: Request, user_id: int = Depends(_get_uid)):
     return {"status": "saved"}
 
 
-# ── Facebook OAuth ─────────────────────────────────────────────────────────────
+# в”Ђв”Ђ Facebook OAuth в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 _FB_SUCCESS_TMPL = """<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>*{{box-sizing:border-box}}body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}.card{{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;text-align:center;max-width:400px}}.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:22px;font-weight:700;margin-bottom:8px}}.sub{{color:#64748b;font-size:15px;line-height:1.6}}</style>
 <script>setTimeout(()=>location.href='{dashboard_url}',2000)</script></head>
-<body><div class="card"><div class="icon">✅</div><div class="title">Facebook подключён!</div>
-<div class="sub">Кампании синхронизированы.<br><br>Открываю дашборд...</div></div></body></html>"""
+<body><div class="card"><div class="icon">вњ…</div><div class="title">Facebook РїРѕРґРєР»СЋС‡С‘РЅ!</div>
+<div class="sub">РљР°РјРїР°РЅРёРё СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅС‹.<br><br>РћС‚РєСЂС‹РІР°СЋ РґР°С€Р±РѕСЂРґ...</div></div></body></html>"""
 
 _FB_ERROR = """<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>*{{box-sizing:border-box}}body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}.card{{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;text-align:center;max-width:400px}}.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:22px;font-weight:700;margin-bottom:8px}}.sub{{color:#64748b;font-size:15px}}</style></head>
-<body><div class="card"><div class="icon">❌</div><div class="title">{title}</div><div class="sub">{msg}</div></div></body></html>"""
+<body><div class="card"><div class="icon">вќЊ</div><div class="title">{title}</div><div class="sub">{msg}</div></div></body></html>"""
 
 
 @app.get("/fb/connect")
@@ -312,14 +294,14 @@ async def fb_connect(user_id: int = Query(...)):
 async def fb_callback(code: str = Query(None), state: str = Query(None),
                       error: str = Query(None), error_description: str = Query(None)):
     if error:
-        return HTMLResponse(_FB_ERROR.format(title="Отмена", msg="Вы отменили подключение Facebook."))
+        return HTMLResponse(_FB_ERROR.format(title="РћС‚РјРµРЅР°", msg="Р’С‹ РѕС‚РјРµРЅРёР»Рё РїРѕРґРєР»СЋС‡РµРЅРёРµ Facebook."))
     if not code or not state:
-        return HTMLResponse(_FB_ERROR.format(title="Ошибка", msg="Неверный запрос."))
+        return HTMLResponse(_FB_ERROR.format(title="РћС€РёР±РєР°", msg="РќРµРІРµСЂРЅС‹Р№ Р·Р°РїСЂРѕСЃ."))
 
     try:
         user_id = int(state)
     except ValueError:
-        return HTMLResponse(_FB_ERROR.format(title="Ошибка", msg="Неверный state."))
+        return HTMLResponse(_FB_ERROR.format(title="РћС€РёР±РєР°", msg="РќРµРІРµСЂРЅС‹Р№ state."))
 
     async with httpx.AsyncClient(timeout=15) as client:
         r = await client.get("https://graph.facebook.com/v19.0/oauth/access_token", params={
@@ -329,8 +311,8 @@ async def fb_callback(code: str = Query(None), state: str = Query(None),
         token_data = r.json()
 
     if "error" in token_data:
-        msg = token_data["error"].get("message", "Ошибка Facebook")
-        return HTMLResponse(_FB_ERROR.format(title="Ошибка Facebook", msg=msg))
+        msg = token_data["error"].get("message", "РћС€РёР±РєР° Facebook")
+        return HTMLResponse(_FB_ERROR.format(title="РћС€РёР±РєР° Facebook", msg=msg))
 
     short_token = token_data["access_token"]
 
@@ -349,8 +331,8 @@ async def fb_callback(code: str = Query(None), state: str = Query(None),
         accounts = r.json().get("data", [])
 
     if not accounts:
-        return HTMLResponse(_FB_ERROR.format(title="Аккаунты не найдены",
-                            msg="Рекламные аккаунты Facebook не найдены."))
+        return HTMLResponse(_FB_ERROR.format(title="РђРєРєР°СѓРЅС‚С‹ РЅРµ РЅР°Р№РґРµРЅС‹",
+                            msg="Р РµРєР»Р°РјРЅС‹Рµ Р°РєРєР°СѓРЅС‚С‹ Facebook РЅРµ РЅР°Р№РґРµРЅС‹."))
 
     if len(accounts) == 1:
         ad_account_id = accounts[0]["id"]
@@ -366,18 +348,18 @@ async def fb_callback(code: str = Query(None), state: str = Query(None),
         return HTMLResponse(f"""<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;padding:32px;max-width:480px;margin:0 auto}}</style></head>
-<body><h2>Выберите рекламный аккаунт</h2>{items}</body></html>""")
+<body><h2>Р’С‹Р±РµСЂРёС‚Рµ СЂРµРєР»Р°РјРЅС‹Р№ Р°РєРєР°СѓРЅС‚</h2>{items}</body></html>""")
 
     from ai_manager import sync_fb_campaigns
     import asyncio
     count = await asyncio.get_event_loop().run_in_executor(
         None, sync_fb_campaigns, user_id, long_token, ad_account_id
     )
-    sync_text = f"📊 Синхронизировано кампаний: *{count}*" if count > 0 else "📊 Активных кампаний не найдено"
+    sync_text = f"рџ“Љ РЎРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ РєР°РјРїР°РЅРёР№: *{count}*" if count > 0 else "рџ“Љ РђРєС‚РёРІРЅС‹С… РєР°РјРїР°РЅРёР№ РЅРµ РЅР°Р№РґРµРЅРѕ"
 
     await _notify(user_id,
-        f"✅ *Facebook подключён и синхронизирован!*\n\n"
-        f"Аккаунт: `{ad_account_id}`\n"
+        f"вњ… *Facebook РїРѕРґРєР»СЋС‡С‘РЅ Рё СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅ!*\n\n"
+        f"РђРєРєР°СѓРЅС‚: `{ad_account_id}`\n"
         f"{sync_text}")
     dashboard_url = f"{_BASE_URL}/app?user_id={user_id}"
     return HTMLResponse(_FB_SUCCESS_TMPL.format(dashboard_url=dashboard_url))
@@ -390,14 +372,14 @@ async def fb_select(user_id: int = Query(...), token: str = Query(...), account_
     count = await asyncio.get_event_loop().run_in_executor(
         None, sync_fb_campaigns, user_id, token, account_id
     )
-    sync_text = f"📊 Синхронизировано кампаний: *{count}*" if count > 0 else "📊 Активных кампаний не найдено"
+    sync_text = f"рџ“Љ РЎРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ РєР°РјРїР°РЅРёР№: *{count}*" if count > 0 else "рџ“Љ РђРєС‚РёРІРЅС‹С… РєР°РјРїР°РЅРёР№ РЅРµ РЅР°Р№РґРµРЅРѕ"
     await _notify(user_id,
-        f"✅ *Facebook подключён!*\n\nАккаунт: `{account_id}`\n{sync_text}")
+        f"вњ… *Facebook РїРѕРґРєР»СЋС‡С‘РЅ!*\n\nРђРєРєР°СѓРЅС‚: `{account_id}`\n{sync_text}")
     dashboard_url = f"{_BASE_URL}/app?user_id={user_id}"
     return HTMLResponse(_FB_SUCCESS_TMPL.format(dashboard_url=dashboard_url))
 
 
-# ── Directions API ─────────────────────────────────────────────────────────────
+# в”Ђв”Ђ Directions API в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 @app.get("/api/directions")
 async def api_get_directions(user_id: int = Depends(_get_uid)):
@@ -412,7 +394,7 @@ async def api_get_directions(user_id: int = Depends(_get_uid)):
 @app.post("/api/directions")
 async def api_create_direction(request: Request, user_id: int = Depends(_get_uid)):
     body = await request.json()
-    name = body.get("name", "Новое направление")
+    name = body.get("name", "РќРѕРІРѕРµ РЅР°РїСЂР°РІР»РµРЅРёРµ")
     did = create_direction(user_id, name)
     fields = {k: v for k, v in body.items()
               if k in ("niche","description","utp","audience","pains","offers",
@@ -488,9 +470,9 @@ async def api_launch_direction(did: int, request: Request, user_id: int = Depend
         raise HTTPException(400, "Facebook not connected")
     creatives = get_direction_creatives(did)
     if not creatives:
-        raise HTTPException(400, "Загрузите хотя бы один креатив")
+        raise HTTPException(400, "Р—Р°РіСЂСѓР·РёС‚Рµ С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ РєСЂРµР°С‚РёРІ")
     body = await request.json()
-    ad_text = body.get("ad_text") or d["ad_text"] or d["description"] or "Свяжитесь с нами"
+    ad_text = body.get("ad_text") or d["ad_text"] or d["description"] or "РЎРІСЏР¶РёС‚РµСЃСЊ СЃ РЅР°РјРё"
     page_id = body.get("page_id", "")
     if not page_id:
         raise HTTPException(400, "page_id required")
@@ -500,13 +482,13 @@ async def api_launch_direction(did: int, request: Request, user_id: int = Depend
 
     camp_id = create_fb_campaign(
         fb["access_token"], fb["ad_account_id"],
-        name=f"{d['name']} | like.ai",
+        name=f"{d['name']} | Adai",
     )
     adset_id = create_fb_adset(
         fb["access_token"], fb["ad_account_id"], camp_id,
         name=f"{d['name']} AdSet",
         daily_budget_kzt=d["daily_budget"] or 5000,
-        geo=d["geo"] or "Казахстан",
+        geo=d["geo"] or "РљР°Р·Р°С…СЃС‚Р°РЅ",
         age_min=strategy.get("age_min", 20),
         age_max=strategy.get("age_max", 45),
         gender=d["gender"] or "all",
@@ -527,36 +509,189 @@ async def api_launch_direction(did: int, request: Request, user_id: int = Depend
 
     update_direction(did, fb_campaign_id=camp_id, status="launched")
     await _notify(user_id,
-        f"🚀 *Кампания запущена!*\n\n"
-        f"Направление: *{d['name']}*\n"
-        f"Кампания: `{camp_id}`\n"
-        f"Объявлений: {len(ad_ids)}\n\n"
-        f"Статус: на проверке Facebook")
+        f"рџљЂ *РљР°РјРїР°РЅРёСЏ Р·Р°РїСѓС‰РµРЅР°!*\n\n"
+        f"РќР°РїСЂР°РІР»РµРЅРёРµ: *{d['name']}*\n"
+        f"РљР°РјРїР°РЅРёСЏ: `{camp_id}`\n"
+        f"РћР±СЉСЏРІР»РµРЅРёР№: {len(ad_ids)}\n\n"
+        f"РЎС‚Р°С‚СѓСЃ: РЅР° РїСЂРѕРІРµСЂРєРµ Facebook")
     return {"campaign_id": camp_id, "adset_id": adset_id, "ads": ad_ids, "strategy": strategy}
 
 
-# ── Banner Generation ──────────────────────────────────────────────────────────
+# в”Ђв”Ђ Image Generator API в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 @app.post("/api/generate-banner")
-async def api_generate_banner(request: Request):
-    from image_generator import generate_ad_copy, OPENAI_AVAILABLE
-    from banner_composer import create_banners
+async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)):
     import base64 as b64mod
+    from image_generator import generate_dalle_image, generate_ad_copy, OPENAI_AVAILABLE
+    from banner_composer import create_banners
+
     if not OPENAI_AVAILABLE:
         raise HTTPException(503, "OpenAI API key not configured")
-    body         = await request.json()
-    offer        = (body.get("offer") or "").strip()
-    audience     = (body.get("audience") or "").strip()
+
+    body = await request.json()
+
+    # Legacy path: user uploads their own photo (AI Studio)
     image_base64 = body.get("image_base64")
-    if not offer:
-        raise HTTPException(400, "offer is required")
-    if not image_base64:
-        raise HTTPException(400, "Загрузите фото товара или услуги")
+    offer        = (body.get("offer") or "").strip()
+    if image_base64 and offer:
+        try:
+            copy      = await generate_ad_copy(offer, body.get("audience") or "", image_base64)
+            img_bytes = b64mod.b64decode(image_base64)
+            headlines = copy.get("headlines", [offer] * 3)
+            banners   = create_banners(img_bytes, headlines, copy.get("bullets", []), copy.get("cta", "РЈР·РЅР°С‚СЊ Р±РѕР»СЊС€Рµ"))
+            return {"banners": banners, "copy": copy}
+        except Exception as e:
+            raise HTTPException(500, str(e))
+
+    # DALL-E path: generate image from description
+    description = (body.get("description") or "").strip()
+    niche        = (body.get("niche") or "").strip()
+    audience     = (body.get("audience") or "РјРµСЃС‚РЅС‹Рµ Р¶РёС‚РµР»Рё").strip()
+    style        = body.get("style", "cinematic")
+
+    if not description:
+        raise HTTPException(400, "description or (offer + image_base64) required")
+
+    style_prompts = {
+        "cinematic": (
+            f"Professional cinematic advertising photo for Facebook ad. {description}. "
+            "Dramatic lighting, deep shadows, rich colors, photorealistic, 8K, commercial photography."
+        ),
+        "product": (
+            f"Clean product photography for social media ad. {description}. "
+            "White or neutral background, studio lighting, sharp focus, commercial quality."
+        ),
+        "minimal": (
+            f"Modern minimalist advertising visual for social media. {description}. "
+            "Bold solid color background, geometric shapes, high contrast, editorial style."
+        ),
+    }
+    dalle_prompt = style_prompts.get(style, style_prompts["cinematic"])
+
     try:
-        copy      = await generate_ad_copy(offer, audience, image_base64)
-        img_bytes = b64mod.b64decode(image_base64)
-        headlines = copy.get("headlines", [offer] * 3)
-        banners   = create_banners(img_bytes, headlines, copy["bullets"], copy["cta"])
-        return {"banners": banners, "copy": copy}
+        image_bytes = await generate_dalle_image(dalle_prompt, size="1024x1024")
+    except RuntimeError as e:
+        raise HTTPException(503, str(e))
     except Exception as e:
-        raise HTTPException(500, str(e))
+        logger.error("DALL-E generation error: %s", e)
+        raise HTTPException(500, "РћС€РёР±РєР° РіРµРЅРµСЂР°С†РёРё РёР·РѕР±СЂР°Р¶РµРЅРёСЏ")
+
+    try:
+        photo_b64 = b64mod.b64encode(image_bytes).decode()
+        copy = await generate_ad_copy(niche or description, audience, photo_b64)
+        headlines = copy.get("headlines", [description] * 3)
+        bullets   = copy.get("bullets", [])
+        cta       = copy.get("cta", "РЈР·РЅР°С‚СЊ Р±РѕР»СЊС€Рµ")
+    except Exception as e:
+        logger.error("Ad copy generation error: %s", e)
+        headlines = [description, description, description]
+        bullets, cta = [], "РЈР·РЅР°С‚СЊ Р±РѕР»СЊС€Рµ"
+
+    banners = create_banners(image_bytes, headlines, bullets, cta)
+    return {
+        "banners": banners,
+        "copy": {"headlines": headlines, "bullets": bullets, "cta": cta},
+    }
+
+
+# в”Ђв”Ђ AI Agents API в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+
+@app.get("/chat/{agent_id}")
+async def serve_chat(agent_id: int):
+    agent = get_agent(agent_id)
+    if not agent:
+        raise HTTPException(404, "РђРіРµРЅС‚ РЅРµ РЅР°Р№РґРµРЅ")
+    return FileResponse(os.path.join(os.path.dirname(__file__), "chat.html"))
+
+
+@app.get("/api/agents")
+async def api_get_agents(user_id: int = Depends(_get_uid)):
+    agents = get_agents(user_id)
+    result = []
+    for a in agents:
+        convs = get_agent_conversations(a["id"], limit=1000)
+        result.append({
+            "id": a["id"], "name": a["name"],
+            "system_prompt": a["system_prompt"],
+            "greeting": a["greeting"],
+            "active": a["active"],
+            "created_at": a["created_at"],
+            "conversations_count": len(convs),
+            "chat_url": f"{_BASE_URL}/chat/{a['id']}",
+        })
+    return result
+
+
+@app.post("/api/agents")
+async def api_create_agent(request: Request, user_id: int = Depends(_get_uid)):
+    body = await request.json()
+    name = body.get("name", "РњРѕР№ РР-Р°РіРµРЅС‚")
+    system_prompt = body.get("system_prompt", "РўС‹ РІРµР¶Р»РёРІС‹Р№ РїРѕРјРѕС‰РЅРёРє.")
+    greeting = body.get("greeting", "Р—РґСЂР°РІСЃС‚РІСѓР№С‚Рµ! Р§РµРј РјРѕРіСѓ РїРѕРјРѕС‡СЊ?")
+    aid = create_agent(user_id, name, system_prompt, greeting)
+    return {"id": aid, "chat_url": f"{_BASE_URL}/chat/{aid}"}
+
+
+@app.put("/api/agents/{aid}")
+async def api_update_agent(aid: int, request: Request, user_id: int = Depends(_get_uid)):
+    agent = get_agent(aid)
+    if not agent:
+        raise HTTPException(404, "Agent not found")
+    body = await request.json()
+    fields = {k: v for k, v in body.items()
+              if k in ("name", "system_prompt", "greeting", "active")}
+    if fields:
+        update_agent(aid, **fields)
+    return {"status": "updated"}
+
+
+@app.get("/api/agents/{aid}/conversations")
+async def api_agent_conversations(aid: int, user_id: int = Depends(_get_uid)):
+    agent = get_agent(aid)
+    if not agent:
+        raise HTTPException(404, "Agent not found")
+    convs = get_agent_conversations(aid)
+    return [
+        {
+            "id": c["id"], "session_id": c["session_id"],
+            "lead_name": c["lead_name"], "status": c["status"],
+            "message_count": c["message_count"],
+            "last_message": c["last_message"],
+            "created_at": c["created_at"],
+            "last_message_at": c["last_message_at"],
+        }
+        for c in convs
+    ]
+
+
+@app.get("/api/agents/{aid}/conversations/{conv_id}")
+async def api_conversation_detail(aid: int, conv_id: int, user_id: int = Depends(_get_uid)):
+    conv, msgs = get_conversation_detail(conv_id)
+    if not conv or conv["agent_id"] != aid:
+        raise HTTPException(404, "Conversation not found")
+    return {
+        "conversation": dict(conv),
+        "messages": [{"role": m["role"], "content": m["content"], "created_at": m["created_at"]} for m in msgs],
+    }
+
+
+@app.post("/api/agents/{agent_id}/chat")
+async def api_agent_chat(agent_id: int, request: Request):
+    from agent_handler import chat as agent_chat
+    body = await request.json()
+    session_id = body.get("session_id", "")
+    message = (body.get("message") or "").strip()
+    if not session_id or not message:
+        raise HTTPException(400, "session_id and message required")
+    reply = agent_chat(agent_id, session_id, message)
+    return {"reply": reply}
+
+
+@app.get("/api/agents/{agent_id}/greeting")
+async def api_agent_greeting(agent_id: int):
+    agent = get_agent(agent_id)
+    if not agent:
+        raise HTTPException(404, "Agent not found")
+    return {"name": agent["name"], "greeting": agent["greeting"]}
+
+

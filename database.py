@@ -153,10 +153,49 @@ def init_db():
                 created_at TEXT DEFAULT (NOW()::TEXT)
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS agents (
+                id SERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL REFERENCES users(id),
+                name TEXT NOT NULL,
+                system_prompt TEXT NOT NULL,
+                greeting TEXT DEFAULT 'Здравствуйте! Чем могу помочь?',
+                model TEXT DEFAULT 'claude-sonnet-4-6',
+                active BOOLEAN DEFAULT TRUE,
+                created_at TEXT DEFAULT (NOW()::TEXT)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS agent_conversations (
+                id SERIAL PRIMARY KEY,
+                agent_id INTEGER NOT NULL REFERENCES agents(id),
+                session_id TEXT NOT NULL,
+                lead_name TEXT,
+                lead_phone TEXT,
+                status TEXT DEFAULT 'active',
+                created_at TEXT DEFAULT (NOW()::TEXT),
+                last_message_at TEXT DEFAULT (NOW()::TEXT),
+                UNIQUE(agent_id, session_id)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS agent_messages (
+                id SERIAL PRIMARY KEY,
+                conversation_id INTEGER NOT NULL REFERENCES agent_conversations(id),
+                role TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TEXT DEFAULT (NOW()::TEXT)
+            )
+        """)
         for col_sql in [
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS target_cpl REAL DEFAULT 0",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp TEXT",
             "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS ai_scenario TEXT",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS fb_page_id TEXT",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS fb_ad_account_id TEXT",
+            "ALTER TABLE directions ADD COLUMN IF NOT EXISTS age_min INT DEFAULT 25",
+            "ALTER TABLE directions ADD COLUMN IF NOT EXISTS age_max INT DEFAULT 55",
+            "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS budget_alert_sent_date TEXT",
         ]:
             conn.execute(col_sql)
     print("[DB] PostgreSQL initialized")
@@ -332,6 +371,14 @@ def update_campaign_budget(campaign_id: int, new_budget: float):
         conn.execute("UPDATE campaigns SET budget=%s WHERE id=%s", (new_budget, campaign_id))
 
 
+def mark_budget_alert_sent(campaign_id: int, date_str: str):
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE campaigns SET budget_alert_sent_date=%s WHERE id=%s",
+            (date_str, campaign_id),
+        )
+
+
 # ── Stats ──────────────────────────────────────────────────────────────────────
 
 def upsert_campaign_stats(campaign_id: int, date: str, impressions: int,
@@ -501,6 +548,126 @@ def get_direction_creatives(direction_id: int):
             "SELECT * FROM direction_creatives WHERE direction_id=%s ORDER BY created_at DESC",
             (direction_id,),
         ).fetchall()
+
+
+def get_users_with_fb_tokens():
+    with get_conn() as conn:
+        return conn.execute(
+            "SELECT user_id, connected_at, token_expires FROM facebook_tokens"
+        ).fetchall()
+
+
+def save_user_page_id(user_id: int, page_id: str):
+    with get_conn() as conn:
+        conn.execute("UPDATE users SET fb_page_id = %s WHERE id = %s", (page_id, user_id))
+
+
+def save_user_ad_account_id(user_id: int, ad_account_id: str):
+    with get_conn() as conn:
+        conn.execute("UPDATE users SET fb_ad_account_id = %s WHERE id = %s", (ad_account_id, user_id))
+
+
+def update_direction_ad_text(direction_id: int, ad_text: str):
+    with get_conn() as conn:
+        conn.execute("UPDATE directions SET ad_text = %s WHERE id = %s", (ad_text, direction_id))
+
+
+def update_direction_campaign(direction_id: int, campaign_id: str, status: str):
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE directions SET fb_campaign_id = %s, status = %s WHERE id = %s",
+            (campaign_id, status, direction_id),
+        )
+
+
+# ── Agents ─────────────────────────────────────────────────────────────────────
+
+def create_agent(user_id: int, name: str, system_prompt: str, greeting: str = None) -> int:
+    g = greeting or "Здравствуйте! Чем могу помочь?"
+    with get_conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO agents (user_id, name, system_prompt, greeting) VALUES (%s,%s,%s,%s) RETURNING id",
+            (user_id, name, system_prompt, g),
+        )
+        return cur.fetchone()["id"]
+
+
+def get_agent(agent_id: int):
+    with get_conn() as conn:
+        return conn.execute("SELECT * FROM agents WHERE id=%s AND active=TRUE", (agent_id,)).fetchone()
+
+
+def get_agents(user_id: int):
+    with get_conn() as conn:
+        return conn.execute(
+            "SELECT * FROM agents WHERE user_id=%s ORDER BY created_at DESC", (user_id,)
+        ).fetchall()
+
+
+def update_agent(agent_id: int, **kwargs):
+    fields = [f"{k}=%s" for k in kwargs]
+    vals = list(kwargs.values()) + [agent_id]
+    with get_conn() as conn:
+        conn.execute(f"UPDATE agents SET {', '.join(fields)} WHERE id=%s", vals)
+
+
+def get_or_create_conversation(agent_id: int, session_id: str) -> int:
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT id FROM agent_conversations WHERE agent_id=%s AND session_id=%s",
+            (agent_id, session_id),
+        ).fetchone()
+        if row:
+            conn.execute(
+                "UPDATE agent_conversations SET last_message_at=NOW()::TEXT WHERE id=%s",
+                (row["id"],),
+            )
+            return row["id"]
+        cur = conn.execute(
+            "INSERT INTO agent_conversations (agent_id, session_id) VALUES (%s,%s) RETURNING id",
+            (agent_id, session_id),
+        )
+        return cur.fetchone()["id"]
+
+
+def save_agent_message(conversation_id: int, role: str, content: str):
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO agent_messages (conversation_id, role, content) VALUES (%s,%s,%s)",
+            (conversation_id, role, content),
+        )
+
+
+def get_conversation_messages(conversation_id: int, limit: int = 20):
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT role, content FROM agent_messages WHERE conversation_id=%s ORDER BY created_at DESC LIMIT %s",
+            (conversation_id, limit),
+        ).fetchall()
+    return list(reversed(rows))
+
+
+def get_agent_conversations(agent_id: int, limit: int = 50):
+    with get_conn() as conn:
+        return conn.execute(
+            """SELECT ac.*,
+               (SELECT content FROM agent_messages WHERE conversation_id=ac.id ORDER BY created_at DESC LIMIT 1) AS last_message,
+               (SELECT COUNT(*) FROM agent_messages WHERE conversation_id=ac.id) AS message_count
+               FROM agent_conversations ac
+               WHERE ac.agent_id=%s
+               ORDER BY ac.last_message_at DESC LIMIT %s""",
+            (agent_id, limit),
+        ).fetchall()
+
+
+def get_conversation_detail(conversation_id: int):
+    with get_conn() as conn:
+        conv = conn.execute("SELECT * FROM agent_conversations WHERE id=%s", (conversation_id,)).fetchone()
+        msgs = conn.execute(
+            "SELECT role, content, created_at FROM agent_messages WHERE conversation_id=%s ORDER BY created_at ASC",
+            (conversation_id,),
+        ).fetchall()
+    return conv, msgs
 
 
 if __name__ == "__main__":

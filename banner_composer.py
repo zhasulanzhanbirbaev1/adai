@@ -140,6 +140,55 @@ def style_top(img, headline, bullets, cta):
     return img
 
 
+# ── Генератор баннера из бриф направления (без фото) ─────────────────────────
+
+def generate_creative_for_direction(direction: dict) -> bytes:
+    """Create a styled text-only banner from direction brief. Returns JPEG bytes."""
+    img = Image.new("RGB", (SIZE, SIZE), (6, 12, 28))
+    draw = ImageDraw.Draw(img)
+
+    # blue→dark gradient
+    for i in range(SIZE):
+        r = int(6 + (20 - 6) * i / SIZE)
+        g = int(12 + (30 - 12) * i / SIZE)
+        b = int(28 + (80 - 28) * i / SIZE)
+        draw.line([(0, i), (SIZE, i)], fill=(r, g, b))
+
+    # top accent bar
+    draw.rectangle([0, 0, SIZE, 12], fill=(59, 130, 246))
+
+    fh = _font(F_BOLD, 64)
+    fb_f = _font(F_REG, 36)
+    fc = _font(F_BOLD, 38)
+
+    name = direction.get("name", "Реклама")
+    utp = direction.get("utp", "")
+    geo = direction.get("geo", "Казахстан")
+    traffic = direction.get("traffic_dest", "whatsapp")
+    cta_text = "Написать в WhatsApp" if traffic == "whatsapp" else "Узнать подробнее"
+
+    y = 60
+    for line in _wrap(name, fh, SIZE - 80, draw)[:3]:
+        draw.text((40, y), line, font=fh, fill=(255, 255, 255))
+        y += 78
+
+    y += 20
+    if utp:
+        for line in _wrap(utp, fb_f, SIZE - 80, draw)[:3]:
+            draw.text((40, y), line, font=fb_f, fill=(185, 215, 255))
+            y += 46
+
+    y += 16
+    if geo:
+        draw.text((40, y), f"📍 {geo}", font=fb_f, fill=(100, 160, 255))
+
+    _cta_btn(draw, 40, SIZE - 120, cta_text, fc)
+
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=90)
+    return buf.getvalue()
+
+
 # ── Публичная функция ─────────────────────────────────────────────────────────
 
 def create_banners(image_bytes, headlines, bullets, cta):

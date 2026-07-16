@@ -3,90 +3,102 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>like.ai — Личный кабинет</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;900&family=Onest:wght@400;500;600&display=swap" rel="stylesheet"/>
+<title>Adai — Личный кабинет</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#05070f;--surface:#0c1120;--surface2:#111827;--border:#1c2638;
-  --accent:#3b82f6;--accent2:#93c5fd;--green:#10d9a0;--red:#f4546a;--yellow:#fbbf24;
-  --text:#eef2ff;--muted:#6b7a99;--sidebar:220px;--r:12px;
+  --accent:#6366f1;--accent2:#a5b4fc;--green:#10d9a0;--red:#f4546a;--yellow:#fbbf24;
+  --text:#eef2ff;--muted:#6b7a99;--sidebar:224px;--r:12px;
 }
 html,body{height:100%;overflow:hidden}
-body{background:var(--bg);color:var(--text);font-family:'Onest',sans-serif;font-size:14px;display:flex}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;display:flex}
 
 /* SIDEBAR */
 .sidebar{width:var(--sidebar);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:fixed;left:0;top:0;z-index:50}
-.sidebar-logo{padding:24px 20px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
-.sidebar-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#3b82f6,#10d9a0);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.sidebar-logo-text{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;line-height:1.2}
-.sidebar-logo-text span{display:block;font-size:10px;font-weight:400;color:var(--muted)}
-.nav-items{padding:12px 0;flex:1;overflow-y:auto}
-.nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--muted);cursor:pointer;transition:color .2s,background .2s;font-size:14px;font-weight:500;text-decoration:none;border-left:3px solid transparent;margin:2px 0}
-.nav-item:hover{color:var(--text);background:rgba(59,130,246,.06)}
-.nav-item.active{color:var(--text);background:rgba(59,130,246,.1);border-left-color:var(--accent)}
-.nav-item .icon{font-size:18px;width:22px;text-align:center;flex-shrink:0}
-.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
+.sidebar-logo{padding:22px 20px 18px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--border)}
+.logo-mark{width:38px;height:38px;background:linear-gradient(135deg,#6366f1,#10d9a0);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.logo-text{font-size:18px;font-weight:800;letter-spacing:-0.5px;color:var(--text)}
+.logo-text span{display:block;font-size:10px;font-weight:400;color:var(--muted);letter-spacing:0}
+.nav-items{padding:10px 0;flex:1;overflow-y:auto}
+.nav-section{padding:16px 20px 6px;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 18px;color:var(--muted);cursor:pointer;transition:color .15s,background .15s;font-size:13.5px;font-weight:500;text-decoration:none;border-left:3px solid transparent;margin:1px 0}
+.nav-item:hover{color:var(--text);background:rgba(99,102,241,.06)}
+.nav-item.active{color:var(--text);background:rgba(99,102,241,.12);border-left-color:var(--accent)}
+.nav-item .icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sidebar-footer{padding:14px 18px;border-top:1px solid var(--border)}
 .user-chip{display:flex;align-items:center;gap:10px}
-.user-avatar{width:32px;height:32px;background:linear-gradient(135deg,#3b82f6,#10d9a0);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
-.user-name{font-size:13px;font-weight:500}
+.user-avatar{width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#10d9a0);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{font-size:13px;font-weight:600}
 .user-plan{font-size:11px;color:var(--muted)}
 
 /* MAIN */
 .main{margin-left:var(--sidebar);flex:1;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
-.topbar{padding:20px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:40}
-.topbar-title{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700}
-.topbar-actions{display:flex;gap:12px;align-items:center}
-.status-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;font-size:12px;font-weight:600}
+.topbar{padding:18px 30px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:40;backdrop-filter:blur(8px)}
+.topbar-title{font-size:17px;font-weight:700}
+.topbar-actions{display:flex;gap:10px;align-items:center}
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;font-size:11px;font-weight:600}
 .status-active{background:rgba(16,217,160,.12);color:var(--green)}
 .status-trial{background:rgba(251,191,36,.12);color:var(--yellow)}
 .status-expired{background:rgba(244,84,106,.12);color:var(--red)}
-.content{padding:28px 32px;flex:1}
+.content{padding:26px 30px;flex:1}
 
-/* PAGE */
+/* PAGES */
 .page{display:none}
 .page.active{display:block}
 
-/* CARDS */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px}
-.stat-label{font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.stat-value{font-family:'Unbounded',sans-serif;font-size:24px;font-weight:700}
-.stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+/* GRID CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:7px;font-weight:500}
+.stat-value{font-size:24px;font-weight:800;letter-spacing:-0.5px}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
 .stat-up{color:var(--green)}
 .stat-down{color:var(--red)}
 
-/* CHART */
-.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:24px}
-.box-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.box-title{font-weight:600;font-size:15px}
-.chart-wrap{height:200px;position:relative}
+/* AI HERO CARD */
+.ai-hero{background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(16,217,160,.08));border:1px solid rgba(99,102,241,.3);border-radius:var(--r);padding:20px 24px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.ai-hero-left{display:flex;align-items:center;gap:14px}
+.ai-pulse{width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(16,217,160,.4);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,217,160,.5)}70%{box-shadow:0 0 0 10px rgba(16,217,160,0)}100%{box-shadow:0 0 0 0 rgba(16,217,160,0)}}
+.ai-hero-title{font-size:15px;font-weight:700;margin-bottom:2px}
+.ai-hero-sub{font-size:12px;color:var(--muted)}
+.ai-hero-right{display:flex;gap:24px;align-items:center}
+.ai-saved-block{text-align:right}
+.ai-saved-label{font-size:11px;color:var(--muted);margin-bottom:3px}
+.ai-saved-value{font-size:22px;font-weight:800;color:var(--green);letter-spacing:-0.5px}
+
+/* CHART BOX */
+.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:20px}
+.box-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.box-title{font-weight:600;font-size:14px}
+.chart-wrap{height:190px;position:relative}
 
 /* TABLE */
-.table-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:24px}
+.table-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
 table{width:100%;border-collapse:collapse}
-thead th{padding:12px 16px;text-align:left;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
-tbody td{padding:12px 16px;font-size:14px;border-bottom:1px solid rgba(28,38,56,.5)}
+thead th{padding:11px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody td{padding:11px 16px;font-size:13.5px;border-bottom:1px solid rgba(28,38,56,.5)}
 tbody tr:last-child td{border-bottom:none}
-tbody tr:hover{background:rgba(59,130,246,.04)}
+tbody tr:hover{background:rgba(99,102,241,.04)}
 
 /* BADGES */
-.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:600}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:600;white-space:nowrap}
 .badge-active{background:rgba(16,217,160,.12);color:var(--green)}
 .badge-paused{background:rgba(100,116,153,.12);color:var(--muted)}
 .badge-ai{background:rgba(244,84,106,.12);color:var(--red)}
-.badge-scale{background:rgba(59,130,246,.12);color:var(--accent2)}
+.badge-scale{background:rgba(99,102,241,.12);color:var(--accent2)}
+.badge-warn{background:rgba(251,191,36,.12);color:var(--yellow)}
 
 /* AI LOG */
-.ai-log{display:flex;flex-direction:column;gap:10px}
-.ai-entry{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start}
-.ai-entry-icon{font-size:20px;flex-shrink:0;margin-top:1px}
-.ai-entry-body{flex:1}
-.ai-entry-title{font-weight:600;font-size:14px;margin-bottom:3px}
-.ai-entry-sub{color:var(--muted);font-size:13px}
-.ai-entry-time{font-size:11px;color:var(--muted);flex-shrink:0;margin-top:2px}
+.ai-log{display:flex;flex-direction:column;gap:8px}
+.ai-entry{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.ai-entry-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.ai-entry-body{flex:1;min-width:0}
+.ai-entry-title{font-weight:600;font-size:13px;margin-bottom:2px}
+.ai-entry-sub{color:var(--muted);font-size:12px;line-height:1.4}
+.ai-entry-time{font-size:11px;color:var(--muted);flex-shrink:0;margin-top:2px;white-space:nowrap}
 
 /* TOGGLE */
 .toggle{position:relative;width:40px;height:22px;flex-shrink:0}
@@ -97,136 +109,146 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
 .toggle input:checked + .toggle-track::after{transform:translateX(18px)}
 
 /* MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-.modal-title{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700}
-.modal-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px;transition:color .2s}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.modal-title{font-size:17px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px;transition:color .2s;line-height:1}
 .modal-close:hover{color:var(--text)}
 
 /* FORM */
-.form-group{margin-bottom:18px}
-.form-label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:8px}
-.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-family:'Onest',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.4px}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s}
 .form-input:focus{border-color:var(--accent)}
-.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.type-opt{border:1.5px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;font-size:13px}
-.type-opt:hover{border-color:rgba(59,130,246,.5)}
-.type-opt.active{border-color:var(--accent);background:rgba(59,130,246,.1)}
-.type-opt .t-icon{font-size:22px;margin-bottom:4px}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-color:var(--surface2)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.type-opt{border:1.5px solid var(--border);border-radius:9px;padding:11px 6px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.type-opt:hover{border-color:rgba(99,102,241,.5)}
+.type-opt.active{border-color:var(--accent);background:rgba(99,102,241,.1)}
+.type-opt .t-icon{font-size:20px;margin-bottom:3px}
 .type-opt .t-label{font-size:11px;font-weight:500}
 
 /* BUTTONS */
-.btn{padding:10px 20px;border-radius:50px;border:none;cursor:pointer;font-family:'Onest',sans-serif;font-size:14px;font-weight:600;transition:opacity .2s,transform .2s;display:inline-flex;align-items:center;gap:8px}
-.btn-primary{background:linear-gradient(135deg,#3b82f6,#1d6eec);color:#fff;box-shadow:0 4px 20px rgba(59,130,246,.4)}
+.btn{padding:9px 18px;border-radius:50px;border:none;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:600;transition:opacity .15s,transform .15s;display:inline-flex;align-items:center;gap:7px}
+.btn-primary{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;box-shadow:0 4px 18px rgba(99,102,241,.35)}
 .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
 .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
 .btn-secondary:hover{border-color:var(--accent)}
-.btn-sm{padding:6px 14px;font-size:13px}
+.btn-danger{background:rgba(244,84,106,.12);color:var(--red);border:1px solid rgba(244,84,106,.2)}
+.btn-sm{padding:6px 13px;font-size:12px}
 
 /* FUNNEL */
-.funnel{display:flex;flex-direction:column;gap:8px;margin-top:24px}
-.funnel-step{display:flex;align-items:center;gap:16px}
-.funnel-bar-wrap{flex:1;background:var(--surface2);border-radius:50px;height:36px;overflow:hidden}
-.funnel-bar{height:100%;border-radius:50px;display:flex;align-items:center;padding:0 16px;font-size:12px;font-weight:600;transition:width .8s ease}
-.funnel-label{width:110px;font-size:13px;color:var(--muted);text-align:right}
-.funnel-val{width:80px;font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;text-align:right}
+.funnel{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.funnel-step{display:flex;align-items:center;gap:14px}
+.funnel-bar-wrap{flex:1;background:var(--surface2);border-radius:50px;height:34px;overflow:hidden}
+.funnel-bar{height:100%;border-radius:50px;display:flex;align-items:center;padding:0 14px;font-size:12px;font-weight:600;transition:width .8s ease}
+.funnel-label{width:100px;font-size:12px;color:var(--muted);text-align:right}
+.funnel-val{width:72px;font-size:13px;font-weight:700;text-align:right}
 
-/* AI STUDIO */
-.studio-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-.upload-area{background:var(--surface2);border:2px dashed var(--border);border-radius:14px;padding:48px 24px;text-align:center;cursor:pointer;transition:border-color .2s}
+/* AI RULES */
+.rules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.rule-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.rule-icon{font-size:22px;margin-bottom:8px}
+.rule-name{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.rule-desc{font-size:13px;color:var(--text);line-height:1.4}
+.rule-thresh{font-size:20px;font-weight:800;color:var(--accent2);margin-top:6px}
+
+/* CREATIVE STUDIO */
+.studio-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.upload-area{background:var(--surface2);border:2px dashed var(--border);border-radius:12px;padding:36px 20px;text-align:center;cursor:pointer;transition:border-color .2s}
 .upload-area:hover{border-color:var(--accent)}
-.upload-icon{font-size:48px;margin-bottom:12px;opacity:.5}
-.upload-area p{color:var(--muted);font-size:14px}
-.upload-area strong{display:block;margin-bottom:6px;color:var(--text)}
-.banners-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
-.banner-preview{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .3s,transform .2s}
+.upload-icon{font-size:42px;margin-bottom:10px;opacity:.5}
+.banners-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.banner-preview{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s}
 .banner-preview:hover{border-color:var(--accent);transform:translateY(-2px)}
-.banner-preview.selected{border-color:var(--accent);box-shadow:0 0 20px rgba(59,130,246,.3)}
-.banner-img{width:100%;aspect-ratio:1/1;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:32px;position:relative;overflow:hidden}
-.banner-style-1{background:linear-gradient(135deg,#0f2027,#203a43,#2c5364)}
-.banner-style-2{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}
-.banner-style-3{background:linear-gradient(135deg,#0c0c1d,#111132,#0f0f23)}
-.banner-text-overlay{position:absolute;bottom:0;left:0;right:0;padding:12px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:11px;color:#fff;font-weight:600}
-.banner-info{padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
+.banner-preview.selected{border-color:var(--accent);box-shadow:0 0 18px rgba(99,102,241,.25)}
+.banner-img{width:100%;aspect-ratio:1;background:var(--surface);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.banner-info{padding:9px 11px;display:flex;justify-content:space-between;align-items:center}
 .banner-style-name{font-size:11px;color:var(--muted)}
-@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TABS */
+.tabs{display:flex;gap:4px;background:var(--surface2);padding:4px;border-radius:10px;margin-bottom:20px}
+.tab-btn{padding:7px 18px;border-radius:7px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;transition:all .2s}
+.tab-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
 
 /* PERIOD FILTER */
 .period-filter{display:flex;gap:4px;background:var(--surface2);padding:4px;border-radius:10px}
-.pf-btn{padding:6px 16px;border-radius:8px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:'Onest',sans-serif;font-size:13px;font-weight:500;transition:all .2s}
+.pf-btn{padding:6px 14px;border-radius:8px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;transition:all .2s}
 .pf-btn.active{background:var(--accent);color:#fff}
 
 /* SETTINGS */
-.settings-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:20px}
-.settings-section h3{font-weight:600;font-size:15px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
-.fb-status{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface2);border-radius:10px;margin-bottom:16px}
-
-/* EMPTY STATE */
-.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
-.empty-state .empty-icon{font-size:48px;margin-bottom:16px;opacity:.4}
-.empty-state p{font-size:15px}
-
-/* DIRECTIONS */
-.dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:4px}
-.dir-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;cursor:pointer;transition:border-color .2s,transform .2s;position:relative}
-.dir-card:hover{border-color:rgba(59,130,246,.5);transform:translateY(-2px)}
-.dir-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
-.dir-card-name{font-weight:700;font-size:15px;line-height:1.3;flex:1;margin-right:10px}
-.dir-status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:600;flex-shrink:0}
-.dir-status-draft{background:rgba(107,122,153,.15);color:var(--muted)}
-.dir-status-ready{background:rgba(251,191,36,.12);color:var(--yellow)}
-.dir-status-launched{background:rgba(16,217,160,.12);color:var(--green)}
-.dir-niche{font-size:13px;color:var(--muted);margin-bottom:14px}
-.dir-meta{display:flex;gap:16px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);padding-top:12px;margin-top:4px}
-.dir-meta span{display:flex;align-items:center;gap:4px}
-.dir-actions{display:flex;gap:8px;margin-top:14px}
-.dir-add-card{border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:160px;color:var(--muted);font-size:14px;font-weight:500}
-.dir-add-card:hover{border-color:var(--accent);color:var(--accent)}
-.dir-add-card .add-icon{font-size:32px;opacity:.5}
+.settings-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:18px}
+.settings-section h3{font-weight:600;font-size:14px;margin-bottom:18px;display:flex;align-items:center;gap:9px}
+.fb-connect-btn{display:flex;align-items:center;gap:12px;padding:14px 18px;background:linear-gradient(135deg,#1877f2,#0d5ec4);border-radius:10px;color:#fff;text-decoration:none;font-weight:600;font-size:14px;transition:opacity .2s;cursor:pointer;border:none;width:100%;justify-content:center}
+.fb-connect-btn:hover{opacity:.9}
+.fb-connected{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(16,217,160,.08);border:1px solid rgba(16,217,160,.2);border-radius:10px;margin-bottom:12px}
 
 /* WIZARD */
-.wizard-steps{display:flex;gap:0;margin-bottom:28px}
+.wizard-steps{display:flex;gap:0;margin-bottom:24px}
 .wiz-step{flex:1;text-align:center;position:relative}
-.wiz-step::after{content:'';position:absolute;top:14px;left:50%;width:100%;height:2px;background:var(--border);z-index:0}
+.wiz-step::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:2px;background:var(--border);z-index:0}
 .wiz-step:last-child::after{display:none}
-.wiz-dot{width:28px;height:28px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;position:relative;z-index:1;transition:all .3s}
+.wiz-dot{width:26px;height:26px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;position:relative;z-index:1;transition:all .3s}
 .wiz-step.done .wiz-dot{background:var(--green);border-color:var(--green);color:#000}
 .wiz-step.active .wiz-dot{background:var(--accent);border-color:var(--accent);color:#fff}
-.wiz-label{font-size:11px;color:var(--muted);margin-top:6px;display:block}
+.wiz-label{font-size:11px;color:var(--muted);margin-top:5px;display:block}
 .wiz-step.active .wiz-label{color:var(--text)}
 
 /* STRATEGY */
-.strategy-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
-.strategy-card h4{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
-.strategy-card p{font-size:14px;line-height:1.6;color:var(--text)}
-.ad-variant{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color .2s}
-.ad-variant:hover{border-color:rgba(59,130,246,.5)}
-.ad-variant.selected{border-color:var(--accent);background:rgba(59,130,246,.07)}
-.ad-variant-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
-.ad-variant-text{font-size:14px;line-height:1.5}
+.strategy-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}
+.strategy-card h4{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.strategy-card p{font-size:13.5px;line-height:1.6}
+.ad-variant{background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .2s}
+.ad-variant:hover{border-color:rgba(99,102,241,.5)}
+.ad-variant.selected{border-color:var(--accent);background:rgba(99,102,241,.07)}
+.ad-variant-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.ad-variant-text{font-size:13.5px;line-height:1.5}
 
-/* DIVIDER */
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+/* DIRECTIONS */
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-top:4px}
+.dir-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;cursor:pointer;transition:border-color .15s,transform .15s}
+.dir-card:hover{border-color:rgba(99,102,241,.4);transform:translateY(-2px)}
+.dir-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.dir-card-name{font-weight:700;font-size:14px;flex:1;margin-right:8px}
+.dir-status{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:50px;font-size:11px;font-weight:600;flex-shrink:0}
+.dir-status-draft{background:rgba(107,122,153,.15);color:var(--muted)}
+.dir-status-ready{background:rgba(251,191,36,.12);color:var(--yellow)}
+.dir-status-launched{background:rgba(16,217,160,.12);color:var(--green)}
+.dir-niche{font-size:12px;color:var(--muted);margin-bottom:12px}
+.dir-meta{display:flex;gap:14px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:10px}
+.dir-actions{display:flex;gap:7px;margin-top:12px}
+.dir-add-card{border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:150px;color:var(--muted);font-size:13px;font-weight:500}
+.dir-add-card:hover{border-color:var(--accent);color:var(--accent)}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty-state .empty-icon{font-size:44px;margin-bottom:14px;opacity:.4}
+.empty-state p{font-size:14px}
 
 /* RESPONSIVE */
 @media(max-width:900px){
   :root{--sidebar:0px}
   .sidebar{transform:translateX(-100%);transition:transform .3s}
-  .sidebar.open{transform:translateX(0)}
+  .sidebar.open{transform:translateX(0);width:224px}
   .main{margin-left:0}
   .stats-grid{grid-template-columns:1fr 1fr}
   .studio-grid{grid-template-columns:1fr}
-  .two-col{grid-template-columns:1fr}
+  .rules-grid{grid-template-columns:1fr}
   .form-row{grid-template-columns:1fr}
-  .topbar{padding:16px 20px}
-  .content{padding:20px}
+  .topbar{padding:14px 18px}
+  .content{padding:18px}
   .mob-menu-btn{display:flex!important}
+  .ai-hero{flex-direction:column;gap:14px}
+  .two-col{grid-template-columns:1fr!important}
 }
 .mob-menu-btn{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:4px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -234,20 +256,24 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    <div class="sidebar-logo-icon">🎯</div>
-    <div class="sidebar-logo-text">like.ai<span>Личный кабинет</span></div>
+    <div class="logo-mark">🎯</div>
+    <div class="logo-text">Adai<span>AI для рекламы</span></div>
   </div>
   <nav class="nav-items">
+    <div class="nav-section">Главное</div>
     <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')"><span class="icon">📊</span>Дашборд</a>
     <a class="nav-item" data-page="campaigns" onclick="navigate('campaigns')"><span class="icon">🎯</span>Кампании</a>
     <a class="nav-item" data-page="directions" onclick="navigate('directions')"><span class="icon">🗂</span>Направления</a>
-    <a class="nav-item" data-page="studio" onclick="navigate('studio')"><span class="icon">✨</span>AI Studio</a>
+    <div class="nav-section">AI Агенты</div>
+    <a class="nav-item" data-page="targetolog" onclick="navigate('targetolog')"><span class="icon">🤖</span>AI Таргетолог</a>
+    <a class="nav-item" data-page="marketolog" onclick="navigate('marketolog')"><span class="icon">🎨</span>AI Маркетолог</a>
+    <div class="nav-section">Аналитика</div>
     <a class="nav-item" data-page="analytics" onclick="navigate('analytics')"><span class="icon">📈</span>Аналитика</a>
     <a class="nav-item" data-page="settings" onclick="navigate('settings')"><span class="icon">⚙️</span>Настройки</a>
   </nav>
   <div class="sidebar-footer">
     <div class="user-chip">
-      <div class="user-avatar" id="userAvatar">?</div>
+      <div class="user-avatar" id="userAvatar">A</div>
       <div><div class="user-name" id="userName">Загрузка...</div><div class="user-plan" id="userPlan">—</div></div>
     </div>
   </div>
@@ -256,149 +282,273 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
 <!-- MAIN -->
 <main class="main">
   <header class="topbar">
-    <div style="display:flex;align-items:center;gap:16px">
+    <div style="display:flex;align-items:center;gap:14px">
       <button class="mob-menu-btn" onclick="toggleSidebar()">☰</button>
       <div class="topbar-title" id="topbarTitle">Дашборд</div>
     </div>
     <div class="topbar-actions">
       <span class="status-badge status-trial" id="statusBadge">Загрузка...</span>
-      <button class="btn btn-primary btn-sm" onclick="navigate('settings')">⚙️ Настройки</button>
+      <button class="btn btn-primary btn-sm" onclick="navigate('directions')">+ Кампания</button>
     </div>
   </header>
 
   <div class="content">
 
-    <!-- DASHBOARD -->
+    <!-- ══════════════ DASHBOARD ══════════════ -->
     <div class="page active" id="page-dashboard">
+      <!-- AI Autopilot hero -->
+      <div class="ai-hero">
+        <div class="ai-hero-left">
+          <div class="ai-pulse"></div>
+          <div>
+            <div class="ai-hero-title">AI Таргетолог активен</div>
+            <div class="ai-hero-sub" id="d-ai-status">Следит за кампаниями 24/7 — плохие паузирует, хорошие масштабирует</div>
+          </div>
+        </div>
+        <div class="ai-hero-right">
+          <div class="ai-saved-block">
+            <div class="ai-saved-label">Сэкономлено ИИ</div>
+            <div class="ai-saved-value" id="d-ai-saved">—</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:3px">Решений за 30 дней</div>
+            <div style="font-size:22px;font-weight:800;color:var(--accent2)" id="d-ai-decisions">—</div>
+          </div>
+        </div>
+      </div>
+
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-label">👁 Показы</div><div class="stat-value" id="d-impressions">—</div><div class="stat-sub">за 30 дней</div></div>
         <div class="stat-card"><div class="stat-label">🖱 Клики</div><div class="stat-value" id="d-clicks">—</div><div class="stat-sub" id="d-ctr">CTR —</div></div>
         <div class="stat-card"><div class="stat-label">🎯 Заявки</div><div class="stat-value" id="d-leads">—</div><div class="stat-sub" id="d-cpl">CPL —</div></div>
         <div class="stat-card"><div class="stat-label">💰 Потрачено</div><div class="stat-value" id="d-spent">—</div><div class="stat-sub">за 30 дней</div></div>
       </div>
+
       <div class="two-col">
-        <div>
-          <div class="chart-box">
-            <div class="box-header"><div class="box-title">Расходы по дням</div></div>
-            <div class="chart-wrap"><canvas id="spendChart"></canvas></div>
-          </div>
+        <div class="chart-box">
+          <div class="box-header"><div class="box-title">Расходы по дням</div></div>
+          <div class="chart-wrap"><canvas id="spendChart"></canvas></div>
         </div>
-        <div>
-          <div class="chart-box" style="height:100%">
-            <div class="box-header"><div class="box-title">🤖 Решения ИИ сегодня</div></div>
-            <div class="ai-log" id="d-ailog"><div class="empty-state"><div class="empty-icon">🤖</div><p>Пока нет решений сегодня</p></div></div>
-          </div>
+        <div class="chart-box">
+          <div class="box-header"><div class="box-title">🤖 Решения AI сегодня</div><a onclick="navigate('targetolog')" style="font-size:12px;color:var(--accent);cursor:pointer">Все →</a></div>
+          <div class="ai-log" id="d-ailog"><div class="empty-state" style="padding:30px 0"><div class="empty-icon">🤖</div><p>Пока нет решений</p></div></div>
         </div>
       </div>
+
       <div class="table-box">
-        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-          <div class="box-title">Последние кампании</div>
-          <button class="btn btn-primary btn-sm" onclick="navigate('campaigns')">Все кампании</button>
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <div class="box-title">Кампании</div>
+          <button class="btn btn-primary btn-sm" onclick="navigate('campaigns')">Все →</button>
         </div>
         <table>
-          <thead><tr><th>Кампания</th><th>Статус</th><th>CTR</th><th>Бюджет</th></tr></thead>
+          <thead><tr><th>Кампания</th><th>Статус</th><th>CTR</th><th>Бюджет/день</th></tr></thead>
           <tbody id="d-campaigns"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Загрузка...</td></tr></tbody>
         </table>
       </div>
     </div>
 
-    <!-- CAMPAIGNS -->
+    <!-- ══════════════ CAMPAIGNS ══════════════ -->
     <div class="page" id="page-campaigns">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
         <div style="font-size:13px;color:var(--muted)" id="camp-count">0 кампаний</div>
-        <button class="btn btn-primary" onclick="openModal('modal-campaign')">+ Создать кампанию</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="syncFacebook()">🔄 Синхронизировать FB</button>
+          <button class="btn btn-primary" onclick="openModal('modal-campaign')">+ Создать кампанию</button>
+        </div>
       </div>
       <div class="table-box">
         <table>
-          <thead><tr><th>Название</th><th>Тип</th><th>Цель</th><th>Бюджет/день</th><th>CTR</th><th>Заявок</th><th>Потрачено</th><th>Статус</th><th></th></tr></thead>
-          <tbody id="camps-table"><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">Загрузка...</td></tr></tbody>
+          <thead><tr><th>Название</th><th>Тип</th><th>Цель</th><th>Бюджет/день</th><th>CTR</th><th>Заявки</th><th>Потрачено</th><th>Статус</th><th>ВКЛ/ВЫКЛ</th></tr></thead>
+          <tbody id="camps-table"><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px">Загрузка...</td></tr></tbody>
         </table>
       </div>
     </div>
 
-    <!-- DIRECTIONS -->
+    <!-- ══════════════ DIRECTIONS ══════════════ -->
     <div class="page" id="page-directions">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-        <div style="font-size:13px;color:var(--muted)" id="dir-count">0 направлений</div>
-        <button class="btn btn-primary" onclick="openDirModal()">+ Создать направление</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div>
+          <div style="font-weight:600;font-size:15px;margin-bottom:3px">Направления</div>
+          <div style="font-size:12px;color:var(--muted)" id="dir-count">Бриф → AI стратегия → запуск в Facebook</div>
+        </div>
+        <button class="btn btn-primary" onclick="openDirModal()">+ Новое направление</button>
       </div>
       <div class="dir-grid" id="dir-grid">
         <div class="dir-card dir-add-card" onclick="openDirModal()">
-          <div class="add-icon">🗂</div>
+          <div style="font-size:28px;opacity:.4">🗂</div>
           <span>Новое направление</span>
         </div>
       </div>
     </div>
 
-    <!-- AI STUDIO -->
-    <div class="page" id="page-studio">
-      <div class="studio-grid">
-        <div>
-          <div class="form-group">
-            <label class="form-label">Загрузите фото товара или услуги</label>
-            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-              <div class="upload-icon" id="uploadIcon">📷</div>
-              <strong id="uploadText">Нажмите для загрузки</strong>
-              <p>JPG, PNG до 10 МБ</p>
-            </div>
-            <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(this)"/>
+    <!-- ══════════════ AI ТАРГЕТОЛОГ ══════════════ -->
+    <div class="page" id="page-targetolog">
+      <div style="margin-bottom:22px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Правила автоматизации</div>
+        <div class="rules-grid">
+          <div class="rule-card">
+            <div class="rule-icon">🧛</div>
+            <div class="rule-name">Вампир — Пауза</div>
+            <div class="rule-thresh" id="rule-vampire">CTR &lt; 0.5%</div>
+            <div class="rule-desc" style="margin-top:6px;font-size:12px;color:var(--muted)">Кампания тратит бюджет без кликов — ИИ паузирует её и уведомляет вас</div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Описание оффера</label>
-            <textarea class="form-input" id="offerText" rows="4" placeholder="Опишите ваш товар/услугу и главное преимущество для клиента..."></textarea>
+          <div class="rule-card">
+            <div class="rule-icon">⚠️</div>
+            <div class="rule-name">Просадка — Алерт</div>
+            <div class="rule-thresh" id="rule-slump">CTR &lt; 2% + высокий CPL</div>
+            <div class="rule-desc" style="margin-top:6px;font-size:12px;color:var(--muted)">Кампания работает неэффективно — ИИ присылает рекомендацию по улучшению</div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Целевая аудитория</label>
-            <input class="form-input" id="targetAudience" placeholder="Например: женщины 25-40, Алматы, интересы — мода"/>
+          <div class="rule-card">
+            <div class="rule-icon">🚀</div>
+            <div class="rule-name">Масштаб — Рост бюджета</div>
+            <div class="rule-thresh" id="rule-scale">CTR &gt; 3% + низкий CPL</div>
+            <div class="rule-desc" style="margin-top:6px;font-size:12px;color:var(--muted)">Кампания отлично работает — ИИ автоматически увеличивает бюджет на 20%</div>
           </div>
-          <button class="btn btn-primary" style="width:100%" onclick="generateBanners()">✨ Сгенерировать 3 варианта</button>
         </div>
-        <div>
-          <div class="box-title" style="margin-bottom:16px">Варианты баннеров</div>
-          <div id="banners-wrap">
-            <div class="empty-state"><div class="empty-icon">✨</div><p>Заполните форму слева и нажмите «Сгенерировать»</p></div>
+      </div>
+
+      <div class="table-box">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <div class="box-title">История решений AI</div>
+          <div style="font-size:12px;color:var(--muted)" id="targ-count">—</div>
+        </div>
+        <table>
+          <thead><tr><th>Сценарий</th><th>Кампания</th><th>Действие AI</th><th>Время</th></tr></thead>
+          <tbody id="targ-log"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:32px">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════ AI МАРКЕТОЛОГ ══════════════ -->
+    <div class="page" id="page-marketolog">
+      <div class="tabs" style="width:fit-content;margin-bottom:22px">
+        <button class="tab-btn active" onclick="switchTab('studio-upload')">📷 Загрузить фото</button>
+        <button class="tab-btn" onclick="switchTab('studio-dalle')">✨ Создать с нуля (DALL-E)</button>
+      </div>
+
+      <!-- TAB 1: Upload photo -->
+      <div class="tab-pane active" id="tab-studio-upload">
+        <div class="studio-grid">
+          <div>
+            <div class="form-group">
+              <label class="form-label">Фото товара или услуги</label>
+              <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon" id="uploadIcon">📷</div>
+                <strong id="uploadText" style="display:block;margin-bottom:4px">Нажмите для загрузки</strong>
+                <span style="color:var(--muted);font-size:12px">JPG, PNG до 10 МБ</span>
+              </div>
+              <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(this)"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Описание оффера</label>
+              <textarea class="form-input" id="offerText" rows="3" placeholder="Опишите товар/услугу и главное преимущество..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Целевая аудитория</label>
+              <input class="form-input" id="targetAudience" placeholder="Женщины 25-40, Алматы, интересы — мода"/>
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="generateBannersUpload()">🎨 Сгенерировать 3 варианта</button>
+          </div>
+          <div>
+            <div class="box-title" style="margin-bottom:14px">Результат</div>
+            <div id="banners-wrap">
+              <div class="empty-state"><div class="empty-icon">🎨</div><p>Загрузите фото и нажмите «Сгенерировать»</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: DALL-E -->
+      <div class="tab-pane" id="tab-studio-dalle">
+        <div class="studio-grid">
+          <div>
+            <div class="chart-box">
+              <div class="box-header"><div class="box-title">Описание изображения</div></div>
+              <div class="form-group">
+                <label class="form-label">Что изобразить?</label>
+                <textarea class="form-input" id="gen-description" rows="3" placeholder="Красивый салон красоты в Алматы, современный интерьер, довольные клиенты..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Ниша / бизнес</label>
+                <input class="form-input" id="gen-niche" placeholder="Салон красоты, кофейня, автосервис..."/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Аудитория</label>
+                <input class="form-input" id="gen-audience" placeholder="Женщины 25–40, Алматы"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Стиль изображения</label>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+                  <div class="type-opt active" data-val="cinematic" onclick="selectGenStyle(this)"><div class="t-icon">🎬</div><div class="t-label">Кинематичный</div></div>
+                  <div class="type-opt" data-val="product" onclick="selectGenStyle(this)"><div class="t-icon">📸</div><div class="t-label">Продуктовый</div></div>
+                  <div class="type-opt" data-val="minimal" onclick="selectGenStyle(this)"><div class="t-icon">⬜</div><div class="t-label">Минимализм</div></div>
+                </div>
+              </div>
+              <button class="btn btn-primary" id="gen-btn" onclick="generateBannersDalle()" style="width:100%">✨ Создать баннеры</button>
+              <div id="gen-status" style="margin-top:12px;color:var(--muted);font-size:12px;text-align:center"></div>
+            </div>
+            <div id="gen-copy-box" style="display:none">
+              <div class="chart-box">
+                <div class="box-header"><div class="box-title">📝 Рекламные тексты</div></div>
+                <div id="gen-copy-content"></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="chart-box" style="min-height:360px">
+              <div class="box-header"><div class="box-title">Результат</div><span id="gen-dl-hint" style="font-size:11px;color:var(--muted)"></span></div>
+              <div id="gen-banners" class="banners-grid">
+                <div style="grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--muted)">
+                  <div style="font-size:42px;opacity:.3;margin-bottom:10px">✨</div>
+                  <p>Заполните форму и нажмите «Создать баннеры»</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ANALYTICS -->
+    <!-- ══════════════ АНАЛИТИКА ══════════════ -->
     <div class="page" id="page-analytics">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:20px">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:18px">
         <div class="period-filter">
           <button class="pf-btn" onclick="setPeriod('1',this)">Сегодня</button>
           <button class="pf-btn active" onclick="setPeriod('7',this)">7 дней</button>
           <button class="pf-btn" onclick="setPeriod('30',this)">30 дней</button>
         </div>
       </div>
-      <div style="margin-bottom:24px">
-        <div class="box-title" style="margin-bottom:20px">Воронка конверсий</div>
+      <div style="margin-bottom:22px">
+        <div class="box-title" style="margin-bottom:18px">Воронка конверсий</div>
         <div class="funnel" id="funnel">
-          <div class="funnel-step"><div class="funnel-label">Показы</div><div class="funnel-bar-wrap"><div class="funnel-bar" id="fb-imp" style="width:100%;background:linear-gradient(90deg,#3b82f6,#1d6eec)"><span id="fb-imp-v">0</span></div></div><div class="funnel-val" id="fb-imp-p">—</div></div>
+          <div class="funnel-step"><div class="funnel-label">Показы</div><div class="funnel-bar-wrap"><div class="funnel-bar" id="fb-imp" style="width:100%;background:linear-gradient(90deg,#6366f1,#4f46e5)"><span id="fb-imp-v">0</span></div></div><div class="funnel-val" id="fb-imp-p">—</div></div>
           <div class="funnel-step"><div class="funnel-label">Клики</div><div class="funnel-bar-wrap"><div class="funnel-bar" id="fb-cl" style="width:60%;background:linear-gradient(90deg,#a78bfa,#7c3aed)"><span id="fb-cl-v">0</span></div></div><div class="funnel-val" id="fb-cl-p">—</div></div>
           <div class="funnel-step"><div class="funnel-label">Заявки</div><div class="funnel-bar-wrap"><div class="funnel-bar" id="fb-ld" style="width:30%;background:linear-gradient(90deg,#10d9a0,#059669)"><span id="fb-ld-v">0</span></div></div><div class="funnel-val" id="fb-ld-p">—</div></div>
         </div>
       </div>
       <div class="table-box">
-        <div style="padding:16px 20px;border-bottom:1px solid var(--border)"><div class="box-title">По кампаниям</div></div>
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border)"><div class="box-title">По кампаниям</div></div>
         <table>
           <thead><tr><th>Кампания</th><th>Показы</th><th>Клики</th><th>CTR</th><th>Заявки</th><th>CPL</th><th>Потрачено</th></tr></thead>
-          <tbody id="analytics-table"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">Загрузка...</td></tr></tbody>
+          <tbody id="analytics-table"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Загрузка...</td></tr></tbody>
         </table>
       </div>
     </div>
 
-    <!-- SETTINGS -->
+    <!-- ══════════════ НАСТРОЙКИ ══════════════ -->
     <div class="page" id="page-settings">
       <div class="two-col">
         <div>
           <div class="settings-section">
-            <h3>🔗 Facebook Ads</h3>
-            <div class="fb-status" id="fb-status-block">
-              <span style="font-size:20px">❌</span>
-              <div><strong>Не подключён</strong><div style="color:var(--muted);font-size:12px">Введите токен для подключения</div></div>
+            <h3>🔵 Facebook Ads</h3>
+            <div id="fb-status-block">
+              <button class="fb-connect-btn" onclick="connectFacebook()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                Подключить Facebook Ads
+              </button>
             </div>
-            <div class="form-group">
+            <div style="margin-top:12px;font-size:12px;color:var(--muted)">Или введите токен вручную:</div>
+            <div class="form-group" style="margin-top:10px">
               <label class="form-label">Access Token</label>
               <input class="form-input" id="fb-token" placeholder="EAAxxxxxxxxxxxxxxxxxxxxxxx"/>
             </div>
@@ -406,10 +556,11 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
               <label class="form-label">ID рекламного аккаунта</label>
               <input class="form-input" id="fb-account" placeholder="act_123456789"/>
             </div>
-            <button class="btn btn-primary" onclick="saveFacebook()">Сохранить и подключить</button>
+            <button class="btn btn-primary" onclick="saveFacebook()">Сохранить токен</button>
           </div>
+
           <div class="settings-section">
-            <h3>🎯 Цели ИИ-менеджера</h3>
+            <h3>🎯 Цели AI Таргетолога</h3>
             <div class="form-group">
               <label class="form-label">Целевая цена заявки (CPL), ₸</label>
               <input class="form-input" type="number" id="target-cpl" placeholder="1500"/>
@@ -423,14 +574,21 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
         </div>
         <div>
           <div class="settings-section">
-            <h3>💳 Подписка</h3>
+            <h3>✅ Подписка</h3>
             <div id="sub-info" style="color:var(--muted);font-size:14px">Загрузка...</div>
-            <button class="btn btn-primary" style="margin-top:16px" onclick="openTelegram()">Управление подпиской в Telegram</button>
           </div>
           <div class="settings-section">
-            <h3>📱 Telegram-бот</h3>
-            <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Ежедневные отчёты и уведомления ИИ приходят в Telegram.</p>
-            <button class="btn btn-secondary" onclick="openTelegram()">Открыть бот</button>
+            <h3>📱 Telegram-уведомления</h3>
+            <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Ежедневные отчёты и AI-решения приходят в Telegram в реальном времени.</p>
+            <button class="btn btn-secondary" onclick="openTelegram()">📲 Открыть бот</button>
+          </div>
+          <div class="settings-section">
+            <h3>ℹ️ О продукте</h3>
+            <p style="color:var(--muted);font-size:13px;line-height:1.6">
+              <strong style="color:var(--text)">Adai</strong> — AI-платформа для автоматизации Facebook-рекламы малого и среднего бизнеса.<br/><br/>
+              🤖 <strong style="color:var(--text)">AI Таргетолог</strong> следит за метриками 24/7, паузирует неэффективные объявления и масштабирует успешные.<br/><br/>
+              🎨 <strong style="color:var(--text)">AI Маркетолог</strong> генерирует рекламные баннеры и тексты объявлений за секунды.
+            </p>
           </div>
         </div>
       </div>
@@ -473,46 +631,14 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
         <label class="form-label">Гео</label>
         <select class="form-input form-select" id="nc-geo">
           <option value="Весь Казахстан">🇰🇿 Весь Казахстан</option>
-          <optgroup label="── Города ──">
-            <option value="Алматы">Алматы</option>
-            <option value="Астана">Астана</option>
-            <option value="Шымкент">Шымкент</option>
-            <option value="Актобе">Актобе</option>
-            <option value="Тараз">Тараз</option>
-            <option value="Павлодар">Павлодар</option>
-            <option value="Усть-Каменогорск">Усть-Каменогорск</option>
-            <option value="Семей">Семей</option>
-            <option value="Атырау">Атырау</option>
-            <option value="Костанай">Костанай</option>
-            <option value="Кызылорда">Кызылорда</option>
-            <option value="Уральск">Уральск</option>
-            <option value="Петропавловск">Петропавловск</option>
-            <option value="Актау">Актау</option>
-            <option value="Темиртау">Темиртау</option>
-            <option value="Туркестан">Туркестан</option>
-            <option value="Кокшетау">Кокшетау</option>
-            <option value="Талдыкорган">Талдыкорган</option>
-            <option value="Экибастуз">Экибастуз</option>
-          </optgroup>
-          <optgroup label="── Области ──">
-            <option value="Алматинская область">Алматинская область</option>
-            <option value="Акмолинская область">Акмолинская область</option>
-            <option value="Актюбинская область">Актюбинская область</option>
-            <option value="Атырауская область">Атырауская область</option>
-            <option value="ВКО">Восточно-Казахстанская область</option>
-            <option value="Жамбылская область">Жамбылская область</option>
-            <option value="ЗКО">Западно-Казахстанская область</option>
-            <option value="Карагандинская область">Карагандинская область</option>
-            <option value="Костанайская область">Костанайская область</option>
-            <option value="Кызылординская область">Кызылординская область</option>
-            <option value="Мангистауская область">Мангистауская область</option>
-            <option value="Павлодарская область">Павлодарская область</option>
-            <option value="СКО">Северо-Казахстанская область</option>
-            <option value="Туркестанская область">Туркестанская область</option>
-            <option value="Абайская область">Абайская область</option>
-            <option value="Жетысуская область">Жетысуская область</option>
-            <option value="Улытауская область">Улытауская область</option>
-          </optgroup>
+          <option value="Алматы">Алматы</option>
+          <option value="Астана">Астана</option>
+          <option value="Шымкент">Шымкент</option>
+          <option value="Актобе">Актобе</option>
+          <option value="Атырау">Атырау</option>
+          <option value="Костанай">Костанай</option>
+          <option value="Павлодар">Павлодар</option>
+          <option value="Уральск">Уральск</option>
         </select>
       </div>
     </div>
@@ -526,7 +652,7 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
         <input class="form-input" type="number" id="nc-cpl" placeholder="1500"/>
       </div>
     </div>
-    <div style="display:flex;gap:12px;justify-content:flex-end">
+    <div style="display:flex;gap:10px;justify-content:flex-end">
       <button class="btn btn-secondary" onclick="closeModal('modal-campaign')">Отмена</button>
       <button class="btn btn-primary" onclick="createCampaign()">Создать кампанию</button>
     </div>
@@ -540,21 +666,13 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
       <div class="modal-title" id="dir-modal-title">Новое направление</div>
       <button class="modal-close" onclick="closeModal('modal-direction')">×</button>
     </div>
-
-    <!-- Wizard Steps -->
     <div class="wizard-steps" id="wiz-steps">
-      <div class="wiz-step active" id="wstep-0">
-        <div class="wiz-dot">1</div><span class="wiz-label">Бриф</span>
-      </div>
-      <div class="wiz-step" id="wstep-1">
-        <div class="wiz-dot">2</div><span class="wiz-label">Стратегия ИИ</span>
-      </div>
-      <div class="wiz-step" id="wstep-2">
-        <div class="wiz-dot">3</div><span class="wiz-label">Запуск</span>
-      </div>
+      <div class="wiz-step active" id="wstep-0"><div class="wiz-dot">1</div><span class="wiz-label">Бриф</span></div>
+      <div class="wiz-step" id="wstep-1"><div class="wiz-dot">2</div><span class="wiz-label">AI Стратегия</span></div>
+      <div class="wiz-step" id="wstep-2"><div class="wiz-dot">3</div><span class="wiz-label">Запуск</span></div>
     </div>
 
-    <!-- Step 1: Brief -->
+    <!-- Step 1 -->
     <div id="wiz-pane-0">
       <div class="form-group">
         <label class="form-label">Название направления</label>
@@ -563,7 +681,7 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Ниша бизнеса</label>
-          <input class="form-input" id="dir-niche" placeholder="Стоматология, доставка, барбершоп..."/>
+          <input class="form-input" id="dir-niche" placeholder="Стоматология, барбершоп..."/>
         </div>
         <div class="form-group">
           <label class="form-label">Гео</label>
@@ -572,17 +690,12 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
             <option value="Алматы">Алматы</option>
             <option value="Астана">Астана</option>
             <option value="Шымкент">Шымкент</option>
-            <option value="Актобе">Актобе</option>
-            <option value="Атырау">Атырау</option>
-            <option value="Костанай">Костанай</option>
-            <option value="Павлодар">Павлодар</option>
-            <option value="Уральск">Уральск</option>
           </select>
         </div>
       </div>
       <div class="form-group">
         <label class="form-label">Описание бизнеса</label>
-        <textarea class="form-input" id="dir-desc" rows="2" placeholder="Чем занимается бизнес, что продаёт..."></textarea>
+        <textarea class="form-input" id="dir-desc" rows="2" placeholder="Чем занимается бизнес..."></textarea>
       </div>
       <div class="form-group">
         <label class="form-label">УТП — уникальное торговое предложение</label>
@@ -599,7 +712,7 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
         </div>
         <div class="form-group">
           <label class="form-label">Офферы / акции</label>
-          <textarea class="form-input" id="dir-offers" rows="2" placeholder="Скидки, бонусы, условия..."></textarea>
+          <textarea class="form-input" id="dir-offers" rows="2" placeholder="Скидки, бонусы..."></textarea>
         </div>
       </div>
       <div class="form-row">
@@ -631,76 +744,62 @@ tbody tr:hover{background:rgba(59,130,246,.04)}
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Целевой CPL (цена заявки), ₸</label>
+        <label class="form-label">Целевой CPL, ₸</label>
         <input class="form-input" type="number" id="dir-cpl" placeholder="1500" value="1500"/>
       </div>
-      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+      <div style="display:flex;gap:10px;justify-content:flex-end">
         <button class="btn btn-secondary" onclick="closeModal('modal-direction')">Отмена</button>
-        <button class="btn btn-primary" onclick="saveDirBrief()">Сохранить и создать стратегию ✨</button>
+        <button class="btn btn-primary" onclick="saveDirBrief()">Далее: AI Стратегия ✨</button>
       </div>
     </div>
 
-    <!-- Step 2: AI Strategy -->
+    <!-- Step 2 -->
     <div id="wiz-pane-1" style="display:none">
-      <div id="strategy-loading" style="text-align:center;padding:40px 0">
-        <div style="font-size:36px;display:inline-block;animation:spin 1.2s linear infinite">⚙️</div>
-        <div style="color:var(--muted);margin-top:16px">GPT-4o анализирует бриф...</div>
+      <div id="strategy-loading" style="text-align:center;padding:36px 0">
+        <div style="font-size:32px;display:inline-block;animation:spin 1.2s linear infinite">⚙️</div>
+        <div style="color:var(--muted);margin-top:14px">GPT-4o анализирует бриф...</div>
       </div>
       <div id="strategy-result" style="display:none">
-        <div class="strategy-card" id="sc-strategy">
-          <h4>Стратегия</h4>
-          <p id="st-text">—</p>
-        </div>
-        <div class="strategy-card">
-          <h4>Аудитория</h4>
-          <p id="st-audience">—</p>
-        </div>
+        <div class="strategy-card" id="sc-strategy"><h4>Стратегия</h4><p id="st-text">—</p></div>
+        <div class="strategy-card"><h4>Аудитория</h4><p id="st-audience">—</p></div>
         <div style="margin-bottom:12px">
-          <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Выберите вариант текста объявления</div>
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Выберите текст объявления</div>
           <div id="ad-variants"></div>
         </div>
-        <div class="strategy-card">
-          <h4>📅 День 1</h4>
-          <p id="st-day1">—</p>
-        </div>
-        <div class="strategy-card">
-          <h4>⚠️ Риски</h4>
-          <p id="st-risks">—</p>
-        </div>
+        <div class="strategy-card"><h4>📅 День 1</h4><p id="st-day1">—</p></div>
+        <div class="strategy-card"><h4>⚠️ Риски</h4><p id="st-risks">—</p></div>
       </div>
-      <div id="strategy-error" style="display:none;text-align:center;padding:24px;color:var(--red)">
-        Ошибка генерации стратегии. Проверьте OPENAI_API_KEY.
-      </div>
-      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px" id="wiz-nav-1" style="display:none">
+      <div id="strategy-error" style="display:none;text-align:center;padding:24px;color:var(--red)">Ошибка генерации. Проверьте OPENAI_API_KEY.</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px" id="wiz-nav-1">
         <button class="btn btn-secondary" onclick="wizGo(0)">← Назад</button>
         <button class="btn btn-primary" onclick="wizGo(2)">Далее →</button>
       </div>
     </div>
 
-    <!-- Step 3: Creative + Launch -->
+    <!-- Step 3 -->
     <div id="wiz-pane-2" style="display:none">
       <div class="form-group">
-        <label class="form-label">Загрузите рекламное фото / баннер</label>
+        <label class="form-label">Рекламное фото / баннер</label>
         <div class="upload-area" id="dir-upload-area" onclick="document.getElementById('dir-file-input').click()">
           <div class="upload-icon" id="dir-upload-icon">🖼</div>
-          <strong id="dir-upload-text">Нажмите для загрузки</strong>
-          <p>JPG, PNG до 10 МБ</p>
+          <strong id="dir-upload-text" style="display:block;margin-bottom:4px">Нажмите для загрузки</strong>
+          <span style="color:var(--muted);font-size:12px">JPG, PNG до 10 МБ</span>
         </div>
         <input type="file" id="dir-file-input" accept="image/*" style="display:none" onchange="handleDirUpload(this)"/>
       </div>
       <div class="form-group">
         <label class="form-label">Facebook Page ID</label>
         <input class="form-input" id="dir-page-id" placeholder="Ваш Page ID из Facebook Business"/>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px">Найти: facebook.com/settings → Page Info → Page ID</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px">Найти: facebook.com/settings → Page Info → Page ID</div>
       </div>
       <div class="form-group">
         <label class="form-label">Текст объявления</label>
-        <textarea class="form-input" id="dir-ad-text" rows="4" placeholder="Текст объявления (можно взять из стратегии)"></textarea>
+        <textarea class="form-input" id="dir-ad-text" rows="4" placeholder="Текст объявления (можно выбрать из стратегии выше)"></textarea>
       </div>
-      <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--accent2)">
-        ℹ️ Кампания создаётся в статусе <strong>PAUSED</strong>. После проверки в Facebook Ads Manager — включите вручную.
+      <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:9px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--accent2)">
+        ℹ️ Кампания создаётся в статусе PAUSED. После проверки в Facebook Ads Manager — включите вручную.
       </div>
-      <div style="display:flex;gap:12px;justify-content:flex-end">
+      <div style="display:flex;gap:10px;justify-content:flex-end">
         <button class="btn btn-secondary" onclick="wizGo(1)">← Назад</button>
         <button class="btn btn-primary" id="launch-btn" onclick="launchDirection()">🚀 Создать кампанию в Facebook</button>
       </div>
@@ -717,24 +816,25 @@ const UID = new URLSearchParams(location.search).get('user_id')
 
 // ── MOCK DATA ────────────────────────────────────────────────────────────────
 const MOCK = {
-  dashboard: {
+  dashboard:{
     stats:{impressions:45234,clicks:1847,leads:234,spent:87500,
       daily:[
-        {date:'01.04',spent:2800},{date:'02.04',spent:3200},{date:'03.04',spent:2950},
-        {date:'04.04',spent:3800},{date:'05.04',spent:4100},{date:'06.04',spent:3600},
-        {date:'07.04',spent:2200},{date:'08.04',spent:3100},{date:'09.04',spent:4500},
-        {date:'10.04',spent:3900},{date:'11.04',spent:2700},{date:'12.04',spent:3300},
-        {date:'13.04',spent:4200},{date:'14.04',spent:3800}
+        {date:'03.07',spent:2800},{date:'04.07',spent:3200},{date:'05.07',spent:2950},
+        {date:'06.07',spent:3800},{date:'07.07',spent:4100},{date:'08.07',spent:3600},
+        {date:'09.07',spent:2200},{date:'10.07',spent:3100},{date:'11.07',spent:4500},
+        {date:'12.07',spent:3900},{date:'13.07',spent:2700},{date:'14.07',spent:3300},
+        {date:'15.07',spent:4200},{date:'16.07',spent:3800}
       ]
     },
+    ai_saved:32400,ai_decisions_count:17,campaigns_managed:3,
     campaigns:[
       {id:1,name:'Доставка еды — Алматы',active:true,budget:5000,ctr:4.2,paused_by_ai:false,ai_scenario:null},
       {id:2,name:'Летние платья',active:false,budget:3000,ctr:0.3,paused_by_ai:true,ai_scenario:'🧛 Вампир'},
-      {id:3,name:'Курсы — Инстаграм',active:true,budget:7000,ctr:3.8,paused_by_ai:false,ai_scenario:null},
+      {id:3,name:'Курсы — English',active:true,budget:7000,ctr:3.8,paused_by_ai:false,ai_scenario:null},
     ],
     ai_today:[
-      {scenario:'🧛 Вампир',decision:'Кампания поставлена на паузу',campaign:'Летние платья',created_at:'2025-01-15T06:02:00'},
-      {scenario:'🚀 Масштаб',decision:'Бюджет увеличен на 20%',campaign:'Доставка еды',created_at:'2025-01-15T06:05:00'},
+      {scenario:'🧛 Вампир',decision:'Кампания поставлена на паузу (CTR 0.3%)',campaign:'Летние платья',created_at:'2025-07-16T06:02:00'},
+      {scenario:'🚀 Масштаб',decision:'Бюджет увеличен +20% (CTR 4.2%, CPL в норме)',campaign:'Доставка еды',created_at:'2025-07-16T06:05:00'},
     ],
     subscription:{active:true,plan:'trial',expires:null}
   },
@@ -742,6 +842,13 @@ const MOCK = {
     {id:1,name:'Доставка еды — Алматы',type:'reels',goal:'whatsapp',geo:'Алматы',budget:5000,active:true,paused_by_ai:false,ai_scenario:null,stats:{impressions:18400,clicks:770,leads:98,spent:34500,ctr:4.2,cpl:352}},
     {id:2,name:'Летние платья',type:'photo',goal:'instagram',geo:'Алматы',budget:3000,active:false,paused_by_ai:true,ai_scenario:'🧛 Вампир',stats:{impressions:9200,clicks:27,leads:2,spent:8900,ctr:0.3,cpl:4450}},
     {id:3,name:'Онлайн-курсы English',type:'video',goal:'leads',geo:'KZ',budget:7000,active:true,paused_by_ai:false,ai_scenario:null,stats:{impressions:17634,clicks:1050,leads:134,spent:44100,ctr:5.9,cpl:329}},
+  ],
+  targetolog:[
+    {id:1,scenario:'🧛 Вампир',campaign:'Летние платья',decision:'Кампания поставлена на паузу. CTR 0.3% — ниже порога 0.5%. Потрачено впустую: ~8900 ₸.',created_at:'2025-07-16T06:02:00'},
+    {id:2,scenario:'🚀 Масштаб',campaign:'Доставка еды — Алматы',decision:'Бюджет увеличен с 5000 до 6000 ₸/день. CTR 4.2%, CPL 352 ₸ — отличный результат.',created_at:'2025-07-16T06:05:00'},
+    {id:3,scenario:'⚠️ Просадка',campaign:'Онлайн-курсы English',decision:'Уведомление: CPL вырос до 1850 ₸ при цели 1500 ₸. Рекомендуется обновить креатив.',created_at:'2025-07-15T09:30:00'},
+    {id:4,scenario:'🧛 Вампир',campaign:'Акция Нурсулу',decision:'Кампания остановлена. CTR 0.2% за первые 6 часов — нет смысла продолжать.',created_at:'2025-07-14T06:00:00'},
+    {id:5,scenario:'🚀 Масштаб',campaign:'Доставка еды — Алматы',decision:'Бюджет увеличен с 4000 до 4800 ₸/день. CTR 3.9%, стабильно растёт.',created_at:'2025-07-13T06:05:00'},
   ],
   analytics:{
     summary:{impressions:45234,clicks:1847,leads:234,spent:87500,daily:[]},
@@ -752,9 +859,9 @@ const MOCK = {
     ]
   },
   settings:{
-    user:{first_name:'Иван',username:'ivan',target_cpl:1500,whatsapp:'+7 777 123 45 67'},
-    facebook:{connected:false,ad_account_id:null,connected_at:null},
-    subscription:{active:true,plan:'trial',expires:null,trial_ends:'2025-01-22'}
+    user:{first_name:'Жасулан',username:'targetolog',target_cpl:1500,whatsapp:'+7 707 901 11 92'},
+    facebook:{connected:false,ad_account_id:null},
+    subscription:{active:true,plan:'trial',expires:null,trial_ends:'2025-08-01'}
   }
 };
 
@@ -762,30 +869,42 @@ const MOCK = {
 let currentPage = 'dashboard';
 let spendChart  = null;
 let selectedCampType = 'photo';
+let _uploadedBase64 = null;
+let _genStyle = 'cinematic';
+let _currentDirId = null;
+let _currentStrategy = null;
+let _selectedAdText = null;
+let _dirCreativeB64 = null;
+let _wizStep = 0;
 
 // ── API HELPERS ───────────────────────────────────────────────────────────────
-async function api(path, opts = {}) {
+async function api(path, opts={}) {
   if (!UID) return null;
   try {
     const sep = path.includes('?') ? '&' : '?';
-    const r = await fetch(`${API}${path}${sep}user_id=${UID}`, {
-      headers: {'Content-Type':'application/json'}, ...opts
-    });
+    const r = await fetch(`${API}${path}${sep}user_id=${UID}`,
+      {headers:{'Content-Type':'application/json'}, ...opts});
     return r.ok ? r.json() : null;
   } catch { return null; }
 }
-
-function useMock(key) { return !UID; }
+function useMock() { return !UID; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(n) { return Number(n).toLocaleString('ru'); }
+function fmtKZT(n) { return Number(n).toLocaleString('ru') + ' ₸'; }
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
-const PAGE_TITLES = {dashboard:'Дашборд',campaigns:'Кампании',directions:'Направления',studio:'AI Creative Studio',analytics:'Аналитика',settings:'Настройки'};
+const PAGE_TITLES = {
+  dashboard:'Дашборд', campaigns:'Кампании', directions:'Направления',
+  targetolog:'AI Таргетолог', marketolog:'AI Маркетолог',
+  analytics:'Аналитика', settings:'Настройки'
+};
 
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-'+page).classList.add('active');
-  document.querySelector(`[data-page="${page}"]`).classList.add('active');
-  document.getElementById('topbarTitle').textContent = PAGE_TITLES[page];
+  document.getElementById('page-'+page)?.classList.add('active');
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  document.getElementById('topbarTitle').textContent = PAGE_TITLES[page] || page;
   currentPage = page;
   loadPage(page);
   if (window.innerWidth < 900) closeSidebar();
@@ -794,64 +913,71 @@ function navigate(page) {
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 function closeSidebar()   { document.getElementById('sidebar').classList.remove('open'); }
 
-// ── LOAD PAGES ────────────────────────────────────────────────────────────────
 function loadPage(page) {
-  if (page === 'dashboard')  loadDashboard();
-  if (page === 'campaigns')  loadCampaigns();
-  if (page === 'directions') loadDirections();
-  if (page === 'analytics')  loadAnalytics('7');
-  if (page === 'settings')   loadSettings();
+  if (page==='dashboard')   loadDashboard();
+  if (page==='campaigns')   loadCampaigns();
+  if (page==='directions')  loadDirections();
+  if (page==='targetolog')  loadTargetolog();
+  if (page==='analytics')   loadAnalytics('7');
+  if (page==='settings')    loadSettings();
 }
 
-// DASHBOARD
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
 async function loadDashboard() {
   const data = useMock() ? MOCK.dashboard : await api('/api/dashboard');
   if (!data) return;
 
   const s = data.stats;
-  const ctr = s.impressions > 0 ? (s.clicks/s.impressions*100).toFixed(2) : 0;
-  const cpl = s.leads > 0 ? Math.round(s.spent/s.leads) : 0;
+  const ctr = s.impressions>0 ? (s.clicks/s.impressions*100).toFixed(2) : 0;
+  const cpl = s.leads>0 ? Math.round(s.spent/s.leads) : 0;
 
   document.getElementById('d-impressions').textContent = fmt(s.impressions);
-  document.getElementById('d-clicks').textContent = fmt(s.clicks);
-  document.getElementById('d-leads').textContent = s.leads;
-  document.getElementById('d-spent').textContent = fmtKZT(s.spent);
-  document.getElementById('d-ctr').textContent = `CTR ${ctr}%`;
-  document.getElementById('d-cpl').textContent = cpl > 0 ? `CPL ${fmtKZT(cpl)}` : 'Нет заявок';
+  document.getElementById('d-clicks').textContent      = fmt(s.clicks);
+  document.getElementById('d-leads').textContent       = s.leads;
+  document.getElementById('d-spent').textContent       = fmtKZT(s.spent);
+  document.getElementById('d-ctr').textContent         = `CTR ${ctr}%`;
+  document.getElementById('d-cpl').textContent         = cpl>0 ? `CPL ${fmtKZT(cpl)}` : 'Нет заявок';
 
-  // Chart
-  if (s.daily && s.daily.length) renderSpendChart(s.daily);
+  // AI hero
+  const saved = data.ai_saved || 0;
+  document.getElementById('d-ai-saved').textContent = fmtKZT(saved);
+  document.getElementById('d-ai-decisions').textContent = data.ai_decisions_count || 0;
+  if (data.campaigns_managed) {
+    document.getElementById('d-ai-status').textContent =
+      `Следит за ${data.campaigns_managed} кампаниями 24/7 — плохие паузирует, хорошие масштабирует`;
+  }
 
-  // Campaigns
+  if (s.daily?.length) renderSpendChart(s.daily);
+
+  // Campaigns table
   const tbody = document.getElementById('d-campaigns');
-  tbody.innerHTML = data.campaigns.length
-    ? data.campaigns.map(c => `
-      <tr>
-        <td><strong>${c.name}</strong></td>
+  tbody.innerHTML = data.campaigns?.length
+    ? data.campaigns.map(c => `<tr>
+        <td><strong>${esc(c.name)}</strong></td>
         <td>${campaignBadge(c)}</td>
-        <td>${c.ctr}%</td>
+        <td style="font-weight:600;color:${c.ctr>2?'var(--green)':c.ctr<0.5?'var(--red)':'var(--text)'}">${c.ctr}%</td>
         <td>${fmtKZT(c.budget)}/день</td>
       </tr>`).join('')
-    : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Нет кампаний. <a onclick="navigate(\'campaigns\')" style="color:var(--accent);cursor:pointer">Создать</a></td></tr>';
+    : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Нет кампаний. <a onclick="navigate(\'campaigns\')" style="color:var(--accent);cursor:pointer">Создать →</a></td></tr>';
 
-  // AI Log
+  // AI log today
   const aiDiv = document.getElementById('d-ailog');
-  if (data.ai_today && data.ai_today.length) {
+  if (data.ai_today?.length) {
     aiDiv.innerHTML = data.ai_today.map(e => `
       <div class="ai-entry">
         <div class="ai-entry-icon">${scenarioIcon(e.scenario)}</div>
         <div class="ai-entry-body">
-          <div class="ai-entry-title">${e.campaign}</div>
-          <div class="ai-entry-sub">${e.decision}</div>
+          <div class="ai-entry-title">${esc(e.campaign)}</div>
+          <div class="ai-entry-sub">${esc(e.decision)}</div>
         </div>
-        <div class="ai-entry-time">${e.created_at.slice(11,16)}</div>
+        <div class="ai-entry-time">${e.created_at?.slice(11,16)||''}</div>
       </div>`).join('');
   }
 
-  // Status badge
-  const sub = data.subscription;
+  // Status
+  const sub = data.subscription || {};
   const badge = document.getElementById('statusBadge');
-  if (sub.active && sub.plan === 'trial') {
+  if (sub.active && sub.plan==='trial') {
     badge.className='status-badge status-trial'; badge.textContent='🟡 Пробный период';
   } else if (sub.active) {
     badge.className='status-badge status-active'; badge.textContent=`🟢 ${sub.plan}`;
@@ -859,35 +985,31 @@ async function loadDashboard() {
     badge.className='status-badge status-expired'; badge.textContent='🔴 Нет подписки';
   }
 
-  // User
-  document.getElementById('userAvatar').textContent = '👤';
+  // User info
+  document.getElementById('userAvatar').textContent = 'А';
   document.getElementById('userName').textContent = 'Пользователь';
-  document.getElementById('userPlan').textContent = sub.plan === 'trial' ? 'Пробный период' : sub.plan;
+  document.getElementById('userPlan').textContent = sub.plan==='trial' ? 'Пробный период' : (sub.plan||'—');
 }
 
 function renderSpendChart(daily) {
   const ctx = document.getElementById('spendChart').getContext('2d');
   if (spendChart) spendChart.destroy();
   spendChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: daily.map(d => d.date),
-      datasets: [{
-        data: daily.map(d => d.spent),
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59,130,246,.08)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: '#3b82f6',
-        pointRadius: 3,
-        pointHoverRadius: 5,
+    type:'line',
+    data:{
+      labels:daily.map(d=>d.date),
+      datasets:[{
+        data:daily.map(d=>d.spent),
+        borderColor:'#6366f1',
+        backgroundColor:'rgba(99,102,241,.08)',
+        borderWidth:2,fill:true,tension:0.4,
+        pointBackgroundColor:'#6366f1',pointRadius:3,pointHoverRadius:5
       }]
     },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {legend:{display:false},tooltip:{callbacks:{label:v=>`${fmtKZT(v.parsed.y)}`}}},
-      scales: {
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>`${fmtKZT(v.parsed.y)}`}}},
+      scales:{
         x:{grid:{color:'rgba(28,38,56,.6)'},ticks:{color:'#6b7a99',font:{size:10}}},
         y:{grid:{color:'rgba(28,38,56,.6)'},ticks:{color:'#6b7a99',font:{size:10},callback:v=>fmtKZT(v)}}
       }
@@ -895,155 +1017,188 @@ function renderSpendChart(daily) {
   });
 }
 
-// CAMPAIGNS
+// ── CAMPAIGNS ─────────────────────────────────────────────────────────────────
 async function loadCampaigns() {
   const data = useMock() ? MOCK.campaigns : await api('/api/campaigns');
   if (!data) return;
-
   document.getElementById('camp-count').textContent = `${data.length} кампаний`;
   const tbody = document.getElementById('camps-table');
-
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px">Нет кампаний. Нажмите «+ Создать»</td></tr>';
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:36px">Нет кампаний</td></tr>';
     return;
   }
-
-  tbody.innerHTML = data.map(c => `
-    <tr>
-      <td><strong>${c.name}</strong><div style="font-size:11px;color:var(--muted)">${c.geo}</div></td>
-      <td>${typeIcon(c.type)} ${c.type}</td>
-      <td>${goalLabel(c.goal)}</td>
-      <td>${fmtKZT(c.budget)}</td>
-      <td style="font-weight:600;color:${c.stats.ctr>2?'var(--green)':c.stats.ctr<0.5?'var(--red)':'var(--text)'}">${c.stats.ctr}%</td>
-      <td>${c.stats.leads}</td>
-      <td>${fmtKZT(c.stats.spent)}</td>
-      <td>${campaignBadge(c)}</td>
-      <td>
-        <label class="toggle">
-          <input type="checkbox" ${c.active?'checked':''} onchange="toggleCamp(${c.id},this)"/>
-          <div class="toggle-track"></div>
-        </label>
-      </td>
-    </tr>`).join('');
+  tbody.innerHTML = data.map(c=>`<tr>
+    <td><strong>${esc(c.name)}</strong><div style="font-size:11px;color:var(--muted)">${esc(c.geo||'')}</div></td>
+    <td>${typeIcon(c.type)} ${c.type}</td>
+    <td>${goalLabel(c.goal)}</td>
+    <td>${fmtKZT(c.budget)}</td>
+    <td style="font-weight:600;color:${c.stats?.ctr>2?'var(--green)':c.stats?.ctr<0.5?'var(--red)':'var(--text)'}">${c.stats?.ctr||0}%</td>
+    <td>${c.stats?.leads||0}</td>
+    <td>${fmtKZT(c.stats?.spent||0)}</td>
+    <td>${campaignBadge(c)}</td>
+    <td><label class="toggle"><input type="checkbox" ${c.active?'checked':''} onchange="toggleCamp(${c.id},this)"/><div class="toggle-track"></div></label></td>
+  </tr>`).join('');
 }
 
-async function toggleCamp(id, checkbox) {
-  if (useMock()) { return; }
-  const res = await api(`/api/campaigns/${id}/toggle`, {method:'PATCH'});
-  if (!res) checkbox.checked = !checkbox.checked;
+async function toggleCamp(id, cb) {
+  if (useMock()) return;
+  const res = await api(`/api/campaigns/${id}/toggle`,{method:'PATCH'});
+  if (!res) cb.checked = !cb.checked;
 }
 
-// ANALYTICS
+async function syncFacebook() {
+  showToast('Синхронизация...');
+  if (!useMock()) {
+    await api('/api/fb/sync',{method:'POST'});
+    loadCampaigns();
+  }
+}
+
+// ── AI ТАРГЕТОЛОГ ─────────────────────────────────────────────────────────────
+async function loadTargetolog() {
+  const data = useMock() ? MOCK.targetolog : await api('/api/ai-log?limit=50');
+  const tbody = document.getElementById('targ-log');
+  if (!data || !data.length) {
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:36px">Решений ещё нет.<br>AI Таргетолог начнёт работать после подключения кампаний.</td></tr>';
+    document.getElementById('targ-count').textContent = '0 решений';
+    return;
+  }
+  document.getElementById('targ-count').textContent = `${data.length} решений`;
+  const log = Array.isArray(data) ? data : (data.log || []);
+  tbody.innerHTML = log.map(e=>`<tr>
+    <td><span class="badge ${scenarioBadgeClass(e.scenario)}">${esc(e.scenario||'AI')}</span></td>
+    <td><strong>${esc(e.campaign||'')}</strong></td>
+    <td style="max-width:380px;font-size:12px;color:var(--muted);line-height:1.4">${esc(e.decision||'')}</td>
+    <td style="white-space:nowrap;font-size:11px;color:var(--muted)">${fmtDate(e.created_at)}</td>
+  </tr>`).join('');
+}
+
+function scenarioBadgeClass(s) {
+  if (!s) return 'badge-paused';
+  if (s.includes('Вампир')) return 'badge-ai';
+  if (s.includes('Масштаб')) return 'badge-scale';
+  if (s.includes('Просадка')) return 'badge-warn';
+  return 'badge-paused';
+}
+
+function fmtDate(dt) {
+  if (!dt) return '—';
+  const d = new Date(dt);
+  return d.toLocaleDateString('ru',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── ANALYTICS ─────────────────────────────────────────────────────────────────
 async function loadAnalytics(period) {
   const data = useMock() ? MOCK.analytics : await api(`/api/analytics?period=${period}`);
   if (!data) return;
-
   const s = data.summary;
   const ctr = s.impressions>0 ? s.clicks/s.impressions*100 : 0;
   const cld = s.clicks>0 ? s.leads/s.clicks*100 : 0;
-
-  document.getElementById('fb-imp').style.width = '100%';
-  document.getElementById('fb-cl').style.width  = ctr > 0 ? Math.min(100,ctr*10)+'%' : '0%';
-  document.getElementById('fb-ld').style.width  = cld > 0 ? Math.min(100,cld*5)+'%' : '0%';
-  document.getElementById('fb-imp-v').textContent = fmt(s.impressions);
-  document.getElementById('fb-cl-v').textContent  = fmt(s.clicks);
-  document.getElementById('fb-ld-v').textContent  = s.leads;
-  document.getElementById('fb-imp-p').textContent = '100%';
-  document.getElementById('fb-cl-p').textContent  = ctr.toFixed(2)+'%';
-  document.getElementById('fb-ld-p').textContent  = cld.toFixed(2)+'%';
-
-  const tbody = document.getElementById('analytics-table');
-  tbody.innerHTML = data.table.map(r => `
-    <tr>
-      <td><strong>${r.name}</strong></td>
-      <td>${fmt(r.impressions)}</td>
-      <td>${fmt(r.clicks)}</td>
-      <td style="color:${r.ctr>2?'var(--green)':r.ctr<0.5?'var(--red)':'inherit'}">${r.ctr}%</td>
-      <td>${r.leads}</td>
-      <td>${r.cpl>0?fmtKZT(r.cpl):'—'}</td>
-      <td>${fmtKZT(r.spent)}</td>
-    </tr>`).join('');
+  document.getElementById('fb-imp').style.width='100%';
+  document.getElementById('fb-cl').style.width=ctr>0?Math.min(100,ctr*10)+'%':'0%';
+  document.getElementById('fb-ld').style.width=cld>0?Math.min(100,cld*5)+'%':'0%';
+  document.getElementById('fb-imp-v').textContent=fmt(s.impressions);
+  document.getElementById('fb-cl-v').textContent=fmt(s.clicks);
+  document.getElementById('fb-ld-v').textContent=s.leads;
+  document.getElementById('fb-imp-p').textContent='100%';
+  document.getElementById('fb-cl-p').textContent=ctr.toFixed(2)+'%';
+  document.getElementById('fb-ld-p').textContent=cld.toFixed(2)+'%';
+  const tbody=document.getElementById('analytics-table');
+  tbody.innerHTML=data.table.map(r=>`<tr>
+    <td><strong>${esc(r.name)}</strong></td>
+    <td>${fmt(r.impressions)}</td>
+    <td>${fmt(r.clicks)}</td>
+    <td style="color:${r.ctr>2?'var(--green)':r.ctr<0.5?'var(--red)':'inherit'}">${r.ctr}%</td>
+    <td>${r.leads}</td>
+    <td>${r.cpl>0?fmtKZT(r.cpl):'—'}</td>
+    <td>${fmtKZT(r.spent)}</td>
+  </tr>`).join('');
 }
 
-function setPeriod(p, btn) {
-  document.querySelectorAll('.pf-btn').forEach(b => b.classList.remove('active'));
+function setPeriod(p,btn) {
+  document.querySelectorAll('.pf-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   loadAnalytics(p);
 }
 
-// SETTINGS
+// ── SETTINGS ──────────────────────────────────────────────────────────────────
 async function loadSettings() {
   const data = useMock() ? MOCK.settings : await api('/api/settings');
   if (!data) return;
+  document.getElementById('fb-account').value = data.facebook?.ad_account_id||'';
+  document.getElementById('target-cpl').value = data.user?.target_cpl||'';
+  document.getElementById('whatsapp').value   = data.user?.whatsapp||'';
 
-  document.getElementById('fb-token').value   = '';
-  document.getElementById('fb-account').value = data.facebook.ad_account_id || '';
-  document.getElementById('target-cpl').value = data.user.target_cpl || '';
-  document.getElementById('whatsapp').value   = data.user.whatsapp || '';
-
-  const fbBlock = document.getElementById('fb-status-block');
-  if (data.facebook.connected) {
-    fbBlock.innerHTML = `<span style="font-size:20px">✅</span><div><strong>Подключён</strong><div style="color:var(--muted);font-size:12px">Аккаунт ${data.facebook.ad_account_id}</div></div>`;
+  if (data.facebook?.connected) {
+    document.getElementById('fb-status-block').innerHTML=`
+      <div class="fb-connected">
+        <span style="font-size:20px">✅</span>
+        <div><strong>Facebook подключён</strong><div style="font-size:12px;color:var(--muted)">Аккаунт ${data.facebook.ad_account_id}</div></div>
+      </div>`;
   }
 
-  const sub = data.subscription;
+  const sub = data.subscription||{};
   const subDiv = document.getElementById('sub-info');
-  if (sub.active && sub.plan === 'trial') {
-    subDiv.innerHTML = `<div class="status-badge status-trial" style="margin-bottom:8px">🟡 Пробный период</div><br/>Доступ до: <strong>${sub.trial_ends||'—'}</strong>`;
+  if (sub.active && sub.plan==='trial') {
+    subDiv.innerHTML=`<div class="status-badge status-trial" style="margin-bottom:10px">🟡 Пробный период</div><br/>Доступ до: <strong>${sub.trial_ends||'—'}</strong>`;
   } else if (sub.active) {
-    subDiv.innerHTML = `<div class="status-badge status-active" style="margin-bottom:8px">🟢 Подписка активна</div><br/>Тариф: <strong>${sub.plan}</strong><br/>До: <strong>${sub.expires||'—'}</strong>`;
+    subDiv.innerHTML=`<div class="status-badge status-active" style="margin-bottom:10px">🟢 Подписка активна</div><br/>Тариф: <strong>${sub.plan}</strong><br/>До: <strong>${sub.expires||'—'}</strong>`;
   } else {
-    subDiv.innerHTML = `<div class="status-badge status-expired" style="margin-bottom:8px">🔴 Нет подписки</div><br/>Оформите подписку в Telegram.`;
+    subDiv.innerHTML=`<div class="status-badge status-expired" style="margin-bottom:10px">🔴 Нет подписки</div><br/>Оформите подписку в Telegram.`;
   }
+  const u = data.user||{};
+  document.getElementById('userAvatar').textContent = (u.first_name?.[0]||'А').toUpperCase();
+  document.getElementById('userName').textContent   = u.first_name||'Пользователь';
+  document.getElementById('userPlan').textContent   = sub.plan==='trial'?'Пробный период':(sub.plan||'—');
+}
 
-  document.getElementById('userAvatar').textContent = data.user.first_name?.[0] || '👤';
-  document.getElementById('userName').textContent = data.user.first_name || 'Пользователь';
-  document.getElementById('userPlan').textContent = sub.plan === 'trial' ? 'Пробный период' : sub.plan;
+function connectFacebook() {
+  if (!UID) { showToast('Откройте приложение из Telegram'); return; }
+  window.location.href = `/fb/connect?user_id=${UID}`;
 }
 
 async function saveFacebook() {
   const t = document.getElementById('fb-token').value.trim();
   const a = document.getElementById('fb-account').value.trim();
-  if (!t || !a) { alert('Заполните токен и ID аккаунта'); return; }
+  if (!t||!a) { alert('Заполните токен и ID аккаунта'); return; }
   if (!a.startsWith('act_')) { alert('ID должен начинаться с act_'); return; }
   if (!useMock()) {
-    const res = await api('/api/settings/facebook', {method:'PUT',body:JSON.stringify({access_token:t,ad_account_id:a})});
+    const res = await api('/api/settings/facebook',{method:'PUT',body:JSON.stringify({access_token:t,ad_account_id:a})});
     if (!res) { alert('Ошибка сохранения'); return; }
   }
-  document.getElementById('fb-status-block').innerHTML = `<span style="font-size:20px">✅</span><div><strong>Подключён</strong><div style="color:var(--muted);font-size:12px">Аккаунт ${a}</div></div>`;
+  document.getElementById('fb-status-block').innerHTML=`
+    <div class="fb-connected"><span style="font-size:20px">✅</span>
+    <div><strong>Подключён</strong><div style="font-size:12px;color:var(--muted)">Аккаунт ${a}</div></div></div>`;
   showToast('Facebook подключён!');
 }
 
 async function saveProfile() {
-  const cpl = parseFloat(document.getElementById('target-cpl').value) || 0;
+  const cpl = parseFloat(document.getElementById('target-cpl').value)||0;
   const wa  = document.getElementById('whatsapp').value.trim();
-  if (!useMock()) {
-    await api('/api/settings/profile', {method:'PUT', body:JSON.stringify({target_cpl:cpl,whatsapp:wa})});
-  }
+  if (!useMock()) await api('/api/settings/profile',{method:'PUT',body:JSON.stringify({target_cpl:cpl,whatsapp:wa})});
   showToast('Настройки сохранены');
 }
 
-// MODAL
+// ── MODAL ─────────────────────────────────────────────────────────────────────
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function closeModalOut(e) { if (e.target.classList.contains('modal-overlay')) closeModal(e.target.id); }
+function closeModalOut(e) { if(e.target.classList.contains('modal-overlay')) closeModal(e.target.id); }
 
 function selectType(el) {
-  document.querySelectorAll('.type-opt').forEach(o => o.classList.remove('active'));
+  el.closest('.type-grid').querySelectorAll('.type-opt').forEach(o=>o.classList.remove('active'));
   el.classList.add('active');
   selectedCampType = el.dataset.val;
 }
 
 async function createCampaign() {
-  const name   = document.getElementById('nc-name').value.trim();
-  const goal   = document.getElementById('nc-goal').value;
-  const geo    = document.getElementById('nc-geo').value;
-  const budget = parseFloat(document.getElementById('nc-budget').value) || 0;
-  const cpl    = parseFloat(document.getElementById('nc-cpl').value) || 0;
+  const name  = document.getElementById('nc-name').value.trim();
+  const goal  = document.getElementById('nc-goal').value;
+  const geo   = document.getElementById('nc-geo').value;
+  const budget= parseFloat(document.getElementById('nc-budget').value)||0;
+  const cpl   = parseFloat(document.getElementById('nc-cpl').value)||0;
   if (!name) { alert('Введите название'); return; }
-
   if (!useMock()) {
-    const res = await api('/api/campaigns', {method:'POST',body:JSON.stringify({name,type:selectedCampType,goal,geo,budget,target_cpl:cpl})});
+    const res = await api('/api/campaigns',{method:'POST',body:JSON.stringify({name,type:selectedCampType,goal,geo,budget,target_cpl:cpl})});
     if (!res) { alert('Ошибка создания'); return; }
   }
   closeModal('modal-campaign');
@@ -1051,392 +1206,351 @@ async function createCampaign() {
   loadCampaigns();
 }
 
-// AI STUDIO
-let _uploadedBase64 = null;
+// ── TABS (AI Маркетолог) ──────────────────────────────────────────────────────
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    b.classList.toggle('active', b.onclick.toString().includes(tabId));
+  });
+  // simpler approach:
+  const panes = document.querySelectorAll('.tab-pane');
+  panes.forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tabId)?.classList.add('active');
+  // update buttons
+  document.querySelectorAll('#page-marketolog .tab-btn').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('onclick')?.includes(tabId));
+  });
+}
 
+// ── AI STUDIO (upload photo) ──────────────────────────────────────────────────
 function handleUpload(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    _uploadedBase64 = e.target.result.split(',')[1]; // base64 без префикса
-    document.getElementById('uploadIcon').innerHTML =
-      `<img src="${e.target.result}" style="width:100%;height:120px;object-fit:cover;border-radius:8px"/>`;
+    _uploadedBase64 = e.target.result.split(',')[1];
+    document.getElementById('uploadIcon').innerHTML=
+      `<img src="${e.target.result}" style="width:100%;height:110px;object-fit:cover;border-radius:7px"/>`;
     document.getElementById('uploadText').textContent = file.name;
   };
   reader.readAsDataURL(file);
 }
 
-async function generateBanners() {
+async function generateBannersUpload() {
   const offer    = document.getElementById('offerText').value.trim();
   const audience = document.getElementById('targetAudience').value.trim();
   const wrap     = document.getElementById('banners-wrap');
-
-  if (!offer) {
-    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Опишите ваш оффер</p></div>';
-    return;
+  if (!offer) { wrap.innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><p>Опишите оффер</p></div>'; return; }
+  if (!_uploadedBase64) { wrap.innerHTML='<div class="empty-state"><div class="empty-icon">📷</div><p>Загрузите фото</p></div>'; return; }
+  wrap.innerHTML=`<div style="text-align:center;padding:44px 0"><div style="font-size:32px;display:inline-block;animation:spin 1.2s linear infinite">⏳</div><div style="color:var(--muted);margin-top:12px;font-size:13px">AI Маркетолог создаёт баннеры...</div></div>`;
+  try {
+    const r = await fetch(`${API}/api/generate-banner`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({offer,audience,image_base64:_uploadedBase64,user_id:UID})});
+    const data = await r.json();
+    if (!r.ok) { wrap.innerHTML=`<div class="empty-state"><div class="empty-icon">❌</div><p>${data.detail||'Ошибка'}</p></div>`; return; }
+    renderBanners(data, wrap);
+  } catch(e) {
+    wrap.innerHTML='<div class="empty-state"><div class="empty-icon">❌</div><p>Сервер недоступен</p></div>';
   }
-  if (!_uploadedBase64) {
-    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">📷</div><p>Загрузите фото товара или услуги</p></div>';
-    return;
-  }
+}
 
-  wrap.innerHTML = `<div style="text-align:center;padding:48px 0">
-    <div style="font-size:36px;display:inline-block;animation:spin 1.2s linear infinite">⏳</div>
-    <div style="color:var(--muted);margin-top:16px;font-size:14px">GPT-4o пишет текст,<br/>накладываем на фото...</div>
-  </div>`;
+// ── DALL-E GENERATOR ──────────────────────────────────────────────────────────
+function selectGenStyle(el) {
+  el.closest('div').querySelectorAll('.type-opt').forEach(o=>o.classList.remove('active'));
+  el.classList.add('active');
+  _genStyle = el.dataset.val;
+}
+
+async function generateBannersDalle() {
+  const desc     = document.getElementById('gen-description').value.trim();
+  const niche    = document.getElementById('gen-niche').value.trim();
+  const audience = document.getElementById('gen-audience').value.trim();
+  const btn      = document.getElementById('gen-btn');
+  const status   = document.getElementById('gen-status');
+  const container= document.getElementById('gen-banners');
+
+  if (!desc) { status.textContent='Опишите изображение'; return; }
+  btn.disabled = true;
+  btn.textContent = '⏳ Создаю...';
+  status.textContent = 'DALL-E 3 генерирует изображение (15–30 сек)...';
+  container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:44px 0"><div style="font-size:32px;display:inline-block;animation:spin 1.2s linear infinite">✨</div></div>';
+  document.getElementById('gen-copy-box').style.display='none';
 
   try {
-    const resp = await fetch(`${API}/api/generate-banner`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({offer, audience, image_base64: _uploadedBase64})
-    });
-    const data = await resp.json();
-    if (!resp.ok) {
-      wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><p>${data.detail || 'Ошибка'}</p></div>`;
-      return;
-    }
-
-    wrap.innerHTML = `
-      <div style="margin-bottom:12px;padding:12px 16px;background:var(--surface2);border-radius:12px;font-size:13px;color:var(--muted)">
-        ✍️ <strong style="color:var(--text)">${data.copy.headline}</strong>
-      </div>
-      <div class="banners-grid">
-        ${data.banners.map((b, i) => `
-        <div class="banner-preview" id="banner-${i}" onclick="selectBanner(${i})">
-          <div class="banner-img" style="cursor:pointer">
-            <img src="${b.image}" style="width:100%;height:100%;object-fit:cover" alt="${b.label}"/>
-          </div>
-          <div class="banner-info">
-            <span class="banner-style-name">${b.label}</span>
-            <a class="btn btn-primary btn-sm" href="${b.image}" download="banner-${i+1}.png">⬇ Скачать</a>
-          </div>
-        </div>`).join('')}
-      </div>`;
+    const r = await fetch(`${API}/api/generate-banner`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({description:desc,niche,audience,style:_genStyle,user_id:UID})});
+    const data = await r.json();
+    if (!r.ok) { status.textContent = data.detail||'Ошибка'; container.innerHTML=''; return; }
+    renderGeneratedBanners(data);
+    status.textContent='';
   } catch(e) {
-    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><p>Сервер недоступен</p></div>`;
+    status.textContent='Сервер недоступен';
+  } finally {
+    btn.disabled=false;
+    btn.textContent='✨ Создать баннеры';
   }
 }
 
-function selectBanner(i) {
-  document.querySelectorAll('.banner-preview').forEach(b => b.classList.remove('selected'));
-  document.getElementById('banner-'+i).classList.add('selected');
+function renderBanners(data, wrap) {
+  const headline = data.copy?.headline || '';
+  wrap.innerHTML=`
+    ${headline?`<div style="padding:10px 14px;background:var(--surface2);border-radius:9px;font-size:13px;margin-bottom:14px">✍️ <strong>${esc(headline)}</strong></div>`:''}
+    <div class="banners-grid">
+      ${data.banners.map((b,i)=>`
+      <div class="banner-preview" onclick="selectBanner(this)">
+        <div class="banner-img"><img src="${b.image}" style="width:100%;height:100%;object-fit:cover"/></div>
+        <div class="banner-info">
+          <span class="banner-style-name">${esc(b.label||'')}</span>
+          <a class="btn btn-primary btn-sm" href="${b.image}" download="banner-${i+1}.png">⬇</a>
+        </div>
+      </div>`).join('')}
+    </div>`;
 }
 
-function launchBanner(i) {
-  navigate('campaigns');
-  setTimeout(() => openModal('modal-campaign'), 300);
+function renderGeneratedBanners(data) {
+  const container = document.getElementById('gen-banners');
+  const hint      = document.getElementById('gen-dl-hint');
+  hint.textContent = '← нажмите для скачивания';
+  container.innerHTML = data.banners.map((b,i)=>`
+    <div class="banner-preview" onclick="selectBanner(this)">
+      <div class="banner-img"><img src="${b.image}" style="width:100%;height:100%;object-fit:cover"/></div>
+      <div class="banner-info">
+        <span class="banner-style-name">${esc(b.label||'Вариант '+(i+1))}</span>
+        <a class="btn btn-primary btn-sm" href="${b.image}" download="adai-banner-${i+1}.png">⬇</a>
+      </div>
+    </div>`).join('');
+
+  if (data.copy) {
+    const box = document.getElementById('gen-copy-box');
+    box.style.display='block';
+    document.getElementById('gen-copy-content').innerHTML=`
+      <div style="padding:12px 14px;background:var(--surface2);border-radius:9px;margin-bottom:10px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">Заголовок</div>
+        <div style="font-weight:600">${esc(data.copy.headline||'')}</div>
+      </div>
+      <div style="padding:12px 14px;background:var(--surface2);border-radius:9px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">Текст</div>
+        <div style="font-size:13px;line-height:1.6;color:var(--muted)">${esc(data.copy.body||'')}</div>
+      </div>`;
+  }
 }
 
-// UTILS
-function campaignBadge(c) {
-  if (c.paused_by_ai)  return `<span class="badge badge-ai">${c.ai_scenario||'ИИ'} пауза</span>`;
-  if (c.active)        return `<span class="badge badge-active">🟢 Активна</span>`;
-  return `<span class="badge badge-paused">⏸ Пауза</span>`;
-}
-
-function scenarioIcon(s) {
-  if (!s) return '🤖';
-  if (s.includes('Вампир')) return '🧛';
-  if (s.includes('Просадка')) return '⚠️';
-  if (s.includes('Масштаб')) return '🚀';
-  return '✅';
-}
-
-function typeIcon(t) {
-  return {photo:'🖼',video:'🎬',reels:'📱',ai:'✨'}[t] || '📢';
-}
-
-function goalLabel(g) {
-  return {whatsapp:'WhatsApp',instagram:'Instagram',website:'Сайт',leads:'Лид-форма'}[g] || g;
-}
-
-function fmt(n) { return Number(n).toLocaleString('ru'); }
-function fmtKZT(n) { return Number(n).toLocaleString('ru') + ' ₸'; }
-
-function showToast(msg) {
-  const t = document.createElement('div');
-  t.textContent = msg;
-  t.style.cssText='position:fixed;bottom:24px;right:24px;background:#10d9a0;color:#000;padding:12px 20px;border-radius:50px;font-weight:600;z-index:999;animation:fadeIn .3s';
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 2500);
-}
-
-function openTelegram() {
-  const bot = 'zhasclaude_bot';
-  window.open(`https://t.me/${bot}`, '_blank');
+function selectBanner(el) {
+  el.closest('.banners-grid, #banners-wrap').querySelectorAll('.banner-preview').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
 }
 
 // ── DIRECTIONS ────────────────────────────────────────────────────────────────
-let _currentDirId = null;
-let _currentStrategy = null;
-let _selectedAdText = null;
-let _dirCreativeB64 = null;
-let _wizStep = 0;
-
 const DIR_STATUS_LABELS = {
-  draft: ['dir-status-draft', '📝 Черновик'],
-  brief_ready: ['dir-status-ready', '✨ Стратегия готова'],
-  launched: ['dir-status-launched', '🚀 Запущена'],
+  draft:['dir-status-draft','📝 Черновик'],
+  brief_ready:['dir-status-ready','✨ Стратегия'],
+  launched:['dir-status-launched','🚀 Запущена'],
 };
 
 async function loadDirections() {
   const data = useMock() ? [] : await api('/api/directions');
   if (!data) return;
-  document.getElementById('dir-count').textContent = `${data.length} направлений`;
+  document.getElementById('dir-count').textContent = data.length
+    ? `${data.length} направлений · Бриф → AI стратегия → запуск в Facebook`
+    : 'Бриф → AI стратегия → запуск в Facebook';
   const grid = document.getElementById('dir-grid');
-  const addCard = `<div class="dir-card dir-add-card" onclick="openDirModal()"><div class="add-icon">🗂</div><span>Новое направление</span></div>`;
-  if (!data.length) { grid.innerHTML = addCard; return; }
-  const cards = data.map(d => {
-    const [cls, label] = DIR_STATUS_LABELS[d.status] || DIR_STATUS_LABELS.draft;
-    return `
-    <div class="dir-card" onclick="editDirection(${d.id})">
-      <div class="dir-card-head">
-        <div class="dir-card-name">${d.name}</div>
-        <span class="dir-status ${cls}">${label}</span>
-      </div>
-      <div class="dir-niche">${d.niche || '—'} · ${d.geo || 'Казахстан'}</div>
-      <div class="dir-meta">
-        <span>💰 ${fmtKZT(d.daily_budget || 5000)}/день</span>
-        <span>🎯 CPL ${fmtKZT(d.target_cpl || 1500)}</span>
-        <span>🖼 ${d.creatives_count || 0} фото</span>
-      </div>
+  const addCard=`<div class="dir-card dir-add-card" onclick="openDirModal()"><div style="font-size:26px;opacity:.4">🗂</div><span>Новое направление</span></div>`;
+  if (!data.length) { grid.innerHTML=addCard; return; }
+  grid.innerHTML = data.map(d=>{
+    const [cls,label]=(DIR_STATUS_LABELS[d.status]||DIR_STATUS_LABELS.draft);
+    return `<div class="dir-card" onclick="editDirection(${d.id})">
+      <div class="dir-card-head"><div class="dir-card-name">${esc(d.name)}</div><span class="dir-status ${cls}">${label}</span></div>
+      <div class="dir-niche">${esc(d.niche||'—')} · ${esc(d.geo||'Казахстан')}</div>
+      <div class="dir-meta"><span>💰 ${fmtKZT(d.daily_budget||5000)}/день</span><span>🎯 CPL ${fmtKZT(d.target_cpl||1500)}</span></div>
       <div class="dir-actions" onclick="event.stopPropagation()">
-        ${d.status === 'draft'
-          ? `<button class="btn btn-primary btn-sm" onclick="editDirection(${d.id})">Заполнить бриф</button>`
-          : `<button class="btn btn-secondary btn-sm" onclick="editDirection(${d.id})">Редактировать</button>`}
-        ${d.status !== 'launched'
-          ? `<button class="btn btn-primary btn-sm" onclick="quickLaunchDir(${d.id})">🚀 Запустить</button>`
-          : `<button class="btn btn-secondary btn-sm" style="color:var(--green)">✅ Запущена</button>`}
+        <button class="btn btn-secondary btn-sm" onclick="editDirection(${d.id})">Редактировать</button>
+        ${d.status!=='launched'?`<button class="btn btn-primary btn-sm" onclick="quickLaunchDir(${d.id})">🚀 Запустить</button>`:'<button class="btn btn-secondary btn-sm" style="color:var(--green)">✅ Запущена</button>'}
       </div>
     </div>`;
-  }).join('');
-  grid.innerHTML = cards + addCard;
+  }).join('')+addCard;
 }
 
-function openDirModal(dir) {
-  _currentDirId = null;
-  _currentStrategy = null;
-  _selectedAdText = null;
-  _dirCreativeB64 = null;
-  document.getElementById('dir-modal-title').textContent = 'Новое направление';
-  // Clear fields
-  ['dir-name','dir-niche','dir-desc','dir-utp','dir-audience','dir-pains',
-   'dir-offers','dir-wa','dir-ad-text','dir-page-id'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  document.getElementById('dir-budget').value = '5000';
-  document.getElementById('dir-cpl').value = '1500';
-  document.getElementById('dir-geo').value = 'Весь Казахстан';
-  document.getElementById('dir-traffic').value = 'whatsapp';
-  document.getElementById('dir-gender').value = 'all';
-  document.getElementById('dir-upload-icon').textContent = '🖼';
-  document.getElementById('dir-upload-text').textContent = 'Нажмите для загрузки';
-  wizGo(0, true);
+function openDirModal() {
+  _currentDirId=null; _currentStrategy=null; _selectedAdText=null; _dirCreativeB64=null;
+  document.getElementById('dir-modal-title').textContent='Новое направление';
+  ['dir-name','dir-niche','dir-desc','dir-utp','dir-audience','dir-pains','dir-offers','dir-wa','dir-ad-text','dir-page-id']
+    .forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  document.getElementById('dir-budget').value='5000';
+  document.getElementById('dir-cpl').value='1500';
+  wizGo(0,true);
   openModal('modal-direction');
 }
 
 async function editDirection(id) {
   const data = useMock() ? null : await api(`/api/directions/${id}`);
   if (!data) { openModal('modal-direction'); return; }
-  _currentDirId = id;
-  document.getElementById('dir-modal-title').textContent = data.name;
-  document.getElementById('dir-name').value = data.name || '';
-  document.getElementById('dir-niche').value = data.niche || '';
-  document.getElementById('dir-desc').value = data.description || '';
-  document.getElementById('dir-utp').value = data.utp || '';
-  document.getElementById('dir-audience').value = data.audience || '';
-  document.getElementById('dir-pains').value = data.pains || '';
-  document.getElementById('dir-offers').value = data.offers || '';
-  document.getElementById('dir-wa').value = data.whatsapp_number || '';
-  document.getElementById('dir-budget').value = data.daily_budget || 5000;
-  document.getElementById('dir-cpl').value = data.target_cpl || 1500;
-  document.getElementById('dir-geo').value = data.geo || 'Весь Казахстан';
-  document.getElementById('dir-traffic').value = data.traffic_dest || 'whatsapp';
-  document.getElementById('dir-gender').value = data.gender || 'all';
-  document.getElementById('dir-ad-text').value = data.ad_text || '';
-  const step = data.status === 'launched' ? 2 : data.status === 'brief_ready' ? 1 : 0;
-  wizGo(step, true);
+  _currentDirId=id;
+  document.getElementById('dir-modal-title').textContent=data.name;
+  document.getElementById('dir-name').value=data.name||'';
+  document.getElementById('dir-niche').value=data.niche||'';
+  document.getElementById('dir-desc').value=data.description||'';
+  document.getElementById('dir-utp').value=data.utp||'';
+  document.getElementById('dir-audience').value=data.audience||'';
+  document.getElementById('dir-pains').value=data.pains||'';
+  document.getElementById('dir-offers').value=data.offers||'';
+  document.getElementById('dir-wa').value=data.whatsapp_number||'';
+  document.getElementById('dir-budget').value=data.daily_budget||5000;
+  document.getElementById('dir-cpl').value=data.target_cpl||1500;
+  document.getElementById('dir-ad-text').value=data.ad_text||'';
+  const step=data.status==='launched'?2:data.status==='brief_ready'?1:0;
+  wizGo(step,true);
   openModal('modal-direction');
 }
 
 function quickLaunchDir(id) {
-  editDirection(id).then(() => {
-    if (_wizStep < 2) wizGo(2, true);
-  });
+  editDirection(id).then(()=>{ if(_wizStep<2) wizGo(2,true); });
 }
 
 async function saveDirBrief() {
-  const name = document.getElementById('dir-name').value.trim();
-  if (!name) { alert('Введите название направления'); return; }
-  const body = {
-    name,
-    niche: document.getElementById('dir-niche').value.trim(),
-    description: document.getElementById('dir-desc').value.trim(),
-    utp: document.getElementById('dir-utp').value.trim(),
-    audience: document.getElementById('dir-audience').value.trim(),
-    pains: document.getElementById('dir-pains').value.trim(),
-    offers: document.getElementById('dir-offers').value.trim(),
-    geo: document.getElementById('dir-geo').value,
-    gender: document.getElementById('dir-gender').value,
-    traffic_dest: document.getElementById('dir-traffic').value,
-    whatsapp_number: document.getElementById('dir-wa').value.trim(),
-    daily_budget: parseFloat(document.getElementById('dir-budget').value) || 5000,
-    target_cpl: parseFloat(document.getElementById('dir-cpl').value) || 1500,
+  const name=document.getElementById('dir-name').value.trim();
+  if (!name) { alert('Введите название'); return; }
+  const body={
+    name, niche:document.getElementById('dir-niche').value.trim(),
+    description:document.getElementById('dir-desc').value.trim(),
+    utp:document.getElementById('dir-utp').value.trim(),
+    audience:document.getElementById('dir-audience').value.trim(),
+    pains:document.getElementById('dir-pains').value.trim(),
+    offers:document.getElementById('dir-offers').value.trim(),
+    geo:document.getElementById('dir-geo').value,
+    gender:document.getElementById('dir-gender').value,
+    traffic_dest:document.getElementById('dir-traffic').value,
+    whatsapp_number:document.getElementById('dir-wa').value.trim(),
+    daily_budget:parseFloat(document.getElementById('dir-budget').value)||5000,
+    target_cpl:parseFloat(document.getElementById('dir-cpl').value)||1500,
   };
-
   if (!useMock()) {
     let res;
-    if (_currentDirId) {
-      res = await api(`/api/directions/${_currentDirId}`, {method:'PUT', body:JSON.stringify(body)});
-    } else {
-      res = await api('/api/directions', {method:'POST', body:JSON.stringify(body)});
-      if (res) _currentDirId = res.id;
-    }
+    if (_currentDirId) res=await api(`/api/directions/${_currentDirId}`,{method:'PUT',body:JSON.stringify(body)});
+    else { res=await api('/api/directions',{method:'POST',body:JSON.stringify(body)}); if(res) _currentDirId=res.id; }
     if (!res) { alert('Ошибка сохранения'); return; }
-  } else {
-    _currentDirId = 1;
-  }
-
+  } else { _currentDirId=1; }
   wizGo(1);
   generateStrategy();
 }
 
 async function generateStrategy() {
-  document.getElementById('strategy-loading').style.display = 'block';
-  document.getElementById('strategy-result').style.display = 'none';
-  document.getElementById('strategy-error').style.display = 'none';
-  document.getElementById('wiz-nav-1').style.display = 'none';
-
+  document.getElementById('strategy-loading').style.display='block';
+  document.getElementById('strategy-result').style.display='none';
+  document.getElementById('strategy-error').style.display='none';
+  document.getElementById('wiz-nav-1').style.display='none';
   let strategy;
   if (!useMock() && _currentDirId) {
-    const res = await api(`/api/directions/${_currentDirId}/generate-strategy`, {method:'POST'});
-    strategy = res;
+    strategy = await api(`/api/directions/${_currentDirId}/generate-strategy`,{method:'POST'});
   } else {
-    strategy = {
-      strategy_text: 'Запускаем кампанию с упором на WhatsApp-заявки, таргет на активную аудиторию.',
-      audience_desc: 'Мужчины и женщины 25-45, интересы: бизнес, здоровье, семья',
-      age_min: 25, age_max: 45,
-      ad_texts: {
-        emotional: '❤️ Почувствуйте разницу уже сегодня! Запишитесь прямо сейчас.',
-        rational: '✅ Профессиональный подход, честные цены, гарантия результата.',
-        urgent: '⏰ Только 5 мест по акции! Пишите в WhatsApp сейчас.',
-      },
-      day1_plan: 'Запустить кампанию, следить за CTR первые 6 часов, при CTR<1% — менять креатив.',
-      risks: 'Высокий CPL в первые 3 дня — это нормально. Facebook обучает алгоритм.',
-    };
+    strategy={strategy_text:'Запускаем кампанию с упором на WhatsApp-заявки, таргет на активную аудиторию.',
+      audience_desc:'Мужчины и женщины 25-45, интересы: бизнес, здоровье, семья',
+      age_min:25,age_max:45,
+      ad_texts:{emotional:'❤️ Почувствуйте разницу уже сегодня! Пишите в WhatsApp.',rational:'✅ Профессиональный подход, честные цены, гарантия.',urgent:'⏰ Только 5 мест по акции! Пишите сейчас.'},
+      day1_plan:'Запустить, следить за CTR первые 6 часов. При CTR < 1% — менять креатив.',
+      risks:'Высокий CPL в первые 3 дня — нормально. Facebook обучает алгоритм.'};
   }
-
-  document.getElementById('strategy-loading').style.display = 'none';
-
-  if (!strategy) {
-    document.getElementById('strategy-error').style.display = 'block';
-    return;
-  }
-
-  _currentStrategy = strategy;
-  document.getElementById('st-text').textContent = strategy.strategy_text || '—';
-  document.getElementById('st-audience').textContent =
-    `${strategy.audience_desc || '—'} · Возраст ${strategy.age_min || 20}–${strategy.age_max || 45}`;
-  document.getElementById('st-day1').textContent = strategy.day1_plan || '—';
-  document.getElementById('st-risks').textContent = strategy.risks || '—';
-
-  const variants = strategy.ad_texts || {};
-  const labels = {emotional:'Эмоциональный 💛', rational:'Рациональный 🧠', urgent:'Срочный ⏰'};
-  document.getElementById('ad-variants').innerHTML = Object.entries(variants).map(([k, v]) => `
-    <div class="ad-variant" id="adv-${k}" onclick="selectAdVariant('${k}', \`${v.replace(/`/g,"'")}\`)">
-      <div class="ad-variant-label">${labels[k] || k}</div>
-      <div class="ad-variant-text">${v}</div>
+  document.getElementById('strategy-loading').style.display='none';
+  if (!strategy) { document.getElementById('strategy-error').style.display='block'; return; }
+  _currentStrategy=strategy;
+  document.getElementById('st-text').textContent=strategy.strategy_text||'—';
+  document.getElementById('st-audience').textContent=`${strategy.audience_desc||'—'} · ${strategy.age_min||20}–${strategy.age_max||45} лет`;
+  document.getElementById('st-day1').textContent=strategy.day1_plan||'—';
+  document.getElementById('st-risks').textContent=strategy.risks||'—';
+  const variants=strategy.ad_texts||{};
+  const labels={emotional:'Эмоциональный 💛',rational:'Рациональный 🧠',urgent:'Срочный ⏰'};
+  document.getElementById('ad-variants').innerHTML=Object.entries(variants).map(([k,v])=>`
+    <div class="ad-variant" id="adv-${k}" onclick="selectAdVariant('${k}',\`${v.replace(/`/g,"'")}\`)">
+      <div class="ad-variant-label">${labels[k]||k}</div>
+      <div class="ad-variant-text">${esc(v)}</div>
     </div>`).join('');
-
-  document.getElementById('strategy-result').style.display = 'block';
-  document.getElementById('wiz-nav-1').style.display = 'flex';
+  document.getElementById('strategy-result').style.display='block';
+  document.getElementById('wiz-nav-1').style.display='flex';
 }
 
 function selectAdVariant(key, text) {
-  document.querySelectorAll('.ad-variant').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.ad-variant').forEach(el=>el.classList.remove('selected'));
   document.getElementById('adv-'+key)?.classList.add('selected');
-  _selectedAdText = text;
-  document.getElementById('dir-ad-text').value = text;
+  _selectedAdText=text;
+  document.getElementById('dir-ad-text').value=text;
 }
 
 function handleDirUpload(input) {
-  const file = input.files[0];
+  const file=input.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    _dirCreativeB64 = e.target.result.split(',')[1];
-    document.getElementById('dir-upload-icon').innerHTML =
-      `<img src="${e.target.result}" style="width:100%;height:100px;object-fit:cover;border-radius:8px"/>`;
-    document.getElementById('dir-upload-text').textContent = file.name;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    _dirCreativeB64=e.target.result.split(',')[1];
+    document.getElementById('dir-upload-icon').innerHTML=
+      `<img src="${e.target.result}" style="width:100%;height:100px;object-fit:cover;border-radius:7px"/>`;
+    document.getElementById('dir-upload-text').textContent=file.name;
   };
   reader.readAsDataURL(file);
 }
 
 async function launchDirection() {
   if (!_currentDirId && !useMock()) { alert('Сначала сохраните бриф'); return; }
-  const pageId = document.getElementById('dir-page-id').value.trim();
-  const adText = document.getElementById('dir-ad-text').value.trim();
-
+  const pageId=document.getElementById('dir-page-id').value.trim();
+  const adText=document.getElementById('dir-ad-text').value.trim();
   if (!pageId) { alert('Введите Facebook Page ID'); return; }
   if (!adText) { alert('Введите текст объявления'); return; }
-
-  const btn = document.getElementById('launch-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Создаю кампанию...';
-
+  const btn=document.getElementById('launch-btn');
+  btn.disabled=true; btn.textContent='⏳ Создаю кампанию...';
   try {
     if (!useMock()) {
-      if (_dirCreativeB64) {
-        await api(`/api/directions/${_currentDirId}/upload-creative`, {
-          method: 'POST',
-          body: JSON.stringify({image_base64: _dirCreativeB64, filename: 'creative.jpg'})
-        });
-      }
-      const res = await api(`/api/directions/${_currentDirId}/launch`, {
-        method: 'POST',
-        body: JSON.stringify({page_id: pageId, ad_text: adText})
-      });
+      if (_dirCreativeB64) await api(`/api/directions/${_currentDirId}/upload-creative`,
+        {method:'POST',body:JSON.stringify({image_base64:_dirCreativeB64,filename:'creative.jpg'})});
+      const res=await api(`/api/directions/${_currentDirId}/launch`,
+        {method:'POST',body:JSON.stringify({page_id:pageId,ad_text:adText})});
       if (!res) throw new Error('Launch failed');
     }
     closeModal('modal-direction');
     showToast('🚀 Кампания создана! Проверьте Facebook Ads Manager.');
     loadDirections();
-  } catch(e) {
-    alert('Ошибка запуска: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '🚀 Создать кампанию в Facebook';
-  }
+  } catch(e) { alert('Ошибка: '+e.message); }
+  finally { btn.disabled=false; btn.textContent='🚀 Создать кампанию в Facebook'; }
 }
 
 function wizGo(step, noAnim) {
-  _wizStep = step;
-  for (let i = 0; i < 3; i++) {
-    const pane = document.getElementById('wiz-pane-'+i);
-    const dot = document.getElementById('wstep-'+i);
-    if (pane) pane.style.display = i === step ? 'block' : 'none';
-    if (dot) {
-      dot.classList.remove('active','done');
-      if (i < step) dot.classList.add('done');
-      else if (i === step) dot.classList.add('active');
-    }
+  _wizStep=step;
+  for (let i=0;i<3;i++) {
+    const pane=document.getElementById('wiz-pane-'+i);
+    const dot =document.getElementById('wstep-'+i);
+    if (pane) pane.style.display=i===step?'block':'none';
+    if (dot) { dot.classList.remove('active','done'); if(i<step)dot.classList.add('done'); else if(i===step)dot.classList.add('active'); }
   }
-  // scroll modal to top
-  const m = document.querySelector('#modal-direction .modal');
-  if (m) m.scrollTop = 0;
+  const m=document.querySelector('#modal-direction .modal');
+  if (m) m.scrollTop=0;
 }
 
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function campaignBadge(c) {
+  if (c.paused_by_ai) return `<span class="badge badge-ai">🤖 ${esc(c.ai_scenario||'AI')} пауза</span>`;
+  if (c.active)       return `<span class="badge badge-active">🟢 Активна</span>`;
+  return `<span class="badge badge-paused">⏸ Пауза</span>`;
+}
+
+function scenarioIcon(s) {
+  if (!s) return '🤖';
+  if (s.includes('Вампир'))  return '🧛';
+  if (s.includes('Просадка'))return '⚠️';
+  if (s.includes('Масштаб')) return '🚀';
+  return '✅';
+}
+
+function typeIcon(t) { return {photo:'🖼',video:'🎬',reels:'📱',ai:'✨'}[t]||'📢'; }
+function goalLabel(g) { return {whatsapp:'WhatsApp',instagram:'Instagram DM',website:'На сайт',leads:'Лид-форма'}[g]||g; }
+
+function showToast(msg, ok=true) {
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText=`position:fixed;bottom:24px;right:24px;background:${ok?'#10d9a0':'#f4546a'};color:#000;padding:12px 20px;border-radius:50px;font-weight:600;z-index:9999;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.3)`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2800);
+}
+
+function openTelegram() { window.open(`https://t.me/zhasclaude_bot`,'_blank'); }
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  if (window.Telegram?.WebApp) {
-    window.Telegram.WebApp.ready();
-    window.Telegram.WebApp.expand();
-  }
-  loadDashboard();
-});
+loadDashboard();
 </script>
 </body>
 </html>

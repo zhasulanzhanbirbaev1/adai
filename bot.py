@@ -10,7 +10,7 @@ from database import (
     get_active_subscription, get_campaigns, get_ai_log,
     get_admin_stats, PLANS, save_fb_token, get_fb_token,
 )
-from kaspi_handlers import show_plans, register_kaspi_handlers
+from launch_handler import build_launch_handler, build_launch_activate_handler
 
 load_dotenv()
 BOT_TOKEN       = os.getenv("BOT_TOKEN", "").strip()
@@ -28,7 +28,6 @@ def _main_keyboard(user_id: int):
     if WEBAPP_URL:
         inline_buttons.append([InlineKeyboardButton("📊 Открыть кабинет", web_app=WebAppInfo(url=WEBAPP_URL))])
     inline_buttons.append([
-        InlineKeyboardButton("💳 Подписка", callback_data="open_plans"),
         InlineKeyboardButton("🤖 Лог ИИ", callback_data="open_ailog"),
     ])
     return InlineKeyboardMarkup(inline_buttons)
@@ -36,9 +35,10 @@ def _main_keyboard(user_id: int):
 
 def _reply_keyboard():
     buttons = [
-        [KeyboardButton("🎨 Креатив"), KeyboardButton("💳 Подписка")],
-        [KeyboardButton("🤖 Лог ИИ"), KeyboardButton("🔗 Facebook")],
-        [KeyboardButton("🔄 Синхронизация"), KeyboardButton("📊 Статус")],
+        [KeyboardButton("🚀 Запустить кампанию")],
+        [KeyboardButton("🎨 Креатив"), KeyboardButton("🤖 Лог ИИ")],
+        [KeyboardButton("🔗 Facebook"), KeyboardButton("🔄 Синхронизация")],
+        [KeyboardButton("📊 Статус")],
     ]
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True, persistent=True)
 
@@ -49,14 +49,20 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     create_user(user.id, user.username or "", user.first_name or "")
 
     if is_new:
+        base_url = os.getenv("BASE_URL", "https://like-ai-production.up.railway.app").rstrip("/")
         text = (
             f"👋 Привет, *{user.first_name}*!\n\n"
-            "Добро пожаловать в *like.ai* — умный менеджер рекламы в Facebook/Instagram.\n\n"
-            "🎁 Вам активирован *бесплатный период на 7 дней* — все функции открыты прямо сейчас.\n\n"
-            "С чего начать:\n"
-            "🔗 /token — подключить рекламный кабинет Facebook\n"
-            "📊 Откройте личный кабинет кнопкой ниже\n"
+            "Добро пожаловать в *like.ai* — ИИ-таргетолог для рекламы в Facebook и Instagram.\n\n"
+            "🎁 *Пробный период 7 дней активирован* — все функции открыты прямо сейчас.\n\n"
+            "Чтобы запустить первую кампанию за 5 минут:\n\n"
+            "1️⃣ Подключи рекламный кабинет Facebook → /token\n"
+            "2️⃣ Создай направление (бриф бизнеса) в дашборде\n"
+            "3️⃣ Запусти кампанию → /launch\n\n"
+            "ИИ будет следить за результатами и присылать отчёты каждое утро в 9:00."
         )
+        base_kb = InlineKeyboardMarkup([[
+            InlineKeyboardButton("🔗 Подключить Facebook", url=f"{base_url}/fb/connect?user_id={user.id}"),
+        ]])
     else:
         if is_trial_active(user.id):
             status = "🟡 Пробный период активен"
@@ -79,22 +85,18 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "🔗 /token — подключить Facebook Ads\n"
             "🔄 /sync — синхронизировать кампании\n"
             "🎨 /creative — сгенерировать рекламный креатив\n"
-            "💳 /pay — подписка\n"
             "🤖 /ailog — решения ИИ\n"
         )
 
-    await update.message.reply_text(text, parse_mode="Markdown", reply_markup=_main_keyboard(user.id))
+    kb = base_kb if is_new else _main_keyboard(user.id)
+    await update.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
     await update.message.reply_text("Выберите действие:", reply_markup=_reply_keyboard())
-
-
-async def cmd_pay(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await show_plans(update, context)
 
 
 async def cmd_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     if not has_access(user.id):
-        await update.message.reply_text("❌ Доступ закрыт. Оформите подписку через /pay.")
+        await update.message.reply_text("❌ Доступ закрыт. Свяжитесь с администратором.")
         return
 
     args = context.args
@@ -138,7 +140,7 @@ async def cmd_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_sync(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     if not has_access(user.id):
-        await update.message.reply_text("❌ Доступ закрыт. Оформите подписку через /pay.")
+        await update.message.reply_text("❌ Доступ закрыт. Свяжитесь с администратором.")
         return
     fb = get_fb_token(user.id)
     if not fb:
@@ -203,16 +205,14 @@ async def cmd_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_inline(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     await q.answer()
-    if q.data == "open_plans":
-        await show_plans(update, context)
-    elif q.data == "open_ailog":
+    if q.data == "open_ailog":
         await cmd_ailog(update, context)
 
 
 async def cmd_creative(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     if not has_access(user.id):
-        await update.message.reply_text("❌ Доступ закрыт. Оформите подписку через /pay.")
+        await update.message.reply_text("❌ Доступ закрыт. Свяжитесь с администратором.")
         return
     await update.message.reply_text(
         "🎨 *Генератор рекламных креативов*\n\n"
@@ -226,8 +226,6 @@ async def handle_menu_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE
     text = update.message.text
     if text == "🎨 Креатив":
         await cmd_creative(update, context)
-    elif text == "💳 Подписка":
-        await show_plans(update, context)
     elif text == "🤖 Лог ИИ":
         await cmd_ailog(update, context)
     elif text == "🔗 Facebook":
@@ -268,7 +266,7 @@ async def handle_creative_niche(update: Update, context: ContextTypes.DEFAULT_TY
         return
 
     if not has_access(user.id):
-        await update.message.reply_text("❌ Доступ закрыт. Оформите подписку через /pay.")
+        await update.message.reply_text("❌ Доступ закрыт. Свяжитесь с администратором.")
         CREATIVE_STATES.pop(user.id, None)
         return
 
@@ -323,8 +321,9 @@ async def handle_creative_niche(update: Update, context: ContextTypes.DEFAULT_TY
 
 def build_app() -> Application:
     app = Application.builder().token(BOT_TOKEN).build()
+    app.add_handler(build_launch_handler())
+    app.add_handler(build_launch_activate_handler())
     app.add_handler(CommandHandler("start",    cmd_start))
-    app.add_handler(CommandHandler("pay",      cmd_pay))
     app.add_handler(CommandHandler("token",    cmd_token))
     app.add_handler(CommandHandler("ailog",    cmd_ailog))
     app.add_handler(CommandHandler("admin",    cmd_admin))
@@ -333,7 +332,6 @@ def build_app() -> Application:
     app.add_handler(CallbackQueryHandler(handle_inline, pattern=r"^open_"))
     app.add_handler(MessageHandler(filters.PHOTO, handle_creative_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_menu_buttons))
-    register_kaspi_handlers(app)
     return app
 
 
