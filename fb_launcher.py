@@ -159,3 +159,14 @@ def get_fb_pages(access_token: str) -> list:
     resp = requests.get(f"{META_API}/me/accounts",
                         params={"access_token": access_token, "fields": "id,name"})
     return resp.json().get("data", [])
+
+
+def set_campaign_status(access_token: str, campaign_id: str, status: str) -> dict:
+    """status = 'ACTIVE' or 'PAUSED'."""
+    resp = requests.post(
+        f"{META_API}/{campaign_id}",
+        data={"status": status, "access_token": access_token},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return resp.json()

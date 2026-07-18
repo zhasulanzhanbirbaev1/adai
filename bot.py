@@ -52,13 +52,13 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         base_url = os.getenv("BASE_URL", "https://like-ai-production.up.railway.app").rstrip("/")
         text = (
             f"👋 Привет, *{user.first_name}*!\n\n"
-            "Добро пожаловать в *like.ai* — ИИ-таргетолог для рекламы в Facebook и Instagram.\n\n"
-            "🎁 *Пробный период 7 дней активирован* — все функции открыты прямо сейчас.\n\n"
+            "Добро пожаловать в *Adai* — ИИ-таргетолог для рекламы в Facebook и Instagram.\n\n"
+            "🎁 *Пробный период активирован* — все функции открыты прямо сейчас.\n\n"
             "Чтобы запустить первую кампанию за 5 минут:\n\n"
             "1️⃣ Подключи рекламный кабинет Facebook → /token\n"
             "2️⃣ Создай направление (бриф бизнеса) в дашборде\n"
-            "3️⃣ Запусти кампанию → /launch\n\n"
-            "ИИ будет следить за результатами и присылать отчёты каждое утро в 9:00."
+            "3️⃣ Запусти кампанию — ИИ возьмёт всё под контроль\n\n"
+            "Отчёты каждое утро в 9:00. ИИ паузирует плохие кампании и масштабирует хорошие."
         )
         base_kb = InlineKeyboardMarkup([[
             InlineKeyboardButton("🔗 Подключить Facebook", url=f"{base_url}/fb/connect?user_id={user.id}"),

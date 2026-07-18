@@ -2,8 +2,9 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Adai — Личный кабинет</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Adai</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -249,6 +250,46 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
 .mob-menu-btn{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:4px}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── BOTTOM NAV (Telegram / Mobile) ─────────────────────────────────────── */
+.bottom-nav{
+  display:none;
+  position:fixed;
+  bottom:0;left:0;right:0;
+  height:calc(60px + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  z-index:100;
+  flex-direction:row;
+  align-items:stretch;
+  justify-content:space-around;
+}
+.bn-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;flex:1;cursor:pointer;
+  color:var(--muted);text-decoration:none;
+  padding:6px 0;transition:color .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.bn-item.active{color:var(--accent)}
+.bn-icon{font-size:20px;line-height:1}
+.bn-label{font-size:10px;font-weight:600;letter-spacing:.2px}
+
+@media(max-width:900px){
+  .bottom-nav{display:flex}
+  .main{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+  .mob-menu-btn{display:none!important}
+  .topbar{padding:12px 16px}
+  .topbar-title{font-size:15px}
+  .content{padding:14px 14px}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .stat-value{font-size:20px}
+  .ai-hero{padding:14px 16px}
+  .ai-saved-value{font-size:18px}
+  .table-box{overflow-x:auto}
+  table{min-width:520px}
+}
 </style>
 </head>
 <body>
@@ -278,6 +319,25 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
     </div>
   </div>
 </aside>
+
+<!-- BOTTOM NAV (mobile / Telegram Mini App) -->
+<nav class="bottom-nav" id="bottomNav">
+  <a class="bn-item active" data-page="dashboard" onclick="navigate('dashboard')">
+    <span class="bn-icon">📊</span><span class="bn-label">Дашборд</span>
+  </a>
+  <a class="bn-item" data-page="campaigns" onclick="navigate('campaigns')">
+    <span class="bn-icon">🎯</span><span class="bn-label">Кампании</span>
+  </a>
+  <a class="bn-item" data-page="targetolog" onclick="navigate('targetolog')">
+    <span class="bn-icon">🤖</span><span class="bn-label">AI</span>
+  </a>
+  <a class="bn-item" data-page="marketolog" onclick="navigate('marketolog')">
+    <span class="bn-icon">🎨</span><span class="bn-label">Студия</span>
+  </a>
+  <a class="bn-item" data-page="settings" onclick="navigate('settings')">
+    <span class="bn-icon">⚙️</span><span class="bn-label">Настройки</span>
+  </a>
+</nav>
 
 <!-- MAIN -->
 <main class="main">
@@ -902,12 +962,19 @@ const PAGE_TITLES = {
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.bn-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-'+page)?.classList.add('active');
-  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  document.querySelectorAll(`[data-page="${page}"]`).forEach(el => el.classList.add('active'));
   document.getElementById('topbarTitle').textContent = PAGE_TITLES[page] || page;
   currentPage = page;
   loadPage(page);
+  document.querySelector('.main')?.scrollTo(0, 0);
   if (window.innerWidth < 900) closeSidebar();
+  // Telegram back button
+  if (window.Telegram?.WebApp?.BackButton) {
+    if (page === 'dashboard') Telegram.WebApp.BackButton.hide();
+    else Telegram.WebApp.BackButton.show();
+  }
 }
 
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
@@ -1548,6 +1615,15 @@ function showToast(msg, ok=true) {
 }
 
 function openTelegram() { window.open(`https://t.me/zhasclaude_bot`,'_blank'); }
+
+// ── TELEGRAM MINI APP INIT ────────────────────────────────────────────────────
+(function() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return;
+  tg.ready();
+  tg.expand();
+  tg.BackButton.onClick(() => navigate('dashboard'));
+})();
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 loadDashboard();
