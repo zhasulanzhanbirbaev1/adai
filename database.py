@@ -21,7 +21,6 @@ class _Conn:
         self._conn.autocommit = False
 
     def execute(self, query, params=()):
-        query = query.replace("?", "%s")
         cur = self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         return cur
