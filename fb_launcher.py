@@ -81,11 +81,7 @@ def create_fb_adset(access_token: str, ad_account_id: str, campaign_id: str,
                      name: str, daily_budget_kzt: float, geo: str,
                      age_min: int, age_max: int, gender: str,
                      whatsapp_number: str) -> str:
-    geo_map = {
-        "Казахстан": "KZ", "Алматы": "KZ", "Астана": "KZ",
-        "Шымкент": "KZ", "Весь Казахстан": "KZ",
-    }
-    country = geo_map.get(geo, "KZ")
+    country = "KZ"  # все города и регионы КЗ → страна KZ в Facebook
 
     targeting = {
         "geo_locations": {"countries": [country]},
