@@ -59,7 +59,7 @@ async def landing():
 async def health():
     return {"status": "ok", "service": "Adai"}
 
-@app.get("/app")
+@app.api_route("/app", methods=["GET", "HEAD"])
 async def serve_app():
     return FileResponse(os.path.join(os.path.dirname(__file__), "app.html"))
 
