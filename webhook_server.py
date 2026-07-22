@@ -550,8 +550,25 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
     audience     = (body.get("audience") or "местные жители").strip()
     style        = body.get("style", "cinematic")
 
-    if not description:
-        raise HTTPException(400, "description or (offer + image_base64) required")
+    if not description and not niche:
+        raise HTTPException(400, "niche or description required")
+
+    # Auto-generate description from niche if not provided
+    if not description and niche:
+        niche_prompts = {
+            "кофейня": "Уютная современная кофейня в Алматы, ароматный кофе, счастливые люди",
+            "фитнес": "Современный фитнес зал, люди тренируются, мотивация и здоровье",
+            "салон красоты": "Элегантный салон красоты, профессиональный уход, довольные клиентки",
+            "ресторан": "Красивый ресторан в Алматы, изысканные блюда, приятная атмосфера",
+            "автосервис": "Профессиональный автосервис, современное оборудование, чистый цех",
+            "стоматология": "Современная стоматологическая клиника, белые зубы, улыбающиеся пациенты",
+            "недвижимость": "Красивые современные квартиры в Алматы, уютный интерьер, панорамные окна",
+            "одежда": "Стильная модная одежда, модели в современном образе, яркие цвета",
+        }
+        description = niche_prompts.get(niche.lower(),
+            f"Professional advertising photo for {niche} business in Kazakhstan. "
+            f"High quality service, happy clients, modern environment"
+        )
 
     style_prompts = {
         "cinematic": (

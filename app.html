@@ -523,29 +523,30 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
         <div class="studio-grid">
           <div>
             <div class="chart-box">
-              <div class="box-header"><div class="box-title">Описание изображения</div></div>
+              <div class="box-header"><div class="box-title">✨ AI Генератор баннеров</div></div>
               <div class="form-group">
-                <label class="form-label">Что изобразить?</label>
-                <textarea class="form-input" id="gen-description" rows="3" placeholder="Красивый салон красоты в Алматы, современный интерьер, довольные клиенты..."></textarea>
+                <label class="form-label">Ниша / бизнес <span style="color:var(--accent)">*</span></label>
+                <input class="form-input" id="gen-niche" placeholder="Салон красоты, кофейня, фитнес, ресторан..." style="font-size:16px"/>
               </div>
               <div class="form-group">
-                <label class="form-label">Ниша / бизнес</label>
-                <input class="form-input" id="gen-niche" placeholder="Салон красоты, кофейня, автосервис..."/>
+                <label class="form-label">Описание <span style="color:var(--muted);font-weight:400">(необязательно — AI заполнит сам)</span></label>
+                <textarea class="form-input" id="gen-description" rows="2" placeholder="Уютный салон в центре Алматы, лучшие мастера..."></textarea>
               </div>
               <div class="form-group">
-                <label class="form-label">Аудитория</label>
+                <label class="form-label">Аудитория <span style="color:var(--muted);font-weight:400">(необязательно)</span></label>
                 <input class="form-input" id="gen-audience" placeholder="Женщины 25–40, Алматы"/>
               </div>
               <div class="form-group">
-                <label class="form-label">Стиль изображения</label>
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+                <label class="form-label">Стиль</label>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
                   <div class="type-opt active" data-val="cinematic" onclick="selectGenStyle(this)"><div class="t-icon">🎬</div><div class="t-label">Кинематичный</div></div>
                   <div class="type-opt" data-val="product" onclick="selectGenStyle(this)"><div class="t-icon">📸</div><div class="t-label">Продуктовый</div></div>
+                  <div class="type-opt" data-val="lifestyle" onclick="selectGenStyle(this)"><div class="t-icon">🌟</div><div class="t-label">Лайфстайл</div></div>
                   <div class="type-opt" data-val="minimal" onclick="selectGenStyle(this)"><div class="t-icon">⬜</div><div class="t-label">Минимализм</div></div>
                 </div>
               </div>
-              <button class="btn btn-primary" id="gen-btn" onclick="generateBannersDalle()" style="width:100%">✨ Создать баннеры</button>
-              <div id="gen-status" style="margin-top:12px;color:var(--muted);font-size:12px;text-align:center"></div>
+              <button class="btn btn-primary" id="gen-btn" onclick="generateBannersDalle()" style="width:100%;font-size:16px;padding:14px">✨ Создать баннеры</button>
+              <div id="gen-status" style="margin-top:12px;color:var(--muted);font-size:13px;text-align:center"></div>
             </div>
             <div id="gen-copy-box" style="display:none">
               <div class="chart-box">
