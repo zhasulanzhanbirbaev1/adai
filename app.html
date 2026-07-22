@@ -1536,38 +1536,46 @@ function renderGeneratedBanners(data) {
 
   const box = document.getElementById('gen-copy-box');
   box.style.display='block';
-  const ig = data.instagram || {};
+  const ig   = data.instagram || {};
   const copy = data.copy || {};
-  document.getElementById('gen-copy-content').innerHTML=`
-    ${ig.caption ? `
-    <div style="margin-bottom:12px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">📸 Caption для поста</div>
-      <div style="background:var(--surface2);border-radius:10px;padding:14px;font-size:13px;line-height:1.7;white-space:pre-wrap">${esc(ig.caption)}</div>
-      <button onclick="copyText('${ig.caption.replace(/'/g,"\\'")}',this)" style="margin-top:6px;background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:12px;color:var(--muted);cursor:pointer">📋 Копировать</button>
-    </div>` : ''}
-    ${ig.stories_text ? `
-    <div style="margin-bottom:12px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">⚡ Stories</div>
-      <div style="background:var(--surface2);border-radius:10px;padding:12px;font-size:15px;font-weight:600">${esc(ig.stories_text)}</div>
-      <button onclick="copyText('${ig.stories_text.replace(/'/g,"\\'")}',this)" style="margin-top:6px;background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:12px;color:var(--muted);cursor:pointer">📋 Копировать</button>
-    </div>` : ''}
-    ${ig.hashtags ? `
-    <div style="margin-bottom:12px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">🏷 Хэштеги</div>
-      <div style="background:var(--surface2);border-radius:10px;padding:12px;font-size:12px;color:var(--accent);line-height:1.8">${esc(ig.hashtags)}</div>
-      <button onclick="copyText('${ig.hashtags.replace(/'/g,"\\'")}',this)" style="margin-top:6px;background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:12px;color:var(--muted);cursor:pointer">📋 Копировать</button>
-    </div>` : ''}
-    ${copy.headlines?.length ? `
-    <div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">✍️ Заголовки для рекламы</div>
-      ${copy.headlines.map(h=>`<div style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-weight:600;font-size:13px">${esc(h)}</div>`).join('')}
-    </div>` : ''}`;
-}
 
-function copyText(text, btn) {
-  navigator.clipboard.writeText(text).then(()=>{
-    btn.textContent='✅ Скопировано';
-    setTimeout(()=>btn.textContent='📋 Копировать', 2000);
+  // Store texts globally so copy buttons can access them safely
+  window._igCopy = {
+    caption:    typeof ig.caption === 'string'      ? ig.caption      : '',
+    stories:    typeof ig.stories_text === 'string' ? ig.stories_text : '',
+    hashtags:   typeof ig.hashtags === 'string'     ? ig.hashtags     : '',
+    headlines:  Array.isArray(copy.headlines)       ? copy.headlines  : [],
+  };
+
+  const c = window._igCopy;
+  const copyBtn = key => `<button class="copy-btn" data-key="${key}" style="margin-top:6px;background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:12px;color:var(--muted);cursor:pointer">📋 Копировать</button>`;
+
+  document.getElementById('gen-copy-content').innerHTML = `
+    ${c.caption ? `<div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">📸 Caption для поста</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;font-size:13px;line-height:1.7;white-space:pre-wrap">${esc(c.caption)}</div>
+      ${copyBtn('caption')}</div>` : ''}
+    ${c.stories ? `<div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">⚡ Stories</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:12px;font-size:15px;font-weight:600">${esc(c.stories)}</div>
+      ${copyBtn('stories')}</div>` : ''}
+    ${c.hashtags ? `<div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">🏷 Хэштеги</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:12px;font-size:12px;color:var(--accent);line-height:1.8">${esc(c.hashtags)}</div>
+      ${copyBtn('hashtags')}</div>` : ''}
+    ${c.headlines.length ? `<div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600">✍️ Заголовки для рекламы</div>
+      ${c.headlines.map(h=>`<div style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-weight:600;font-size:13px">${esc(h)}</div>`).join('')}
+    </div>` : ''}`;
+
+  document.getElementById('gen-copy-content').querySelectorAll('.copy-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const text = window._igCopy[btn.dataset.key] || '';
+      navigator.clipboard.writeText(text).then(()=>{
+        btn.textContent='✅ Скопировано';
+        setTimeout(()=>btn.textContent='📋 Копировать', 2000);
+      });
+    });
   });
 }
 
