@@ -574,7 +574,7 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
         raise HTTPException(503, str(e))
     except Exception as e:
         logger.error("DALL-E generation error: %s", e)
-        raise HTTPException(500, "РћС€РёР±РєР° РіРµРЅРµСЂР°С†РёРё РёР·РѕР±СЂР°Р¶РµРЅРёСЏ")
+        raise HTTPException(500, f"DALL-E error: {str(e)}")
 
     try:
         photo_b64 = b64mod.b64encode(image_bytes).decode()
