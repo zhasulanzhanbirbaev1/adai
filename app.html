@@ -565,6 +565,48 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
                 </div>
               </div>
             </div>
+
+            <!-- Launch block — shown after banner generation -->
+            <div id="launch-block" style="display:none">
+              <div class="chart-box" style="margin-top:16px">
+                <div class="box-header"><div class="box-title">🚀 Запустить в Instagram/Facebook</div></div>
+                <div class="form-group">
+                  <label class="form-label">Текст объявления</label>
+                  <textarea class="form-input" id="launch-ad-text" rows="3" placeholder="Текст вашей рекламы..."></textarea>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Бюджет в день (₸)</label>
+                    <input class="form-input" id="launch-budget" type="number" value="5000" min="1000"/>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">WhatsApp номер</label>
+                    <input class="form-input" id="launch-whatsapp" placeholder="+77001234567"/>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Возраст от</label>
+                    <input class="form-input" id="launch-age-min" type="number" value="20" min="18" max="65"/>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">до</label>
+                    <input class="form-input" id="launch-age-max" type="number" value="55" min="18" max="65"/>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Пол</label>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+                    <div class="type-opt active" data-val="all" onclick="selectLaunchGender(this)"><div class="t-label">Все</div></div>
+                    <div class="type-opt" data-val="female" onclick="selectLaunchGender(this)"><div class="t-label">Женщины</div></div>
+                    <div class="type-opt" data-val="male" onclick="selectLaunchGender(this)"><div class="t-label">Мужчины</div></div>
+                  </div>
+                </div>
+                <div id="launch-status" style="margin-bottom:10px;font-size:13px;color:var(--muted);text-align:center;display:none"></div>
+                <button class="btn btn-primary" id="launch-btn" onclick="launchCampaign()" style="width:100%;font-size:16px;padding:14px">🚀 Запустить рекламу</button>
+                <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Кампания создаётся на паузе — проверите перед запуском в Facebook Ads Manager</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -629,6 +671,11 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
             <div class="form-group">
               <label class="form-label">WhatsApp для заявок</label>
               <input class="form-input" id="whatsapp" placeholder="+7 777 123 45 67"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Facebook Page ID</label>
+              <input class="form-input" id="fb-page-id" placeholder="123456789012345"/>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">Найти: facebook.com → ваша страница → О странице → ID страницы</div>
             </div>
             <button class="btn btn-primary" onclick="saveProfile()">Сохранить</button>
           </div>
@@ -1212,9 +1259,11 @@ function setPeriod(p,btn) {
 async function loadSettings() {
   const data = useMock() ? MOCK.settings : await api('/api/settings');
   if (!data) return;
-  document.getElementById('fb-account').value = data.facebook?.ad_account_id||'';
-  document.getElementById('target-cpl').value = data.user?.target_cpl||'';
-  document.getElementById('whatsapp').value   = data.user?.whatsapp||'';
+  window._settings = data;
+  document.getElementById('fb-account').value  = data.facebook?.ad_account_id||'';
+  document.getElementById('target-cpl').value  = data.user?.target_cpl||'';
+  document.getElementById('whatsapp').value    = data.user?.whatsapp||'';
+  document.getElementById('fb-page-id').value  = data.user?.fb_page_id||'';
 
   if (data.facebook?.connected) {
     document.getElementById('fb-status-block').innerHTML=`
@@ -1260,9 +1309,11 @@ async function saveFacebook() {
 }
 
 async function saveProfile() {
-  const cpl = parseFloat(document.getElementById('target-cpl').value)||0;
-  const wa  = document.getElementById('whatsapp').value.trim();
-  if (!useMock()) await api('/api/settings/profile',{method:'PUT',body:JSON.stringify({target_cpl:cpl,whatsapp:wa})});
+  const cpl    = parseFloat(document.getElementById('target-cpl').value)||0;
+  const wa     = document.getElementById('whatsapp').value.trim();
+  const pageId = document.getElementById('fb-page-id').value.trim();
+  if (!useMock()) await api('/api/settings/profile',{method:'PUT',body:JSON.stringify({target_cpl:cpl,whatsapp:wa,fb_page_id:pageId})});
+  if (window._settings?.user) { window._settings.user.whatsapp=wa; window._settings.user.fb_page_id=pageId; }
   showToast('Настройки сохранены');
 }
 
@@ -1347,33 +1398,110 @@ function selectGenStyle(el) {
   _genStyle = el.dataset.val;
 }
 
+let _lastGeneratedBanners = [];
+let _launchGender = 'all';
+
+function selectLaunchGender(el) {
+  el.closest('div').querySelectorAll('.type-opt').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  _launchGender = el.dataset.val;
+}
+
 async function generateBannersDalle() {
-  const desc     = document.getElementById('gen-description').value.trim();
   const niche    = document.getElementById('gen-niche').value.trim();
+  const desc     = document.getElementById('gen-description').value.trim();
   const audience = document.getElementById('gen-audience').value.trim();
   const btn      = document.getElementById('gen-btn');
   const status   = document.getElementById('gen-status');
   const container= document.getElementById('gen-banners');
 
-  if (!desc) { status.textContent='Опишите изображение'; return; }
+  if (!niche) { status.textContent='Укажите нишу'; return; }
   btn.disabled = true;
   btn.textContent = '⏳ Создаю...';
-  status.textContent = 'DALL-E 3 генерирует изображение (15–30 сек)...';
+  status.textContent = 'AI генерирует изображение (20–40 сек)...';
   container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:44px 0"><div style="font-size:32px;display:inline-block;animation:spin 1.2s linear infinite">✨</div></div>';
   document.getElementById('gen-copy-box').style.display='none';
+  document.getElementById('launch-block').style.display='none';
 
   try {
-    const r = await fetch(`${API}/api/generate-banner`,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({description:desc,niche,audience,style:_genStyle,user_id:UID})});
+    const r = await fetch(`${API}/api/generate-banner?user_id=${UID}`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({description:desc,niche,audience,style:_genStyle})});
     const data = await r.json();
-    if (!r.ok) { status.textContent = data.detail||'Ошибка'; container.innerHTML=''; return; }
+    if (!r.ok) { status.textContent = data.detail||'Ошибка генерации'; container.innerHTML=''; return; }
+    _lastGeneratedBanners = data.banners || [];
     renderGeneratedBanners(data);
     status.textContent='';
+    // Show launch block
+    document.getElementById('launch-block').style.display='block';
+    if (data.copy?.headlines?.[0]) {
+      const h = data.copy.headlines;
+      const b = data.copy.bullets || [];
+      document.getElementById('launch-ad-text').value =
+        h[0] + '\n\n' + b.map(x=>'✓ '+x).join('\n');
+    }
+    document.getElementById('launch-whatsapp').value = window._settings?.user?.whatsapp || '';
   } catch(e) {
     status.textContent='Сервер недоступен';
   } finally {
     btn.disabled=false;
     btn.textContent='✨ Создать баннеры';
+  }
+}
+
+async function launchCampaign() {
+  const btn    = document.getElementById('launch-btn');
+  const status = document.getElementById('launch-status');
+  const niche  = document.getElementById('gen-niche').value.trim();
+
+  if (!_lastGeneratedBanners.length) { alert('Сначала создайте баннер'); return; }
+
+  const selectedImg = (() => {
+    const sel = document.querySelector('#gen-banners .banner-preview.selected img');
+    if (sel) return sel.src;
+    const first = document.querySelector('#gen-banners .banner-preview img');
+    return first ? first.src : _lastGeneratedBanners[0]?.image;
+  })();
+
+  if (!selectedImg) { alert('Выберите баннер'); return; }
+
+  const pageId = window._settings?.user?.fb_page_id || '';
+  if (!pageId) {
+    alert('Укажите ID страницы Facebook в Настройках → Facebook Page ID');
+    navigate('settings');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Запускаю...';
+  status.style.display='block';
+  status.textContent='Создаю кампанию в Facebook...';
+
+  try {
+    const r = await fetch(`${API}/api/studio/launch?user_id=${UID}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        image_base64: selectedImg,
+        ad_text: document.getElementById('launch-ad-text').value,
+        budget_kzt: parseFloat(document.getElementById('launch-budget').value)||5000,
+        whatsapp_number: document.getElementById('launch-whatsapp').value,
+        age_min: parseInt(document.getElementById('launch-age-min').value)||20,
+        age_max: parseInt(document.getElementById('launch-age-max').value)||55,
+        gender: _launchGender,
+        campaign_name: niche || 'Adai кампания',
+        page_id: pageId,
+      })
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      status.textContent = '❌ ' + (data.detail||'Ошибка');
+      btn.disabled=false; btn.textContent='🚀 Запустить рекламу';
+      return;
+    }
+    status.textContent = '✅ Кампания создана! ID: ' + data.campaign_id;
+    btn.textContent='✅ Запущено';
+  } catch(e) {
+    status.textContent='❌ Сервер недоступен';
+    btn.disabled=false; btn.textContent='🚀 Запустить рекламу';
   }
 }
 

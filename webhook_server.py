@@ -226,7 +226,8 @@ async def api_settings(user_id: int = Depends(_get_uid)):
     return {
         "user": {"id": user["id"], "first_name": user["first_name"],
                  "username": user["username"], "target_cpl": user["target_cpl"],
-                 "whatsapp": user["whatsapp"]},
+                 "whatsapp": user["whatsapp"],
+                 "fb_page_id": user.get("fb_page_id", "")},
         "facebook": {"connected": fb is not None,
                      "ad_account_id": fb["ad_account_id"] if fb else None,
                      "connected_at": fb["connected_at"][:10] if fb else None},
@@ -235,6 +236,79 @@ async def api_settings(user_id: int = Depends(_get_uid)):
                          "expires": sub["expires_at"][:10] if sub else None,
                          "trial_ends": user["trial_ends_at"][:10] if user["trial_ends_at"] else None},
     }
+
+
+@app.get("/api/fb/pages")
+async def api_fb_pages(user_id: int = Depends(_get_uid)):
+    fb = get_fb_token(user_id)
+    if not fb:
+        raise HTTPException(400, "Facebook not connected")
+    from fb_launcher import get_fb_pages
+    pages = get_fb_pages(fb["access_token"])
+    return {"pages": pages}
+
+
+@app.post("/api/studio/launch")
+async def api_studio_launch(request: Request, user_id: int = Depends(_get_uid)):
+    import base64 as b64mod
+    fb = get_fb_token(user_id)
+    if not fb:
+        raise HTTPException(400, "Facebook не подключён. Подключите в Настройках.")
+
+    body          = await request.json()
+    image_b64     = body.get("image_base64", "")
+    ad_text       = body.get("ad_text", "").strip()
+    budget_kzt    = float(body.get("budget_kzt", 5000))
+    whatsapp      = body.get("whatsapp_number", "").strip()
+    page_id       = body.get("page_id", "").strip()
+    campaign_name = body.get("campaign_name", "Adai кампания").strip()
+    age_min       = int(body.get("age_min", 20))
+    age_max       = int(body.get("age_max", 55))
+    gender        = body.get("gender", "all")
+
+    if not image_b64:
+        raise HTTPException(400, "image_base64 required")
+    if not page_id:
+        raise HTTPException(400, "page_id required — укажите ID страницы Facebook в Настройках")
+
+    from fb_launcher import upload_image_to_fb, create_fb_campaign, create_fb_adset, create_fb_ad
+
+    try:
+        img_bytes  = b64mod.b64decode(image_b64.split(",")[-1])
+        image_hash = upload_image_to_fb(fb["access_token"], fb["ad_account_id"], img_bytes, "banner.jpg")
+    except Exception as e:
+        logger.error("Image upload error: %s", e)
+        raise HTTPException(500, f"Ошибка загрузки изображения: {str(e)}")
+
+    try:
+        camp_id  = create_fb_campaign(fb["access_token"], fb["ad_account_id"], name=campaign_name)
+        adset_id = create_fb_adset(
+            fb["access_token"], fb["ad_account_id"], camp_id,
+            name=f"{campaign_name} AdSet",
+            daily_budget_kzt=budget_kzt,
+            geo="KZ", age_min=age_min, age_max=age_max,
+            gender=gender, whatsapp_number=whatsapp,
+        )
+        ad_id = create_fb_ad(
+            fb["access_token"], fb["ad_account_id"], adset_id,
+            name=f"{campaign_name} Ad",
+            image_hash=image_hash,
+            ad_text=ad_text or campaign_name,
+            page_id=page_id,
+            whatsapp_number=whatsapp,
+        )
+    except Exception as e:
+        logger.error("Campaign launch error: %s", e)
+        raise HTTPException(500, f"Ошибка запуска: {str(e)}")
+
+    await _notify(user_id,
+        f"🚀 *Кампания запущена!*\n\n"
+        f"📌 {campaign_name}\n"
+        f"💰 Бюджет: {int(budget_kzt):,} ₸/день\n"
+        f"🆔 ID: `{camp_id}`\n\n"
+        f"Статус: на проверке Facebook")
+
+    return {"campaign_id": camp_id, "adset_id": adset_id, "ad_id": ad_id, "status": "launched"}
 
 
 @app.put("/api/settings/facebook")
@@ -256,6 +330,8 @@ async def api_save_profile(request: Request, user_id: int = Depends(_get_uid)):
         target_cpl=body.get("target_cpl"),
         whatsapp=body.get("whatsapp"),
     )
+    if body.get("fb_page_id"):
+        save_user_page_id(user_id, body["fb_page_id"])
     return {"status": "saved"}
 
 
