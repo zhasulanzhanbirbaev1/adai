@@ -30,6 +30,38 @@ async def generate_dalle_image(prompt: str, size: str = "1024x1024") -> bytes:
         return r.content
 
 
+async def generate_instagram_copy(niche: str, offer: str, audience: str) -> dict:
+    prompt = f"""Ты лучший SMM-копирайтер для Instagram рекламы в Казахстане.
+
+Ниша: {niche}
+Оффер: {offer or niche}
+Аудитория: {audience or 'местные жители Казахстана'}
+
+Создай тексты для Instagram рекламы. Ответь СТРОГО в JSON:
+{{
+  "caption": "Основной текст поста (3-5 предложений, эмодзи, живой язык, боль → решение → CTA)",
+  "caption_short": "Короткий вариант для карусели (1-2 предложения + CTA)",
+  "stories_text": "Текст для Stories — очень короткий, 5-8 слов, цепляющий",
+  "hashtags": "#хэштег1 #хэштег2 ... (15-20 релевантных хэштегов на русском и английском для КЗ)",
+  "cta_button": "Текст кнопки CTA (2-4 слова)"
+}}
+
+Правила:
+- caption пишется живым языком, как будто пишет человек
+- Начни с боли или вопроса клиента
+- Используй эмодзи органично
+- Хэштеги: микс популярных КЗ + нишевых
+- Всё на русском кроме хэштегов"""
+
+    response = await client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=600,
+        response_format={"type": "json_object"},
+    )
+    return json.loads(response.choices[0].message.content)
+
+
 async def generate_ad_copy(offer: str, audience: str, image_base64: str = None) -> dict:
     content = []
     if image_base64:

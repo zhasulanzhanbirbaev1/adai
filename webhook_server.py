@@ -703,9 +703,17 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
         logger.error("Banner compose error: %s", e)
         raise HTTPException(500, f"Ошибка компоновки баннера: {str(e)}")
 
+    try:
+        from image_generator import generate_instagram_copy
+        insta = await generate_instagram_copy(niche or description, description, audience)
+    except Exception as e:
+        logger.error("Instagram copy error: %s", e)
+        insta = {}
+
     return {
         "banners": banners,
         "copy": {"headlines": headlines, "bullets": bullets, "cta": cta},
+        "instagram": insta,
     }
 
 
