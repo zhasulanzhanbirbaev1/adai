@@ -530,7 +530,7 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
 
     body = await request.json()
 
-    # Legacy path: user uploads their own photo (AI Studio)
+    # Upload path: user provides their own photo
     image_base64 = body.get("image_base64")
     offer        = (body.get("offer") or "").strip()
     if image_base64 and offer:
@@ -538,15 +538,16 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
             copy      = await generate_ad_copy(offer, body.get("audience") or "", image_base64)
             img_bytes = b64mod.b64decode(image_base64)
             headlines = copy.get("headlines", [offer] * 3)
-            banners   = create_banners(img_bytes, headlines, copy.get("bullets", []), copy.get("cta", "РЈР·РЅР°С‚СЊ Р±РѕР»СЊС€Рµ"))
+            banners   = create_banners(img_bytes, headlines, copy.get("bullets", []), copy.get("cta", "Узнать больше"))
             return {"banners": banners, "copy": copy}
         except Exception as e:
-            raise HTTPException(500, str(e))
+            logger.error("Upload banner error: %s", e)
+            raise HTTPException(500, f"Ошибка создания баннера: {str(e)}")
 
     # DALL-E path: generate image from description
     description = (body.get("description") or "").strip()
     niche        = (body.get("niche") or "").strip()
-    audience     = (body.get("audience") or "РјРµСЃС‚РЅС‹Рµ Р¶РёС‚РµР»Рё").strip()
+    audience     = (body.get("audience") or "местные жители").strip()
     style        = body.get("style", "cinematic")
 
     if not description:
@@ -554,16 +555,32 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
 
     style_prompts = {
         "cinematic": (
-            f"Professional cinematic advertising photo for Facebook ad. {description}. "
-            "Dramatic lighting, deep shadows, rich colors, photorealistic, 8K, commercial photography."
+            f"Award-winning advertising photography for Facebook/Instagram ad campaign. Subject: {description}. "
+            "Shot by top commercial photographer. Perfect golden hour lighting or dramatic studio lighting. "
+            "Ultra-sharp focus, rich saturated colors, professional color grading. "
+            "Cinematic composition with rule of thirds. No text, no watermarks. "
+            "Photorealistic, 8K resolution, commercial advertising quality."
         ),
         "product": (
-            f"Clean product photography for social media ad. {description}. "
-            "White or neutral background, studio lighting, sharp focus, commercial quality."
+            f"Premium product photography for social media advertising. Subject: {description}. "
+            "Shot in professional photography studio. Pure white or gradient background. "
+            "Three-point lighting setup, catchlights, perfect shadows. "
+            "Ultra-sharp details, vibrant colors, commercial photography standard. "
+            "No text, no watermarks. 8K resolution."
         ),
         "minimal": (
-            f"Modern minimalist advertising visual for social media. {description}. "
-            "Bold solid color background, geometric shapes, high contrast, editorial style."
+            f"Modern minimalist advertising visual for social media. Subject: {description}. "
+            "Bold solid color background in deep blue, rich black, or warm terracotta. "
+            "Clean geometric composition, strong visual hierarchy. "
+            "High-end editorial photography style. Professional advertising aesthetic. "
+            "No text, no watermarks. Ultra-HD quality."
+        ),
+        "lifestyle": (
+            f"Authentic lifestyle photography for social media ad. Subject: {description}. "
+            "Real people in natural environments, candid emotion, genuine happiness. "
+            "Warm natural light, bokeh background, editorial magazine quality. "
+            "Aspirational but relatable. Kazakhstan/Central Asia setting if applicable. "
+            "No text, no watermarks. 8K photorealistic quality."
         ),
     }
     dalle_prompt = style_prompts.get(style, style_prompts["cinematic"])
@@ -581,13 +598,18 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
         copy = await generate_ad_copy(niche or description, audience, photo_b64)
         headlines = copy.get("headlines", [description] * 3)
         bullets   = copy.get("bullets", [])
-        cta       = copy.get("cta", "РЈР·РЅР°С‚СЊ Р±РѕР»СЊС€Рµ")
+        cta       = copy.get("cta", "Узнать больше")
     except Exception as e:
         logger.error("Ad copy generation error: %s", e)
         headlines = [description, description, description]
-        bullets, cta = [], "РЈР·РЅР°С‚СЊ Р±РѕР»СЊС€Рµ"
+        bullets, cta = [], "Узнать больше"
 
-    banners = create_banners(image_bytes, headlines, bullets, cta)
+    try:
+        banners = create_banners(image_bytes, headlines, bullets, cta)
+    except Exception as e:
+        logger.error("Banner compose error: %s", e)
+        raise HTTPException(500, f"Ошибка компоновки баннера: {str(e)}")
+
     return {
         "banners": banners,
         "copy": {"headlines": headlines, "bullets": bullets, "cta": cta},
