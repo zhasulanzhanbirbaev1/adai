@@ -1395,18 +1395,59 @@ async function generateBannersUpload() {
 
 // ── DALL-E GENERATOR ──────────────────────────────────────────────────────────
 function selectGenStyle(el) {
-  el.closest('div').querySelectorAll('.type-opt').forEach(o=>o.classList.remove('active'));
-  el.classList.add('active');
-  _genStyle = el.dataset.val;
+  if (el.classList.contains('active')) {
+    el.classList.remove('active');
+    _genStyle = null;
+  } else {
+    el.closest('div').querySelectorAll('.type-opt').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+    _genStyle = el.dataset.val;
+  }
 }
 
 let _lastGeneratedBanners = [];
 let _launchGender = 'all';
 
 function selectLaunchGender(el) {
-  el.closest('div').querySelectorAll('.type-opt').forEach(e=>e.classList.remove('active'));
-  el.classList.add('active');
-  _launchGender = el.dataset.val;
+  const val = el.dataset.val;
+  if (el.classList.contains('active') && val !== 'all') {
+    // Снять выбор — вернуть "Все"
+    el.closest('div').querySelectorAll('.type-opt').forEach(e => e.classList.remove('active'));
+    el.closest('div').querySelector('[data-val="all"]').classList.add('active');
+    _launchGender = 'all';
+  } else {
+    el.closest('div').querySelectorAll('.type-opt').forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+    _launchGender = val;
+  }
+}
+
+async function downloadBanner(btn, dataUrl, label) {
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳';
+  btn.disabled  = true;
+  try {
+    const resp = await fetch(`${API}/api/send-banner?user_id=${UID}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ image_b64: dataUrl, label }),
+    });
+    if (resp.ok) {
+      btn.innerHTML = '✅';
+      setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2500);
+    } else { throw new Error(); }
+  } catch(e) {
+    // Fallback: blob download
+    try {
+      const res  = await fetch(dataUrl);
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = `adai-${(label||'banner').toLowerCase()}-1080x1350.jpg`;
+      a.click(); URL.revokeObjectURL(url);
+    } catch(_) {}
+    btn.innerHTML = orig; btn.disabled = false;
+  }
 }
 
 async function generateBannersDalle() {
@@ -1531,7 +1572,7 @@ function renderBanners(data, wrap) {
         <div class="banner-info">
           <span class="banner-style-name">${esc(b.label||'')}</span>
           <span class="banner-size-tag">${b.size||'1080×1350'}</span>
-          <a class="btn btn-primary btn-sm" href="${b.image}" download="adai-${(b.label||'banner').toLowerCase()}-1080x1350.jpg" onclick="event.stopPropagation()">⬇</a>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();downloadBanner(this,'${b.image}','${esc(b.label||'Баннер')}')">⬇</button>
         </div>
       </div>`).join('')}
     </div>`;
@@ -1540,14 +1581,14 @@ function renderBanners(data, wrap) {
 function renderGeneratedBanners(data) {
   const container = document.getElementById('gen-banners');
   const hint      = document.getElementById('gen-dl-hint');
-  hint.textContent = '← нажмите для скачивания';
+  hint.textContent = '⬇ — отправляет фото в ваш Telegram';
   container.innerHTML = data.banners.map((b,i)=>`
     <div class="banner-preview" onclick="selectBanner(this)">
       <div class="banner-img"><img src="${b.image}" style="width:100%;height:100%;object-fit:cover"/></div>
       <div class="banner-info">
         <span class="banner-style-name">${esc(b.label||'Вариант '+(i+1))}</span>
         <span class="banner-size-tag">${b.size||'1080×1350'}</span>
-        <a class="btn btn-primary btn-sm" href="${b.image}" download="adai-${(b.label||'banner').toLowerCase()}-1080x1350.jpg" onclick="event.stopPropagation()">⬇</a>
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();downloadBanner(this,'${b.image}','${esc(b.label||'Баннер')}')">⬇</button>
       </div>
     </div>`).join('');
 

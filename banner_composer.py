@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import io, base64, os
 
 FEED_W = 1080
-FEED_H = 1350   # 4:5 — top Instagram engagement format
+FEED_H = 1350   # 4:5 — Instagram feed portrait (highest CTR)
 
 _BASE = os.path.join(os.path.dirname(__file__), "fonts")
 _FONT_CANDIDATES_BOLD = [
@@ -20,9 +20,9 @@ _FONT_CANDIDATES_REG = [
 
 
 def _find_font(candidates):
-    for path in candidates:
-        if os.path.exists(path):
-            return path
+    for p in candidates:
+        if os.path.exists(p):
+            return p
     return None
 
 
@@ -64,167 +64,150 @@ def _cover_crop(image_bytes: bytes, w=FEED_W, h=FEED_H) -> Image.Image:
     return img.crop((x, y, x + w, y + h))
 
 
-def _bottom_gradient(img: Image.Image, zone_frac=0.62, strength=238) -> Image.Image:
-    W, H = img.size
-    ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    d = ImageDraw.Draw(ov)
-    start_y = int(H * (1 - zone_frac))
-    zone_h  = H - start_y
-    for i in range(zone_h):
-        t = (i / zone_h) ** 1.25
-        a = int(strength * t)
-        d.line([(0, start_y + i), (W, start_y + i)], fill=(4, 7, 18, a))
-    return Image.alpha_composite(img.convert("RGBA"), ov).convert("RGB")
-
-
-def _pill(draw, x, y, text, font, bg=(37, 99, 235), fg=(255, 255, 255), pad_x=52, pad_y=20):
+def _pill(draw, x, y, text, font, bg=(37, 99, 235), fg=(255, 255, 255)):
     bb = draw.textbbox((0, 0), text, font=font)
     tw, th = bb[2] - bb[0], bb[3] - bb[1]
-    bw, bh = tw + pad_x * 2, th + pad_y * 2
+    px, py = 52, 20
+    bw, bh = tw + px * 2, th + py * 2
     draw.rounded_rectangle([x, y, x + bw, y + bh], radius=bh // 2, fill=bg)
-    draw.text((x + pad_x, y + pad_y), text, font=font, fill=fg)
+    draw.text((x + px, y + py), text, font=font, fill=fg)
     return bh
 
 
-# ── Style 1: IMPACT ─────────────────────────────────────────────────────────
-# Full-bleed portrait photo, cinematic bottom gradient, giant headline + CTA
-
-def style_impact(img: Image.Image, headline: str, tagline: str, cta: str) -> Image.Image:
-    W, H = img.size
-    img = _bottom_gradient(img, zone_frac=0.65, strength=245)
-
-    # Thin electric-blue accent bar at top
-    draw = ImageDraw.Draw(img)
-    draw.rectangle([0, 0, W, 8], fill=(37, 99, 235))
-
-    fh = _font(F_BOLD, 98)
-    ft = _font(F_REG,  44)
-    fc = _font(F_BOLD, 46)
-    margin = 60
-    tw = W - margin * 2
-
-    # Position text block starting from ~46% down
-    y = int(H * 0.46)
-
-    for line in _wrap(headline, fh, tw, draw)[:3]:
-        draw.text((margin, y), line, font=fh, fill=(255, 255, 255))
-        y += 112
-
-    y += 14
-    if tagline:
-        for tl in _wrap(tagline, ft, tw, draw)[:2]:
-            draw.text((margin, y), tl, font=ft, fill=(180, 210, 255))
-            y += 56
-        y += 16
-
-    _pill(draw, margin, y, cta, fc, bg=(37, 99, 235))
-    return img
+def _pill_center(draw, W, y, text, font, bg=(37, 99, 235), fg=(255, 255, 255)):
+    bb = draw.textbbox((0, 0), text, font=font)
+    tw, th = bb[2] - bb[0], bb[3] - bb[1]
+    px, py = 52, 20
+    bw, bh = tw + px * 2, th + py * 2
+    x = (W - bw) // 2
+    draw.rounded_rectangle([x, y, x + bw, y + bh], radius=bh // 2, fill=bg)
+    draw.text((x + px, y + py), text, font=font, fill=fg)
+    return bh
 
 
-# ── Style 2: PANEL ──────────────────────────────────────────────────────────
-# Photo fills top 58%, deep navy panel with separator line at bottom
+# ── Helper: clean photo crop to given height ─────────────────────────────────
+def _photo_area(base_img: Image.Image, photo_h: int) -> Image.Image:
+    """Return clean top slice of the image — NO text or overlay."""
+    return base_img.crop((0, 0, FEED_W, photo_h))
 
-def style_panel(img: Image.Image, headline: str, bullets: list, cta: str) -> Image.Image:
-    W, H = img.size
-    split_y = int(H * 0.575)
 
-    # Feather edge at bottom of photo
-    ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    d = ImageDraw.Draw(ov)
-    fade = 110
-    for i in range(fade):
-        a = int(255 * (i / fade) ** 1.5)
-        d.line([(0, split_y - fade + i), (W, split_y - fade + i)], fill=(8, 14, 34, a))
-    img = Image.alpha_composite(img.convert("RGBA"), ov).convert("RGB")
+# ── Style 1: STAGE ───────────────────────────────────────────────────────────
+# Clean photo top 60% | Near-black panel | Left-aligned headline + bullet + CTA
 
-    draw = ImageDraw.Draw(img)
-    draw.rectangle([0, split_y, W, H], fill=(8, 14, 34))
-    draw.rectangle([0, split_y, W, split_y + 6], fill=(37, 99, 235))
+def style_stage(base: Image.Image, headline: str, bullets: list, cta: str) -> Image.Image:
+    W, H = FEED_W, FEED_H
+    PANEL_COLOR = (5, 9, 22)      # deep near-black with blue hint
+    SPLIT = int(H * 0.60)         # 810px photo / 540px panel
 
-    fh = _font(F_BOLD, 82)
-    fb = _font(F_REG,  40)
+    canvas = Image.new("RGB", (W, H), PANEL_COLOR)
+    canvas.paste(_photo_area(base, SPLIT), (0, 0))
+
+    draw = ImageDraw.Draw(canvas)
+    # Accent separator
+    draw.rectangle([0, SPLIT, W, SPLIT + 6], fill=(37, 99, 235))
+
+    fh = _font(F_BOLD, 88)
+    ft = _font(F_REG,  40)
     fc = _font(F_BOLD, 44)
-    margin = 60
-    tw = W - margin * 2
-    y  = split_y + 38
+    margin, tw = 60, W - 120
+    y = SPLIT + 38
 
     for line in _wrap(headline, fh, tw, draw)[:2]:
         draw.text((margin, y), line, font=fh, fill=(255, 255, 255))
-        y += 96
+        y += 104
 
     y += 10
+    if bullets:
+        draw.text((margin, y), f"✦  {bullets[0]}", font=ft, fill=(148, 183, 255))
+        y += 54
+
+    y += 18
+    _pill(draw, margin, y, cta, fc)
+    return canvas
+
+
+# ── Style 2: NAVY ────────────────────────────────────────────────────────────
+# Clean photo top 57% | Navy gradient panel | Centered headline + 2 bullets + CTA
+
+def style_navy(base: Image.Image, headline: str, bullets: list, cta: str) -> Image.Image:
+    W, H = FEED_W, FEED_H
+    SPLIT = int(H * 0.575)        # 776px photo / 574px panel
+
+    canvas = Image.new("RGB", (W, H), (10, 22, 50))
+    canvas.paste(_photo_area(base, SPLIT), (0, 0))
+
+    draw = ImageDraw.Draw(canvas)
+    # Gradient panel background
+    for i in range(H - SPLIT):
+        t = i / (H - SPLIT)
+        r = int(10  * (1 - t) + 4  * t)
+        g = int(22  * (1 - t) + 12 * t)
+        b = int(50  * (1 - t) + 22 * t)
+        draw.line([(0, SPLIT + i), (W, SPLIT + i)], fill=(r, g, b))
+
+    # Thin white hairline separator
+    draw.rectangle([0, SPLIT, W, SPLIT + 2], fill=(255, 255, 255, 80))
+
+    fh = _font(F_BOLD, 82)
+    ft = _font(F_REG,  38)
+    fc = _font(F_BOLD, 42)
+    margin, tw = 60, W - 120
+    y = SPLIT + 38
+
+    # Centered headline
+    for line in _wrap(headline, fh, tw, draw)[:2]:
+        bb = draw.textbbox((0, 0), line, font=fh)
+        lw = bb[2] - bb[0]
+        draw.text(((W - lw) // 2, y), line, font=fh, fill=(255, 255, 255))
+        y += 96
+
+    y += 8
     for b in (bullets or [])[:2]:
-        draw.text((margin, y), f"✦  {b}", font=fb, fill=(100, 160, 255))
-        y += 54
-
-    y += 20
-    # Centered CTA
-    bb   = draw.textbbox((0, 0), cta, font=fc)
-    tw2  = bb[2] - bb[0]; th2 = bb[3] - bb[1]
-    px, py = 52, 18
-    bw, bh = tw2 + px * 2, th2 + py * 2
-    bx = (W - bw) // 2
-    draw.rounded_rectangle([bx, y, bx + bw, y + bh], radius=bh // 2, fill=(37, 99, 235))
-    draw.text((bx + px, y + py), cta, font=fc, fill=(255, 255, 255))
-    return img
-
-
-# ── Style 3: CARD ───────────────────────────────────────────────────────────
-# Lightly blurred photo BG, frosted dark card with left accent stripe + CTA
-
-def style_card(img: Image.Image, headline: str, tagline: str, cta: str) -> Image.Image:
-    W, H = img.size
-
-    bg = img.filter(ImageFilter.GaussianBlur(radius=5))
-    tint = Image.new("RGB", (W, H), (5, 10, 25))
-    bg = Image.blend(bg, tint, alpha=0.40)
-
-    # Measure content to size the card
-    probe = ImageDraw.Draw(Image.new("RGB", (1, 1)))
-    fh = _font(F_BOLD, 84)
-    ft = _font(F_REG,  40)
-    fc = _font(F_BOLD, 44)
-    card_inner_w = W - 120 - 80   # 60px margin each side, 80px text padding inside
-
-    h_lines = _wrap(headline, fh, card_inner_w, probe)[:3]
-    t_lines = _wrap(tagline,  ft, card_inner_w, probe)[:2] if tagline else []
-
-    content_h = len(h_lines) * 100 + len(t_lines) * 54 + 88 + 48   # headline + tagline + CTA + gaps
-    card_h    = content_h + 80
-    card_x0   = 60
-    card_x1   = W - 60
-    card_y0   = (H - card_h) // 2
-    card_y1   = card_y0 + card_h
-
-    # Frosted card overlay
-    card_ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    dc = ImageDraw.Draw(card_ov)
-    dc.rounded_rectangle([card_x0, card_y0, card_x1, card_y1],
-                          radius=26, fill=(9, 18, 48, 218))
-    dc.rounded_rectangle([card_x0, card_y0, card_x0 + 7, card_y1],
-                          radius=4, fill=(37, 99, 235, 255))
-
-    result = Image.alpha_composite(bg.convert("RGBA"), card_ov).convert("RGB")
-    draw   = ImageDraw.Draw(result)
-
-    tx = card_x0 + 56
-    y  = card_y0 + 44
-
-    for line in h_lines:
-        draw.text((tx, y), line, font=fh, fill=(255, 255, 255))
-        y += 100
-
-    y += 12
-    for line in t_lines:
-        draw.text((tx, y), line, font=ft, fill=(148, 182, 255))
-        y += 54
+        draw.text((margin, y), f"→  {b}", font=ft, fill=(147, 197, 253))
+        y += 50
 
     y += 22
-    _pill(draw, tx, y, cta, fc, bg=(37, 99, 235))
-    return result
+    _pill_center(draw, W, y, cta, fc)
+    return canvas
 
 
-# ── Direction creative (text-only) ──────────────────────────────────────────
+# ── Style 3: FRAME ───────────────────────────────────────────────────────────
+# Clean photo top 57% with white top bar | Charcoal panel | Bold layout + CTA
+
+def style_frame(base: Image.Image, headline: str, bullets: list, cta: str) -> Image.Image:
+    W, H = FEED_W, FEED_H
+    SPLIT = int(H * 0.570)        # 769px photo / 581px panel
+
+    canvas = Image.new("RGB", (W, H), (14, 14, 18))
+    canvas.paste(_photo_area(base, SPLIT), (0, 0))
+
+    draw = ImageDraw.Draw(canvas)
+    # White top accent bar on photo (brand touch)
+    draw.rectangle([0, 0, W, 9], fill=(255, 255, 255))
+    # Blue left-side accent on panel
+    draw.rectangle([0, SPLIT, 7, H], fill=(37, 99, 235))
+
+    fh = _font(F_BOLD, 84)
+    ft = _font(F_REG,  40)
+    fc = _font(F_BOLD, 42)
+    margin, tw = 60, W - 130
+    y = SPLIT + 38
+
+    for line in _wrap(headline, fh, tw, draw)[:2]:
+        draw.text((margin, y), line, font=fh, fill=(255, 255, 255))
+        y += 100
+
+    y += 14
+    for b in (bullets or [])[:2]:
+        draw.text((margin, y), f"•  {b}", font=ft, fill=(180, 180, 200))
+        y += 52
+
+    y += 22
+    _pill(draw, margin, y, cta, fc)
+    return canvas
+
+
+# ── Direction creative (text-only, no photo) ────────────────────────────────
 def generate_creative_for_direction(direction: dict) -> bytes:
     img  = Image.new("RGB", (FEED_W, FEED_H), (6, 12, 28))
     draw = ImageDraw.Draw(img)
@@ -259,9 +242,9 @@ def generate_creative_for_direction(direction: dict) -> bytes:
         draw.text((40, y), f"📍 {geo}", font=fb, fill=(100, 160, 255))
 
     bb  = draw.textbbox((0, 0), cta_txt, font=fc)
-    tw  = bb[2] - bb[0]; th = bb[3] - bb[1]
+    tw2 = bb[2] - bb[0]; th2 = bb[3] - bb[1]
     px, py = 52, 18
-    bw, bh = tw + px * 2, th + py * 2
+    bw, bh = tw2 + px * 2, th2 + py * 2
     bx = (FEED_W - bw) // 2
     by = FEED_H - bh - 90
     draw.rounded_rectangle([bx, by, bx + bw, by + bh], radius=bh // 2, fill=(37, 99, 235))
@@ -272,18 +255,17 @@ def generate_creative_for_direction(direction: dict) -> bytes:
     return buf.getvalue()
 
 
-# ── Public API ───────────────────────────────────────────────────────────────
+# ── Public API ────────────────────────────────────────────────────────────────
 def create_banners(image_bytes: bytes, headlines: list, bullets: list, cta: str) -> list:
     while len(headlines) < 3:
         headlines.append(headlines[0] if headlines else "Узнайте больше")
 
-    tagline = bullets[0] if bullets else ""
-    img = _cover_crop(image_bytes)   # 1080×1350
+    base = _cover_crop(image_bytes)   # 1080×1350 full canvas
 
     variants = [
-        ("Impact", style_impact(img.copy(), headlines[0], tagline, cta)),
-        ("Panel",  style_panel(img.copy(),  headlines[1], bullets, cta)),
-        ("Card",   style_card(img.copy(),   headlines[2], tagline, cta)),
+        ("Stage", style_stage(base.copy(), headlines[0], bullets, cta)),
+        ("Navy",  style_navy(base.copy(),  headlines[1], bullets, cta)),
+        ("Frame", style_frame(base.copy(), headlines[2], bullets, cta)),
     ]
 
     result = []

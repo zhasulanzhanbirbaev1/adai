@@ -45,6 +45,18 @@ async def _notify(user_id: int, text: str):
             logger.error("TG notify failed: %s", e)
 
 
+async def _notify_photo(user_id: int, img_bytes: bytes, caption: str = ""):
+    async with httpx.AsyncClient(timeout=30) as client:
+        try:
+            await client.post(
+                f"{TG_API}/sendPhoto",
+                data={"chat_id": user_id, "caption": caption},
+                files={"photo": ("banner.jpg", img_bytes, "image/jpeg")},
+            )
+        except Exception as e:
+            logger.error("TG photo notify failed: %s", e)
+
+
 def _get_uid(user_id: int = Query(..., description="Telegram user ID")) -> int:
     if not get_user(user_id):
         raise HTTPException(404, "User not found")
@@ -598,6 +610,22 @@ async def api_launch_direction(did: int, request: Request, user_id: int = Depend
 
 
 # в”Ђв”Ђ Image Generator API в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+
+@app.post("/api/send-banner")
+async def api_send_banner(request: Request, user_id: int = Depends(_get_uid)):
+    import base64 as b64mod
+    body      = await request.json()
+    image_b64 = body.get("image_b64", "")
+    label     = body.get("label", "Баннер")
+    if not image_b64:
+        raise HTTPException(400, "image_b64 required")
+    if "," in image_b64:
+        image_b64 = image_b64.split(",")[1]
+    img_bytes = b64mod.b64decode(image_b64)
+    caption   = f"🎨 Ваш баннер *{label}*\n📐 1080×1350 — готов для Instagram/Facebook рекламы"
+    await _notify_photo(user_id, img_bytes, caption)
+    return {"ok": True}
+
 
 @app.post("/api/generate-banner")
 async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)):
