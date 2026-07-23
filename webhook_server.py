@@ -601,9 +601,13 @@ async def api_launch_direction(did: int, request: Request, user_id: int = Depend
 
 @app.post("/api/generate-banner")
 async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)):
-    import base64 as b64mod
-    from image_generator import generate_dalle_image, generate_ad_copy, OPENAI_AVAILABLE
-    from banner_composer import create_banners
+    try:
+        import base64 as b64mod
+        from image_generator import generate_dalle_image, generate_ad_copy, generate_instagram_copy, OPENAI_AVAILABLE
+        from banner_composer import create_banners
+    except Exception as e:
+        logger.error("Import error in generate-banner: %s", e)
+        raise HTTPException(500, f"Import error: {str(e)}")
 
     if not OPENAI_AVAILABLE:
         raise HTTPException(503, "OpenAI API key not configured")
@@ -711,7 +715,6 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
         raise HTTPException(500, f"Ошибка компоновки баннера: {str(e)}")
 
     try:
-        from image_generator import generate_instagram_copy
         insta = await generate_instagram_copy(niche or description, description, audience)
     except Exception as e:
         logger.error("Instagram copy error: %s", e)
