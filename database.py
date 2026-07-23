@@ -195,6 +195,7 @@ def init_db():
             "ALTER TABLE directions ADD COLUMN IF NOT EXISTS age_min INT DEFAULT 25",
             "ALTER TABLE directions ADD COLUMN IF NOT EXISTS age_max INT DEFAULT 55",
             "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS budget_alert_sent_date TEXT",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS generations_used INT DEFAULT 0",
         ]:
             conn.execute(col_sql)
     print("[DB] PostgreSQL initialized")
@@ -215,6 +216,33 @@ def create_user(user_id: int, username: str, first_name: str):
             (user_id, username, first_name, trial_ends),
         )
     return get_user(user_id)
+
+
+FREE_GENERATIONS = 10
+
+
+def get_generations_used(user_id: int) -> int:
+    with get_conn() as conn:
+        row = conn.execute("SELECT generations_used FROM users WHERE id=%s", (user_id,)).fetchone()
+    return row["generations_used"] if row else 0
+
+
+def increment_generations(user_id: int):
+    with get_conn() as conn:
+        conn.execute("UPDATE users SET generations_used = COALESCE(generations_used,0) + 1 WHERE id=%s", (user_id,))
+
+
+def can_generate(user_id: int) -> bool:
+    if is_subscribed(user_id):
+        return True
+    used = get_generations_used(user_id)
+    return used < FREE_GENERATIONS
+
+
+def generations_left(user_id: int) -> int:
+    if is_subscribed(user_id):
+        return 999
+    return max(0, FREE_GENERATIONS - get_generations_used(user_id))
 
 
 def update_user_settings(user_id: int, target_cpl: float = None, whatsapp: str = None):

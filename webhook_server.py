@@ -18,6 +18,8 @@ from database import (
     add_direction_creative, get_direction_creatives,
     create_agent, get_agent, get_agents, update_agent,
     get_agent_conversations, get_conversation_detail,
+    can_generate, increment_generations, generations_left, FREE_GENERATIONS,
+    save_user_page_id,
 )
 load_dotenv()
 BOT_TOKEN     = os.getenv("BOT_TOKEN", "")
@@ -235,6 +237,8 @@ async def api_settings(user_id: int = Depends(_get_uid)):
                          "plan": sub["plan"] if sub else "trial",
                          "expires": sub["expires_at"][:10] if sub else None,
                          "trial_ends": user["trial_ends_at"][:10] if user["trial_ends_at"] else None},
+        "generations": {"used": user.get("generations_used", 0), "free": FREE_GENERATIONS,
+                        "left": generations_left(user_id)},
     }
 
 
@@ -604,6 +608,9 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
     if not OPENAI_AVAILABLE:
         raise HTTPException(503, "OpenAI API key not configured")
 
+    if not can_generate(user_id):
+        raise HTTPException(402, f"Бесплатные генерации закончились ({FREE_GENERATIONS} из {FREE_GENERATIONS} использовано). Оформите подписку в боте.")
+
     body = await request.json()
 
     # Upload path: user provides their own photo
@@ -710,10 +717,14 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
         logger.error("Instagram copy error: %s", e)
         insta = {}
 
+    increment_generations(user_id)
+    left = generations_left(user_id)
+
     return {
         "banners": banners,
         "copy": {"headlines": headlines, "bullets": bullets, "cta": cta},
         "instagram": insta,
+        "generations_left": left,
     }
 
 

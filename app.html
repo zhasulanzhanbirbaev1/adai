@@ -547,6 +547,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
               </div>
               <button class="btn btn-primary" id="gen-btn" onclick="generateBannersDalle()" style="width:100%;font-size:16px;padding:14px">✨ Создать баннеры</button>
               <div id="gen-status" style="margin-top:12px;color:var(--muted);font-size:13px;text-align:center"></div>
+              <div id="gen-counter" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
             </div>
             <div id="gen-copy-box" style="display:none">
               <div class="chart-box">
@@ -1427,10 +1428,23 @@ async function generateBannersDalle() {
     const r = await fetch(`${API}/api/generate-banner?user_id=${UID}`,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({description:desc,niche,audience,style:_genStyle})});
     const data = await r.json();
+    if (r.status === 402) {
+      container.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px 20px">
+        <div style="font-size:48px;margin-bottom:12px">🔒</div>
+        <div style="font-weight:700;font-size:16px;margin-bottom:8px">Бесплатные генерации закончились</div>
+        <div style="color:var(--muted);font-size:13px;margin-bottom:20px">Вы использовали все 10 бесплатных генераций.<br/>Оформите подписку для безлимитного доступа.</div>
+        <button class="btn btn-primary" onclick="openTelegram()" style="font-size:15px;padding:12px 28px">💳 Оформить подписку</button>
+      </div>`;
+      status.textContent=''; return;
+    }
     if (!r.ok) { status.textContent = data.detail||'Ошибка генерации'; container.innerHTML=''; return; }
     _lastGeneratedBanners = data.banners || [];
     renderGeneratedBanners(data);
     status.textContent='';
+    if (data.generations_left !== undefined) {
+      const el = document.getElementById('gen-counter');
+      if (el) el.textContent = data.generations_left > 100 ? '' : `Осталось бесплатных генераций: ${data.generations_left}`;
+    }
     // Show launch block
     document.getElementById('launch-block').style.display='block';
     if (data.copy?.headlines?.[0]) {
