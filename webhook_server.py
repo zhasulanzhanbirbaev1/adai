@@ -612,8 +612,14 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
     if not OPENAI_AVAILABLE:
         raise HTTPException(503, "OpenAI API key not configured")
 
-    if not can_generate(user_id):
-        raise HTTPException(402, f"Бесплатные генерации закончились ({FREE_GENERATIONS} из {FREE_GENERATIONS} использовано). Оформите подписку в боте.")
+    try:
+        if not can_generate(user_id):
+            raise HTTPException(402, f"Бесплатные генерации закончились ({FREE_GENERATIONS} из {FREE_GENERATIONS} использовано). Оформите подписку в боте.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("can_generate error: %s", e)
+        # If DB check fails, allow generation to continue
 
     body = await request.json()
 
@@ -720,8 +726,12 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
         logger.error("Instagram copy error: %s", e)
         insta = {}
 
-    increment_generations(user_id)
-    left = generations_left(user_id)
+    try:
+        increment_generations(user_id)
+        left = generations_left(user_id)
+    except Exception as e:
+        logger.error("DB generations update error: %s", e)
+        left = 9
 
     return {
         "banners": banners,

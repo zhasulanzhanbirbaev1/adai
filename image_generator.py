@@ -1,6 +1,5 @@
 import os
 import json
-import httpx
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 
@@ -13,21 +12,18 @@ client = AsyncOpenAI(api_key=_api_key) if OPENAI_AVAILABLE else None
 
 
 async def generate_dalle_image(prompt: str, size: str = "1024x1024") -> bytes:
-    """Generate an image with DALL-E 3 and return raw PNG bytes."""
+    """Generate an image with gpt-image-1 and return raw PNG bytes."""
     if not client:
         raise RuntimeError("OPENAI_API_KEY not set")
+    import base64 as _b64
     response = await client.images.generate(
-        model="dall-e-3",
+        model="gpt-image-1",
         prompt=prompt,
         size=size,
-        quality="hd",
+        quality="high",
         n=1,
     )
-    image_url = response.data[0].url
-    async with httpx.AsyncClient(timeout=30) as http:
-        r = await http.get(image_url)
-        r.raise_for_status()
-        return r.content
+    return _b64.b64decode(response.data[0].b64_json)
 
 
 async def generate_instagram_copy(niche: str, offer: str, audience: str) -> dict:
