@@ -696,7 +696,7 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
     dalle_prompt = style_prompts.get(style, style_prompts["cinematic"])
 
     try:
-        image_bytes = await generate_dalle_image(dalle_prompt, size="1024x1024")
+        image_bytes = await generate_dalle_image(dalle_prompt, size="1024x1536")
     except RuntimeError as e:
         raise HTTPException(503, str(e))
     except Exception as e:

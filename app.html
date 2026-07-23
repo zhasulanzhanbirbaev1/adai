@@ -166,9 +166,10 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
 .banner-preview{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s}
 .banner-preview:hover{border-color:var(--accent);transform:translateY(-2px)}
 .banner-preview.selected{border-color:var(--accent);box-shadow:0 0 18px rgba(99,102,241,.25)}
-.banner-img{width:100%;aspect-ratio:1;background:var(--surface);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.banner-info{padding:9px 11px;display:flex;justify-content:space-between;align-items:center}
-.banner-style-name{font-size:11px;color:var(--muted)}
+.banner-img{width:100%;aspect-ratio:4/5;background:var(--surface);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.banner-info{padding:9px 11px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.banner-style-name{font-size:11px;color:var(--muted);flex:1}
+.banner-size-tag{font-size:10px;color:var(--accent);background:rgba(99,102,241,.12);padding:2px 6px;border-radius:4px;white-space:nowrap}
 
 /* TABS */
 .tabs{display:flex;gap:4px;background:var(--surface2);padding:4px;border-radius:10px;margin-bottom:20px}
@@ -1529,7 +1530,8 @@ function renderBanners(data, wrap) {
         <div class="banner-img"><img src="${b.image}" style="width:100%;height:100%;object-fit:cover"/></div>
         <div class="banner-info">
           <span class="banner-style-name">${esc(b.label||'')}</span>
-          <a class="btn btn-primary btn-sm" href="${b.image}" download="banner-${i+1}.png">⬇</a>
+          <span class="banner-size-tag">${b.size||'1080×1350'}</span>
+          <a class="btn btn-primary btn-sm" href="${b.image}" download="adai-${(b.label||'banner').toLowerCase()}-1080x1350.jpg" onclick="event.stopPropagation()">⬇</a>
         </div>
       </div>`).join('')}
     </div>`;
@@ -1544,7 +1546,8 @@ function renderGeneratedBanners(data) {
       <div class="banner-img"><img src="${b.image}" style="width:100%;height:100%;object-fit:cover"/></div>
       <div class="banner-info">
         <span class="banner-style-name">${esc(b.label||'Вариант '+(i+1))}</span>
-        <a class="btn btn-primary btn-sm" href="${b.image}" download="adai-banner-${i+1}.png">⬇</a>
+        <span class="banner-size-tag">${b.size||'1080×1350'}</span>
+        <a class="btn btn-primary btn-sm" href="${b.image}" download="adai-${(b.label||'banner').toLowerCase()}-1080x1350.jpg" onclick="event.stopPropagation()">⬇</a>
       </div>
     </div>`).join('');
 
