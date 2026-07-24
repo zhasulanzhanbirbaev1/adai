@@ -39,9 +39,8 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 @app.exception_handler(Exception)
 async def _global_exc(request: Request, exc: Exception):
     import traceback
-    tb = traceback.format_exc()
-    logger.error("Unhandled %s at %s: %s\n%s", type(exc).__name__, request.url.path, exc, tb)
-    return JSONResponse(status_code=500, content={"detail": f"{type(exc).__name__}: {str(exc)}", "tb": tb[-3000:]})
+    logger.error("Unhandled %s at %s: %s\n%s", type(exc).__name__, request.url.path, exc, traceback.format_exc())
+    return JSONResponse(status_code=500, content={"detail": f"Внутренняя ошибка: {type(exc).__name__}"})
 
 
 async def _notify(user_id: int, text: str):
@@ -81,31 +80,6 @@ async def landing():
 async def health():
     return {"status": "ok", "service": "Adai"}
 
-
-@app.get("/api/test-imports")
-async def test_imports():
-    results = {}
-    try:
-        import openai
-        results["openai"] = openai.__version__
-    except Exception as e:
-        results["openai"] = f"ERROR: {e}"
-    try:
-        from image_generator import OPENAI_AVAILABLE, generate_dalle_image
-        results["image_generator"] = f"ok, openai_available={OPENAI_AVAILABLE}"
-    except Exception as e:
-        results["image_generator"] = f"ERROR: {e}"
-    try:
-        from banner_composer import create_banners
-        results["banner_composer"] = "ok"
-    except Exception as e:
-        results["banner_composer"] = f"ERROR: {e}"
-    try:
-        from database import can_generate
-        results["db_can_generate"] = "ok"
-    except Exception as e:
-        results["db_can_generate"] = f"ERROR: {e}"
-    return results
 
 @app.api_route("/app", methods=["GET", "HEAD"])
 async def serve_app():
