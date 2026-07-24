@@ -1424,7 +1424,7 @@ async function downloadBanner(btn, dataUrl, label) {
 async function generateBannersDalle() {
   const niche    = document.getElementById('gen-niche').value.trim();
   const desc     = document.getElementById('gen-description').value.trim();
-  const audience = document.getElementById('gen-audience').value.trim();
+  const audience = document.getElementById('gen-audience')?.value?.trim() || '';
   const btn      = document.getElementById('gen-btn');
   const status   = document.getElementById('gen-status');
   const container= document.getElementById('gen-banners');
