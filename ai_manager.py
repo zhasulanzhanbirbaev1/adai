@@ -359,6 +359,16 @@ async def check_budget_pacing(bot):
 
 # ── Scheduler ─────────────────────────────────────────────────────────────────
 
+async def _keep_alive():
+    base = os.getenv("BASE_URL", "").rstrip("/")
+    if not base:
+        return
+    try:
+        requests.get(f"{base}/health", timeout=10)
+    except Exception:
+        pass
+
+
 def build_scheduler(bot) -> AsyncIOScheduler:
     scheduler = AsyncIOScheduler()
     scheduler.add_job(sync_stats,          "interval", hours=1,  args=[bot], id="sync")
@@ -370,4 +380,5 @@ def build_scheduler(bot) -> AsyncIOScheduler:
                       timezone=ALMATY_TZ, args=[bot], id="token_expiry")
     scheduler.add_job(check_budget_pacing, "interval", minutes=30, args=[bot], id="budget_pacing",
                       misfire_grace_time=300)
+    scheduler.add_job(_keep_alive,         "interval", minutes=10, id="keep_alive")
     return scheduler
