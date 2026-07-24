@@ -38,8 +38,10 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 
 @app.exception_handler(Exception)
 async def _global_exc(request: Request, exc: Exception):
-    logger.error("Unhandled %s at %s: %s", type(exc).__name__, request.url.path, exc, exc_info=True)
-    return JSONResponse(status_code=500, content={"detail": f"{type(exc).__name__}: {str(exc)}"})
+    import traceback
+    tb = traceback.format_exc()
+    logger.error("Unhandled %s at %s: %s\n%s", type(exc).__name__, request.url.path, exc, tb)
+    return JSONResponse(status_code=500, content={"detail": f"{type(exc).__name__}: {str(exc)}", "tb": tb[-3000:]})
 
 
 async def _notify(user_id: int, text: str):
