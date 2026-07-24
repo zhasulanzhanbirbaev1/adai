@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 def _main_keyboard(user_id: int):
     inline_buttons = []
     if WEBAPP_URL:
-        inline_buttons.append([InlineKeyboardButton("📊 Открыть кабинет", web_app=WebAppInfo(url=WEBAPP_URL))])
+        url = f"{WEBAPP_URL}?user_id={user_id}"
+        inline_buttons.append([InlineKeyboardButton("📊 Открыть кабинет", web_app=WebAppInfo(url=url))])
     inline_buttons.append([
         InlineKeyboardButton("🤖 Лог ИИ", callback_data="open_ailog"),
     ])
