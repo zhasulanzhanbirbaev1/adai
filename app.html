@@ -480,76 +480,36 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
       </div>
     </div>
 
-    <!-- ══════════════ AI МАРКЕТОЛОГ ══════════════ -->
+    <!-- ══════════════ AI СТУДИЯ ══════════════ -->
     <div class="page" id="page-marketolog">
-      <div class="tabs" style="width:fit-content;margin-bottom:22px">
-        <button class="tab-btn active" onclick="switchTab('studio-upload')">📷 Загрузить фото</button>
-        <button class="tab-btn" onclick="switchTab('studio-dalle')">✨ Создать с нуля (DALL-E)</button>
-      </div>
+      <div class="studio-grid">
+        <!-- LEFT: Form -->
+        <div>
+          <div class="chart-box">
+            <div class="box-header"><div class="box-title">🎨 AI Генератор рекламы</div></div>
 
-      <!-- TAB 1: Upload photo -->
-      <div class="tab-pane active" id="tab-studio-upload">
-        <div class="studio-grid">
-          <div>
             <div class="form-group">
-              <label class="form-label">Фото товара или услуги</label>
-              <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-                <div class="upload-icon" id="uploadIcon">📷</div>
-                <strong id="uploadText" style="display:block;margin-bottom:4px">Нажмите для загрузки</strong>
-                <span style="color:var(--muted);font-size:12px">JPG, PNG до 10 МБ</span>
+              <label class="form-label">Ниша / бизнес <span style="color:var(--accent)">*</span></label>
+              <input class="form-input" id="gen-niche" placeholder="Салон красоты, кофейня, фитнес..." style="font-size:16px"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Оффер <span style="color:var(--muted);font-weight:400">(необязательно)</span></label>
+              <textarea class="form-input" id="gen-description" rows="2" placeholder="Скидка 30% на первое посещение, пробный урок бесплатно..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Стиль фото</label>
+              <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+                <div class="type-opt active" data-val="cinematic" onclick="selectGenStyle(this)"><div class="t-icon">🎬</div><div class="t-label">Кинематичный</div></div>
+                <div class="type-opt" data-val="product" onclick="selectGenStyle(this)"><div class="t-icon">📸</div><div class="t-label">Продуктовый</div></div>
+                <div class="type-opt" data-val="lifestyle" onclick="selectGenStyle(this)"><div class="t-icon">🌟</div><div class="t-label">Лайфстайл</div></div>
+                <div class="type-opt" data-val="minimal" onclick="selectGenStyle(this)"><div class="t-icon">⬜</div><div class="t-label">Минимализм</div></div>
               </div>
-              <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(this)"/>
             </div>
-            <div class="form-group">
-              <label class="form-label">Описание оффера</label>
-              <textarea class="form-input" id="offerText" rows="3" placeholder="Опишите товар/услугу и главное преимущество..."></textarea>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Целевая аудитория</label>
-              <input class="form-input" id="targetAudience" placeholder="Женщины 25-40, Алматы, интересы — мода"/>
-            </div>
-            <button class="btn btn-primary" style="width:100%" onclick="generateBannersUpload()">🎨 Сгенерировать 3 варианта</button>
-          </div>
-          <div>
-            <div class="box-title" style="margin-bottom:14px">Результат</div>
-            <div id="banners-wrap">
-              <div class="empty-state"><div class="empty-icon">🎨</div><p>Загрузите фото и нажмите «Сгенерировать»</p></div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- TAB 2: DALL-E -->
-      <div class="tab-pane" id="tab-studio-dalle">
-        <div class="studio-grid">
-          <div>
-            <div class="chart-box">
-              <div class="box-header"><div class="box-title">✨ AI Генератор баннеров</div></div>
-              <div class="form-group">
-                <label class="form-label">Ниша / бизнес <span style="color:var(--accent)">*</span></label>
-                <input class="form-input" id="gen-niche" placeholder="Салон красоты, кофейня, фитнес, ресторан..." style="font-size:16px"/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Описание <span style="color:var(--muted);font-weight:400">(необязательно — AI заполнит сам)</span></label>
-                <textarea class="form-input" id="gen-description" rows="2" placeholder="Уютный салон в центре Алматы, лучшие мастера..."></textarea>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Аудитория <span style="color:var(--muted);font-weight:400">(необязательно)</span></label>
-                <input class="form-input" id="gen-audience" placeholder="Женщины 25–40, Алматы"/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Стиль</label>
-                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-                  <div class="type-opt active" data-val="cinematic" onclick="selectGenStyle(this)"><div class="t-icon">🎬</div><div class="t-label">Кинематичный</div></div>
-                  <div class="type-opt" data-val="product" onclick="selectGenStyle(this)"><div class="t-icon">📸</div><div class="t-label">Продуктовый</div></div>
-                  <div class="type-opt" data-val="lifestyle" onclick="selectGenStyle(this)"><div class="t-icon">🌟</div><div class="t-label">Лайфстайл</div></div>
-                  <div class="type-opt" data-val="minimal" onclick="selectGenStyle(this)"><div class="t-icon">⬜</div><div class="t-label">Минимализм</div></div>
-                </div>
-              </div>
-              <button class="btn btn-primary" id="gen-btn" onclick="generateBannersDalle()" style="width:100%;font-size:16px;padding:14px">✨ Создать баннеры</button>
-              <div id="gen-status" style="margin-top:12px;color:var(--muted);font-size:13px;text-align:center"></div>
-              <div id="gen-counter" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
-            </div>
+            <button class="btn btn-primary" id="gen-btn" onclick="generateBannersDalle()" style="width:100%;font-size:16px;padding:14px">✨ Создать рекламные баннеры</button>
+            <div id="gen-status" style="margin-top:12px;color:var(--muted);font-size:13px;text-align:center"></div>
+            <div id="gen-counter" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
+          </div>
             <div id="gen-copy-box" style="display:none">
               <div class="chart-box">
                 <div class="box-header"><div class="box-title">📝 Рекламные тексты</div></div>
@@ -571,18 +531,29 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
             <!-- Launch block — shown after banner generation -->
             <div id="launch-block" style="display:none">
               <div class="chart-box" style="margin-top:16px">
-                <div class="box-header"><div class="box-title">🚀 Запустить в Instagram/Facebook</div></div>
+                <div class="box-header"><div class="box-title">🚀 Запустить в Instagram / Facebook</div></div>
+
+                <!-- AI Audience suggestion badge -->
+                <div id="audience-badge" style="display:none;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px">
+                  <span style="color:var(--accent);font-weight:600">🤖 AI подобрал аудиторию:</span>
+                  <span id="audience-badge-text" style="color:var(--muted)"></span>
+                </div>
+
                 <div class="form-group">
                   <label class="form-label">Текст объявления</label>
                   <textarea class="form-input" id="launch-ad-text" rows="3" placeholder="Текст вашей рекламы..."></textarea>
                 </div>
+
+                <!-- Moderation row -->
+                <div id="moderation-row" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;font-size:13px"></div>
+
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label">Бюджет в день (₸)</label>
                     <input class="form-input" id="launch-budget" type="number" value="5000" min="1000"/>
                   </div>
                   <div class="form-group">
-                    <label class="form-label">WhatsApp номер</label>
+                    <label class="form-label">WhatsApp</label>
                     <input class="form-input" id="launch-whatsapp" placeholder="+77001234567"/>
                   </div>
                 </div>
@@ -605,8 +576,8 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
                   </div>
                 </div>
                 <div id="launch-status" style="margin-bottom:10px;font-size:13px;color:var(--muted);text-align:center;display:none"></div>
-                <button class="btn btn-primary" id="launch-btn" onclick="launchCampaign()" style="width:100%;font-size:16px;padding:14px">🚀 Запустить рекламу</button>
-                <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Кампания создаётся на паузе — проверите перед запуском в Facebook Ads Manager</p>
+                <button class="btn btn-primary" id="launch-btn" onclick="launchWithModeration()" style="width:100%;font-size:16px;padding:14px">🚀 Запустить рекламу</button>
+                <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Кампания создаётся на паузе — проверите в Facebook Ads Manager</p>
               </div>
             </div>
           </div>
@@ -1496,12 +1467,76 @@ async function generateBannersDalle() {
         h[0] + '\n\n' + b.map(x=>'✓ '+x).join('\n');
     }
     document.getElementById('launch-whatsapp').value = window._settings?.user?.whatsapp || '';
+
+    // Auto-fill audience from AI suggestion
+    if (data.audience) {
+      const a = data.audience;
+      if (a.age_min) document.getElementById('launch-age-min').value = a.age_min;
+      if (a.age_max) document.getElementById('launch-age-max').value = a.age_max;
+      if (a.gender) {
+        document.querySelectorAll('#launch-block .type-opt').forEach(el => {
+          el.classList.toggle('active', el.dataset.val === a.gender);
+        });
+        _launchGender = a.gender;
+      }
+      if (a.audience_description) {
+        const badge = document.getElementById('audience-badge');
+        badge.style.display = 'block';
+        document.getElementById('audience-badge-text').textContent = ' ' + a.audience_description;
+      }
+    }
+    document.getElementById('moderation-row').style.display = 'none';
   } catch(e) {
     status.textContent='Сервер недоступен';
   } finally {
     btn.disabled=false;
     btn.textContent='✨ Создать баннеры';
   }
+}
+
+async function launchWithModeration() {
+  const text = document.getElementById('launch-ad-text').value.trim();
+  const modRow = document.getElementById('moderation-row');
+  const btn = document.getElementById('launch-btn');
+
+  if (!text) { alert('Введите текст объявления'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '🔍 Проверяю текст...';
+  modRow.style.display = 'none';
+
+  try {
+    const r = await fetch(`${API}/api/moderate?user_id=${UID}`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ text }),
+    });
+    const res = await r.json();
+
+    if (res.status === 'warning') {
+      modRow.style.display = 'block';
+      modRow.style.background = 'rgba(234,179,8,.1)';
+      modRow.style.border = '1px solid rgba(234,179,8,.3)';
+      modRow.innerHTML = `<div style="font-weight:600;color:#ca8a04;margin-bottom:6px">⚠️ Есть замечания</div>
+        <div style="color:var(--muted);margin-bottom:8px">${res.issues?.join('<br>') || ''}</div>
+        ${res.suggestion ? `<div style="font-size:12px;color:var(--text)"><b>Предложение:</b> ${esc(res.suggestion)}</div>` : ''}
+        <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="document.getElementById('launch-ad-text').value=${JSON.stringify(res.suggestion||text)};launchCampaign()">Использовать предложение и запустить</button>
+        <button class="btn btn-sm" style="margin-left:8px;margin-top:10px" onclick="launchCampaign()">Запустить как есть</button>`;
+      btn.disabled = false;
+      btn.textContent = '🚀 Запустить рекламу';
+      return;
+    }
+
+    if (res.status === 'approved') {
+      modRow.style.display = 'block';
+      modRow.style.background = 'rgba(34,197,94,.08)';
+      modRow.style.border = '1px solid rgba(34,197,94,.25)';
+      modRow.innerHTML = '✅ Текст прошёл проверку Meta';
+    }
+  } catch(e) {
+    // If moderation fails, just proceed
+  }
+
+  await launchCampaign();
 }
 
 async function launchCampaign() {

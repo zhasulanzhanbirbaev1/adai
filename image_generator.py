@@ -12,7 +12,6 @@ client = AsyncOpenAI(api_key=_api_key) if OPENAI_AVAILABLE else None
 
 
 async def generate_dalle_image(prompt: str, size: str = "1024x1024") -> bytes:
-    """Generate an image with gpt-image-1 and return raw PNG bytes."""
     if not client:
         raise RuntimeError("OPENAI_API_KEY not set")
     import base64 as _b64
@@ -92,6 +91,69 @@ async def generate_ad_copy(offer: str, audience: str, image_base64: str = None) 
     response = await client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": content}],
+        max_tokens=400,
+        response_format={"type": "json_object"},
+    )
+    return json.loads(response.choices[0].message.content)
+
+
+async def suggest_audience(niche: str, offer: str = "") -> dict:
+    """AI подбирает оптимальную аудиторию для ниши."""
+    if not client:
+        return {"age_min": 20, "age_max": 55, "gender": "all", "audience_description": "Широкая аудитория"}
+    response = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": f"""Ты опытный таргетолог. Для бизнеса в Казахстане определи оптимальную аудиторию Facebook/Instagram рекламы.
+
+Ниша: {niche}
+Оффер: {offer or niche}
+
+Ответь СТРОГО в JSON (без лишнего текста):
+{{
+  "age_min": 25,
+  "age_max": 45,
+  "gender": "all",
+  "audience_description": "Краткое описание кто эта аудитория (1 предложение)"
+}}
+
+gender: "all" | "female" | "male" — выбери наиболее подходящее для данной ниши."""}],
+        max_tokens=150,
+        response_format={"type": "json_object"},
+    )
+    return json.loads(response.choices[0].message.content)
+
+
+async def moderate_ad_content(text: str) -> dict:
+    """Проверяет текст объявления на соответствие правилам Meta перед запуском."""
+    if not client:
+        return {"status": "approved", "issues": [], "suggestion": ""}
+    response = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": f"""Ты модератор рекламы Meta (Facebook/Instagram). Проверь текст объявления на нарушения правил.
+
+Текст: "{text}"
+
+Правила Meta которые нарушаются:
+- Обещания гарантированного дохода / быстрого обогащения
+- Ложные медицинские заявления ("вылечим", "похудей за 3 дня")
+- Дискриминация по возрасту, полу, нации, религии
+- Кликбейт ("ШОК!", "СРОЧНО!", "Нажмите сейчас!")
+- Ненормативная лексика
+- "До/после" фото для здоровья и фитнеса
+- Обращение к личным характеристикам пользователя
+
+Ответь СТРОГО в JSON:
+{{
+  "status": "approved",
+  "issues": [],
+  "suggestion": ""
+}}
+или если есть проблемы:
+{{
+  "status": "warning",
+  "issues": ["описание проблемы"],
+  "suggestion": "улучшенный вариант текста без нарушений"
+}}"""}],
         max_tokens=400,
         response_format={"type": "json_object"},
     )

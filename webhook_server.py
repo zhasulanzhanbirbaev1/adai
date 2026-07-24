@@ -619,6 +619,24 @@ async def api_launch_direction(did: int, request: Request, user_id: int = Depend
 
 # в”Ђв”Ђ Image Generator API в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
+@app.post("/api/moderate")
+async def api_moderate(request: Request, user_id: int = Depends(_get_uid)):
+    from image_generator import moderate_ad_content
+    body = await request.json()
+    text = body.get("text", "")
+    if not text:
+        return {"status": "approved", "issues": [], "suggestion": ""}
+    return await moderate_ad_content(text)
+
+
+@app.post("/api/audience-suggest")
+async def api_audience_suggest(request: Request, user_id: int = Depends(_get_uid)):
+    from image_generator import suggest_audience
+    body = await request.json()
+    result = await suggest_audience(body.get("niche", ""), body.get("offer", ""))
+    return result
+
+
 @app.post("/api/send-banner")
 async def api_send_banner(request: Request, user_id: int = Depends(_get_uid)):
     import base64 as b64mod
@@ -763,6 +781,13 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
         insta = {}
 
     try:
+        from image_generator import suggest_audience
+        audience_suggestion = await suggest_audience(niche or description, description)
+    except Exception as e:
+        logger.error("Audience suggest error: %s", e)
+        audience_suggestion = {}
+
+    try:
         increment_generations(user_id)
         left = generations_left(user_id)
     except Exception as e:
@@ -773,6 +798,7 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
         "banners": banners,
         "copy": {"headlines": headlines, "bullets": bullets, "cta": cta},
         "instagram": insta,
+        "audience": audience_suggestion,
         "generations_left": left,
     }
 
