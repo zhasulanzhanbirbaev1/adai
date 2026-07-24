@@ -1,8 +1,8 @@
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont
 import io, base64, os
 
 FEED_W = 1080
-FEED_H = 1350   # 4:5 — Instagram feed portrait (highest CTR)
+FEED_H = 1350   # 4:5 Instagram portrait
 
 _BASE = os.path.join(os.path.dirname(__file__), "fonts")
 _FONT_CANDIDATES_BOLD = [
@@ -85,125 +85,122 @@ def _pill_center(draw, W, y, text, font, bg=(37, 99, 235), fg=(255, 255, 255)):
     return bh
 
 
-# ── Helper: clean photo crop to given height ─────────────────────────────────
-def _photo_area(base_img: Image.Image, photo_h: int) -> Image.Image:
-    """Return clean top slice of the image — NO text or overlay."""
-    return base_img.crop((0, 0, FEED_W, photo_h))
+def _gradient_overlay(img: Image.Image, y_start: int, color=(0, 0, 0),
+                      alpha_start=0, alpha_end=210) -> Image.Image:
+    """Dark gradient overlay from y_start to bottom for text readability."""
+    W, H = img.size
+    overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    zone = H - y_start
+    if zone <= 0:
+        return img
+    r, g, b = color
+    for dy in range(zone):
+        t = dy / zone
+        a = int(alpha_start + (alpha_end - alpha_start) * t)
+        draw.line([(0, y_start + dy), (W - 1, y_start + dy)], fill=(r, g, b, a))
+    return Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
 
 
-# ── Style 1: STAGE ───────────────────────────────────────────────────────────
-# Clean photo top 60% | Near-black panel | Left-aligned headline + bullet + CTA
+# ── Style 1: DARK ────────────────────────────────────────────────────────────
+# Full-bleed photo · dark gradient bottom half · white text overlay
 
-def style_stage(base: Image.Image, headline: str, bullets: list, cta: str) -> Image.Image:
+def style_dark(base: Image.Image, headline: str, bullets: list, cta: str) -> Image.Image:
     W, H = FEED_W, FEED_H
-    PANEL_COLOR = (5, 9, 22)      # deep near-black with blue hint
-    SPLIT = int(H * 0.60)         # 810px photo / 540px panel
 
-    canvas = Image.new("RGB", (W, H), PANEL_COLOR)
-    canvas.paste(_photo_area(base, SPLIT), (0, 0))
+    img = _gradient_overlay(base, int(H * 0.46), color=(3, 7, 18), alpha_start=0, alpha_end=218)
+    draw = ImageDraw.Draw(img)
 
-    draw = ImageDraw.Draw(canvas)
-    # Accent separator
-    draw.rectangle([0, SPLIT, W, SPLIT + 6], fill=(37, 99, 235))
-
-    fh = _font(F_BOLD, 88)
-    ft = _font(F_REG,  40)
-    fc = _font(F_BOLD, 44)
-    margin, tw = 60, W - 120
-    y = SPLIT + 38
+    fh = _font(F_BOLD, 90)
+    ft = _font(F_REG,  43)
+    fc = _font(F_BOLD, 46)
+    margin, tw = 64, W - 128
+    y = int(H * 0.535)
 
     for line in _wrap(headline, fh, tw, draw)[:2]:
         draw.text((margin, y), line, font=fh, fill=(255, 255, 255))
-        y += 104
-
-    y += 10
-    if bullets:
-        draw.text((margin, y), f"✦  {bullets[0]}", font=ft, fill=(148, 183, 255))
-        y += 54
+        y += 108
 
     y += 18
-    _pill(draw, margin, y, cta, fc)
-    return canvas
+    if bullets:
+        draw.text((margin, y), f"✦  {bullets[0]}", font=ft, fill=(148, 196, 255))
+        y += 58
+
+    y += 30
+    _pill(draw, margin, y, cta, fc, bg=(37, 99, 235))
+
+    return img
 
 
-# ── Style 2: NAVY ────────────────────────────────────────────────────────────
-# Clean photo top 57% | Navy gradient panel | Centered headline + 2 bullets + CTA
+# ── Style 2: PREMIUM ─────────────────────────────────────────────────────────
+# Blue brand bar top · full photo · dark gradient bottom · centered text
 
-def style_navy(base: Image.Image, headline: str, bullets: list, cta: str) -> Image.Image:
+def style_premium(base: Image.Image, headline: str, bullets: list, cta: str) -> Image.Image:
     W, H = FEED_W, FEED_H
-    SPLIT = int(H * 0.575)        # 776px photo / 574px panel
 
-    canvas = Image.new("RGB", (W, H), (10, 22, 50))
-    canvas.paste(_photo_area(base, SPLIT), (0, 0))
+    img = _gradient_overlay(base, int(H * 0.42), color=(2, 10, 30), alpha_start=0, alpha_end=228)
+    draw = ImageDraw.Draw(img)
 
-    draw = ImageDraw.Draw(canvas)
-    # Gradient panel background
-    for i in range(H - SPLIT):
-        t = i / (H - SPLIT)
-        r = int(10  * (1 - t) + 4  * t)
-        g = int(22  * (1 - t) + 12 * t)
-        b = int(50  * (1 - t) + 22 * t)
-        draw.line([(0, SPLIT + i), (W, SPLIT + i)], fill=(r, g, b))
+    # Blue brand bar at top
+    draw.rectangle([0, 0, W, 84], fill=(37, 99, 235))
+    fl = _font(F_BOLD, 36)
+    draw.text((50, 22), "Adai  ·  Реклама Instagram & Facebook", font=fl, fill=(255, 255, 255))
 
-    # Thin white hairline separator
-    draw.rectangle([0, SPLIT, W, SPLIT + 2], fill=(255, 255, 255, 80))
-
-    fh = _font(F_BOLD, 82)
-    ft = _font(F_REG,  38)
-    fc = _font(F_BOLD, 42)
-    margin, tw = 60, W - 120
-    y = SPLIT + 38
+    fh = _font(F_BOLD, 86)
+    ft = _font(F_REG,  41)
+    fc = _font(F_BOLD, 44)
+    margin, tw = 64, W - 128
+    y = int(H * 0.49)
 
     # Centered headline
     for line in _wrap(headline, fh, tw, draw)[:2]:
         bb = draw.textbbox((0, 0), line, font=fh)
         lw = bb[2] - bb[0]
         draw.text(((W - lw) // 2, y), line, font=fh, fill=(255, 255, 255))
-        y += 96
+        y += 102
 
-    y += 8
+    y += 18
     for b in (bullets or [])[:2]:
         draw.text((margin, y), f"→  {b}", font=ft, fill=(147, 197, 253))
-        y += 50
-
-    y += 22
-    _pill_center(draw, W, y, cta, fc)
-    return canvas
-
-
-# ── Style 3: FRAME ───────────────────────────────────────────────────────────
-# Clean photo top 57% with white top bar | Charcoal panel | Bold layout + CTA
-
-def style_frame(base: Image.Image, headline: str, bullets: list, cta: str) -> Image.Image:
-    W, H = FEED_W, FEED_H
-    SPLIT = int(H * 0.570)        # 769px photo / 581px panel
-
-    canvas = Image.new("RGB", (W, H), (14, 14, 18))
-    canvas.paste(_photo_area(base, SPLIT), (0, 0))
-
-    draw = ImageDraw.Draw(canvas)
-    # White top accent bar on photo (brand touch)
-    draw.rectangle([0, 0, W, 9], fill=(255, 255, 255))
-    # Blue left-side accent on panel
-    draw.rectangle([0, SPLIT, 7, H], fill=(37, 99, 235))
-
-    fh = _font(F_BOLD, 84)
-    ft = _font(F_REG,  40)
-    fc = _font(F_BOLD, 42)
-    margin, tw = 60, W - 130
-    y = SPLIT + 38
-
-    for line in _wrap(headline, fh, tw, draw)[:2]:
-        draw.text((margin, y), line, font=fh, fill=(255, 255, 255))
-        y += 100
-
-    y += 14
-    for b in (bullets or [])[:2]:
-        draw.text((margin, y), f"•  {b}", font=ft, fill=(180, 180, 200))
         y += 52
 
-    y += 22
-    _pill(draw, margin, y, cta, fc)
+    y += 28
+    _pill_center(draw, W, y, cta, fc, bg=(255, 255, 255), fg=(10, 22, 60))
+
+    return img
+
+
+# ── Style 3: CARD ─────────────────────────────────────────────────────────────
+# Photo top 62% · white card panel bottom 38% · dark text
+
+def style_card(base: Image.Image, headline: str, bullets: list, cta: str) -> Image.Image:
+    W, H = FEED_W, FEED_H
+    PHOTO_H = int(H * 0.615)
+
+    canvas = Image.new("RGB", (W, H), (250, 251, 255))
+    canvas.paste(base.crop((0, 0, W, PHOTO_H)), (0, 0))
+
+    draw = ImageDraw.Draw(canvas)
+    draw.rectangle([0, PHOTO_H, W, PHOTO_H + 6], fill=(37, 99, 235))
+
+    fh = _font(F_BOLD, 82)
+    ft = _font(F_REG,  40)
+    fc = _font(F_BOLD, 44)
+    margin, tw = 60, W - 120
+    y = PHOTO_H + 42
+
+    for line in _wrap(headline, fh, tw, draw)[:2]:
+        draw.text((margin, y), line, font=fh, fill=(8, 16, 44))
+        y += 96
+
+    y += 14
+    if bullets:
+        draw.text((margin, y), f"✦  {bullets[0]}", font=ft, fill=(37, 99, 235))
+        y += 54
+
+    y += 26
+    _pill(draw, margin, y, cta, fc, bg=(37, 99, 235))
+
     return canvas
 
 
@@ -260,12 +257,12 @@ def create_banners(image_bytes: bytes, headlines: list, bullets: list, cta: str)
     while len(headlines) < 3:
         headlines.append(headlines[0] if headlines else "Узнайте больше")
 
-    base = _cover_crop(image_bytes)   # 1080×1350 full canvas
+    base = _cover_crop(image_bytes)
 
     variants = [
-        ("Stage", style_stage(base.copy(), headlines[0], bullets, cta)),
-        ("Navy",  style_navy(base.copy(),  headlines[1], bullets, cta)),
-        ("Frame", style_frame(base.copy(), headlines[2], bullets, cta)),
+        ("Dark",    style_dark(base.copy(),    headlines[0], bullets, cta)),
+        ("Premium", style_premium(base.copy(), headlines[1], bullets, cta)),
+        ("Card",    style_card(base.copy(),    headlines[2], bullets, cta)),
     ]
 
     result = []

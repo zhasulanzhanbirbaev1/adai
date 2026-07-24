@@ -488,6 +488,20 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
           <div class="chart-box">
             <div class="box-header"><div class="box-title">🎨 AI Генератор рекламы</div></div>
 
+            <!-- Photo upload -->
+            <div class="form-group">
+              <label class="form-label">Ваше фото <span id="gen-photo-hint" style="color:var(--muted);font-weight:400;font-size:11px">— или AI создаст сам</span></label>
+              <div id="gen-upload-zone" onclick="document.getElementById('gen-file-input').click()"
+                   style="border:2px dashed var(--border);border-radius:12px;padding:18px 14px;text-align:center;cursor:pointer;transition:border-color .2s;background:var(--surface)">
+                <div id="gen-upload-preview" style="margin-bottom:6px;font-size:26px">📸</div>
+                <div id="gen-upload-text" style="color:var(--muted);font-size:13px">Нажмите чтобы загрузить фото товара / услуги</div>
+                <input type="file" id="gen-file-input" accept="image/*" style="display:none" onchange="handleStudioUpload(this)">
+              </div>
+              <div id="gen-photo-clear" style="display:none;text-align:right;margin-top:6px">
+                <span onclick="clearStudioPhoto()" style="font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline">✕ убрать фото (AI создаст сам)</span>
+              </div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">Ниша / бизнес <span style="color:var(--accent)">*</span></label>
               <input class="form-input" id="gen-niche" placeholder="Салон красоты, кофейня, фитнес..." style="font-size:16px"/>
@@ -496,8 +510,8 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
               <label class="form-label">Оффер <span style="color:var(--muted);font-weight:400">(необязательно)</span></label>
               <textarea class="form-input" id="gen-description" rows="2" placeholder="Скидка 30% на первое посещение, пробный урок бесплатно..."></textarea>
             </div>
-            <div class="form-group">
-              <label class="form-label">Стиль фото</label>
+            <div class="form-group" id="gen-style-group">
+              <label class="form-label">Стиль фото <span id="gen-style-hint" style="color:var(--muted);font-weight:400;font-size:11px">(когда фото нет — AI генерирует)</span></label>
               <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
                 <div class="type-opt active" data-val="cinematic" onclick="selectGenStyle(this)"><div class="t-icon">🎬</div><div class="t-label">Кинематичный</div></div>
                 <div class="type-opt" data-val="product" onclick="selectGenStyle(this)"><div class="t-icon">📸</div><div class="t-label">Продуктовый</div></div>
@@ -1378,6 +1392,33 @@ function selectGenStyle(el) {
 
 let _lastGeneratedBanners = [];
 let _launchGender = 'all';
+let _studioPhotoB64 = null;
+
+function handleStudioUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _studioPhotoB64 = e.target.result.split(',')[1];
+    document.getElementById('gen-upload-preview').innerHTML =
+      `<img src="${e.target.result}" style="width:100%;max-height:130px;object-fit:cover;border-radius:8px">`;
+    document.getElementById('gen-upload-text').textContent = '✅ ' + file.name;
+    document.getElementById('gen-photo-clear').style.display = 'block';
+    document.getElementById('gen-style-group').style.display = 'none';
+    document.getElementById('gen-photo-hint').textContent = '— фото загружено';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearStudioPhoto() {
+  _studioPhotoB64 = null;
+  document.getElementById('gen-upload-preview').innerHTML = '<span style="font-size:26px">📸</span>';
+  document.getElementById('gen-upload-text').textContent = 'Нажмите чтобы загрузить фото товара / услуги';
+  document.getElementById('gen-photo-clear').style.display = 'none';
+  document.getElementById('gen-style-group').style.display = '';
+  document.getElementById('gen-photo-hint').textContent = '— или AI создаст сам';
+  document.getElementById('gen-file-input').value = '';
+}
 
 function selectLaunchGender(el) {
   const val = el.dataset.val;
@@ -1438,8 +1479,11 @@ async function generateBannersDalle() {
   document.getElementById('launch-block').style.display='none';
 
   try {
+    const payload = _studioPhotoB64
+      ? {offer: desc || niche, niche, image_base64: _studioPhotoB64, audience}
+      : {description: desc, niche, audience, style: _genStyle};
     const r = await fetch(`${API}/api/generate-banner?user_id=${UID}`,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({description:desc,niche,audience,style:_genStyle})});
+      body:JSON.stringify(payload)});
     const data = await r.json();
     if (r.status === 402) {
       container.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px 20px">

@@ -679,14 +679,36 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
 
     # Upload path: user provides their own photo
     image_base64 = body.get("image_base64")
-    offer        = (body.get("offer") or "").strip()
-    if image_base64 and offer:
+    offer_up     = (body.get("offer") or body.get("niche") or "").strip()
+    if image_base64 and offer_up:
         try:
-            copy      = await generate_ad_copy(offer, body.get("audience") or "", image_base64)
+            from image_generator import suggest_audience as _suggest
             img_bytes = b64mod.b64decode(image_base64)
-            headlines = copy.get("headlines", [offer] * 3)
-            banners   = create_banners(img_bytes, headlines, copy.get("bullets", []), copy.get("cta", "Узнать больше"))
-            return {"banners": banners, "copy": copy}
+            copy      = await generate_ad_copy(offer_up, body.get("audience") or "", image_base64)
+            headlines = copy.get("headlines", [offer_up] * 3)
+            bullets   = copy.get("bullets", [])
+            cta       = copy.get("cta", "Узнать больше")
+            banners   = create_banners(img_bytes, headlines, bullets, cta)
+            try:
+                insta = await generate_instagram_copy(offer_up, offer_up, body.get("audience") or "")
+            except Exception:
+                insta = {}
+            try:
+                aud_sug = await _suggest(offer_up, offer_up)
+            except Exception:
+                aud_sug = {}
+            try:
+                increment_generations(user_id)
+                left = generations_left(user_id)
+            except Exception:
+                left = 9
+            return {
+                "banners": banners,
+                "copy": {"headlines": headlines, "bullets": bullets, "cta": cta},
+                "instagram": insta,
+                "audience": aud_sug,
+                "generations_left": left,
+            }
         except Exception as e:
             logger.error("Upload banner error: %s", e)
             raise HTTPException(500, f"Ошибка создания баннера: {str(e)}")
