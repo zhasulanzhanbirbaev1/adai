@@ -1669,7 +1669,7 @@ function renderBanners(data, wrap) {
     ${headline?`<div style="padding:10px 14px;background:var(--surface2);border-radius:9px;font-size:13px;margin-bottom:14px">✍️ <strong>${esc(headline)}</strong></div>`:''}
     <div class="banners-grid">
       ${data.banners.map((b,i)=>`
-      <div class="banner-preview" onclick="openBannerPreview(${JSON.stringify(b.image)},${JSON.stringify(b.label||'Вариант '+(i+1))},${JSON.stringify(b.concept||'')})">
+      <div class="banner-preview" onclick="openBannerPreview(${i})">
         <div class="banner-img"><img src="${b.image}" style="width:100%;height:100%;object-fit:cover"/></div>
         <div class="banner-info">
           <span class="banner-style-name">${esc(b.label||'')}</span>
@@ -1685,7 +1685,7 @@ function renderGeneratedBanners(data) {
   const hint      = document.getElementById('gen-dl-hint');
   hint.textContent = '⬇ — отправляет фото в ваш Telegram';
   container.innerHTML = data.banners.map((b,i)=>`
-    <div class="banner-preview" onclick="openBannerPreview(${JSON.stringify(b.image)},${JSON.stringify(b.label||'Вариант '+(i+1))},${JSON.stringify(b.concept||'')})">
+    <div class="banner-preview" onclick="openBannerPreview(${i})">
       <div class="banner-img"><img src="${b.image}" style="width:100%;height:100%;object-fit:cover"/></div>
       <div class="banner-info">
         <span class="banner-style-name">${esc(b.label||'Вариант '+(i+1))}</span>
@@ -1748,19 +1748,21 @@ function selectBanner(el) {
 let _previewDataUrl = '';
 let _previewLabel   = '';
 
-function openBannerPreview(dataUrl, label, concept) {
-  _previewDataUrl = dataUrl;
-  _previewLabel   = label || 'Баннер';
-  document.getElementById('preview-img').src        = dataUrl;
+function openBannerPreview(idx) {
+  const b = _lastGeneratedBanners[idx];
+  if (!b) return;
+  _previewDataUrl = b.image;
+  _previewLabel   = b.label || `Вариант ${idx + 1}`;
+  document.getElementById('preview-img').src           = b.image;
   document.getElementById('preview-label').textContent = _previewLabel;
   const cEl = document.getElementById('preview-concept');
-  if (concept) { cEl.textContent = concept; cEl.style.display = 'block'; }
-  else         { cEl.style.display = 'none'; }
+  if (b.concept) { cEl.textContent = b.concept; cEl.style.display = 'block'; }
+  else           { cEl.style.display = 'none'; }
   document.getElementById('preview-action-status').textContent = '';
-  document.getElementById('preview-dl-btn').textContent  = '📥 Скачать файл';
-  document.getElementById('preview-dl-btn').disabled     = false;
-  document.getElementById('preview-tg-btn').textContent  = '📤 В Telegram';
-  document.getElementById('preview-tg-btn').disabled     = false;
+  document.getElementById('preview-dl-btn').textContent = '📥 Скачать файл';
+  document.getElementById('preview-dl-btn').disabled    = false;
+  document.getElementById('preview-tg-btn').textContent = '📤 В Telegram';
+  document.getElementById('preview-tg-btn').disabled    = false;
   openModal('modal-banner-preview');
 }
 
