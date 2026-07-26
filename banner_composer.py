@@ -102,6 +102,28 @@ def _gradient_overlay(img: Image.Image, y_start: int, color=(0, 0, 0),
     return Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
 
 
+def _gradient_overlay_top(img: Image.Image, y_end: int, color=(0, 0, 0),
+                           alpha_start=190, alpha_end=0) -> Image.Image:
+    """Dark gradient from top (fades out downward)."""
+    W, H = img.size
+    overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    r, g, b = color
+    for y in range(min(y_end, H)):
+        t = y / y_end
+        a = int(alpha_start + (alpha_end - alpha_start) * t)
+        draw.line([(0, y), (W - 1, y)], fill=(r, g, b, a))
+    return Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
+
+
+def _hex_to_rgb(hex_color: str, fallback=(0, 0, 0)) -> tuple:
+    try:
+        h = hex_color.lstrip('#')
+        return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+    except Exception:
+        return fallback
+
+
 # ── Style 1: DARK ────────────────────────────────────────────────────────────
 # Full-bleed photo · dark gradient bottom half · white text overlay
 
@@ -202,6 +224,102 @@ def style_card(base: Image.Image, headline: str, bullets: list, cta: str) -> Ima
     _pill(draw, margin, y, cta, fc, bg=(37, 99, 235))
 
     return canvas
+
+
+# ── AI Creative Director composer ────────────────────────────────────────────
+# Layout: dark gradient top (headline) + clear center (product) + dark gradient bottom (bullets+CTA)
+
+_FONT_CANDIDATES_SERIF = [
+    "/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf",
+    r"C:\Windows\Fonts\georgiabd.ttf",
+    r"C:\Windows\Fonts\georgia.ttf",
+]
+F_SERIF = _find_font(_FONT_CANDIDATES_SERIF)
+
+
+def _get_fonts(font_style: str):
+    """Return (headline_font_path, body_font_path) based on style."""
+    if font_style == "elegant_serif":
+        return F_SERIF or F_BOLD, F_SERIF or F_REG
+    return F_BOLD, F_REG  # bold_sans and modern_display both use bold
+
+
+def compose_creative_banner(image_bytes: bytes, text_overlay: dict,
+                             color_scheme: dict, font_style: str = "bold_sans") -> bytes:
+    """
+    Compose one banner using the AI Creative Director's structured output.
+    Layout: dark top zone (city tag + headline) · clear center (product) · dark bottom zone (bullets + CTA)
+    """
+    W, H = FEED_W, FEED_H
+    base = _cover_crop(image_bytes)
+
+    # Parse colors
+    bg_color  = _hex_to_rgb(color_scheme.get("primary_bg",  "#050912"), (5, 9, 18))
+    txt_color = _hex_to_rgb(color_scheme.get("text_color",  "#FFFFFF"), (255, 255, 255))
+    cta_bg    = _hex_to_rgb(color_scheme.get("cta_bg",      "#2563EB"), (37, 99, 235))
+    cta_txt   = _hex_to_rgb(color_scheme.get("cta_text",    "#FFFFFF"), (255, 255, 255))
+
+    # Accent color: slightly lighter version of cta_bg for bullets
+    accent = tuple(min(255, c + 60) for c in cta_bg)
+
+    # Apply gradients: top 42% fades to transparent, bottom 55% fades to dark
+    img = _gradient_overlay_top(base,  int(H * 0.42), bg_color, alpha_start=195, alpha_end=0)
+    img = _gradient_overlay(img,       int(H * 0.52), bg_color, alpha_start=0,   alpha_end=222)
+
+    draw = ImageDraw.Draw(img)
+    fh_path, fb_path = _get_fonts(font_style)
+
+    fh  = _font(fh_path, 88)   # headline
+    fsb = _font(fh_path, 40)   # subheadline / bullets
+    fc  = _font(fh_path, 44)   # CTA
+    fct = _font(fb_path, 28)   # city tag
+
+    margin, tw = 64, W - 128
+
+    # ── City tag (top right) ──────────────────────────────────────────────────
+    city = (text_overlay.get("city_tag") or "").strip()
+    if city:
+        bb = draw.textbbox((0, 0), city, font=fct)
+        cw, ch = bb[2] - bb[0], bb[3] - bb[1]
+        px, py = 20, 10
+        rx = W - cw - px * 2 - 24
+        ry = 28
+        draw.rounded_rectangle([rx, ry, rx + cw + px * 2, ry + ch + py * 2],
+                                radius=8, fill=(*bg_color, 180))
+        draw.text((rx + px, ry + py), city, font=fct, fill=(255, 255, 255))
+
+    # ── Hook headline (top zone, y ≈ 70–280) ─────────────────────────────────
+    headline = (text_overlay.get("hook_headline") or "").strip()
+    y = 70
+    if font_style == "modern_display":
+        headline = headline.upper()
+    for line in _wrap(headline, fh, tw, draw)[:2]:
+        draw.text((margin, y), line, font=fh, fill=txt_color)
+        y += 106
+
+    # ── Subheadline (optional, just below headline) ───────────────────────────
+    sub = (text_overlay.get("subheadline") or "").strip()
+    if sub:
+        y += 8
+        draw.text((margin, y), sub, font=fsb, fill=(*accent, 255) if len(accent) == 3 else accent)
+        y += 48
+
+    # ── Bullets (bottom zone, y ≈ 870–1060) ──────────────────────────────────
+    bullets = text_overlay.get("bullets") or []
+    y_b = int(H * 0.645)
+    for b in bullets[:3]:
+        draw.text((margin, y_b), f"✦  {b}", font=fsb, fill=(*accent,))
+        y_b += 52
+
+    # ── CTA button (near bottom) ──────────────────────────────────────────────
+    cta = (text_overlay.get("cta_button") or "Узнать цену").strip()
+    y_cta = int(H * 0.835)
+    _pill(draw, margin, y_cta, cta, fc, bg=cta_bg, fg=cta_txt)
+
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=94)
+    return buf.getvalue()
 
 
 # ── Direction creative (text-only, no photo) ────────────────────────────────

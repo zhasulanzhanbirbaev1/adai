@@ -657,170 +657,138 @@ async def api_send_banner(request: Request, user_id: int = Depends(_get_uid)):
 async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)):
     try:
         import base64 as b64mod
-        from image_generator import generate_dalle_image, generate_ad_copy, generate_instagram_copy, OPENAI_AVAILABLE
-        from banner_composer import create_banners
+        import asyncio as _asyncio
+        from image_generator import (
+            generate_dalle_image, generate_instagram_copy,
+            generate_3_creatives_concept, suggest_audience, OPENAI_AVAILABLE,
+        )
+        from banner_composer import compose_creative_banner
     except Exception as e:
         logger.error("Import error in generate-banner: %s", e)
         raise HTTPException(500, f"Import error: {str(e)}")
 
     if not OPENAI_AVAILABLE:
-        raise HTTPException(503, "OpenAI API key not configured")
+        raise HTTPException(503, "OpenAI API не настроен")
 
     try:
         if not can_generate(user_id):
-            raise HTTPException(402, f"Бесплатные генерации закончились ({FREE_GENERATIONS} из {FREE_GENERATIONS} использовано). Оформите подписку в боте.")
+            raise HTTPException(402, f"Бесплатные генерации закончились. Оформите подписку.")
     except HTTPException:
         raise
     except Exception as e:
         logger.error("can_generate error: %s", e)
-        # If DB check fails, allow generation to continue
 
-    body = await request.json()
+    body        = await request.json()
+    niche       = (body.get("niche") or "").strip()
+    description = (body.get("description") or body.get("offer") or "").strip()
+    audience    = (body.get("audience") or "").strip()
+    image_b64   = body.get("image_base64")
 
-    # Upload path: user provides their own photo
-    image_base64 = body.get("image_base64")
-    offer_up     = (body.get("offer") or body.get("niche") or "").strip()
-    if image_base64 and offer_up:
-        try:
-            from image_generator import suggest_audience as _suggest
-            img_bytes = b64mod.b64decode(image_base64)
-            copy      = await generate_ad_copy(offer_up, body.get("audience") or "", image_base64)
-            headlines = copy.get("headlines", [offer_up] * 3)
-            bullets   = copy.get("bullets", [])
-            cta       = copy.get("cta", "Узнать больше")
-            banners   = create_banners(img_bytes, headlines, bullets, cta)
-            try:
-                insta = await generate_instagram_copy(offer_up, offer_up, body.get("audience") or "")
-            except Exception:
-                insta = {}
-            try:
-                aud_sug = await _suggest(offer_up, offer_up)
-            except Exception:
-                aud_sug = {}
-            try:
-                increment_generations(user_id)
-                left = generations_left(user_id)
-            except Exception:
-                left = 9
-            return {
-                "banners": banners,
-                "copy": {"headlines": headlines, "bullets": bullets, "cta": cta},
-                "instagram": insta,
-                "audience": aud_sug,
-                "generations_left": left,
-            }
-        except Exception as e:
-            logger.error("Upload banner error: %s", e)
-            raise HTTPException(500, f"Ошибка создания баннера: {str(e)}")
+    if not niche and not description:
+        raise HTTPException(400, "Укажите нишу или оффер")
 
-    # DALL-E path: generate image from description
-    description = (body.get("description") or "").strip()
-    niche        = (body.get("niche") or "").strip()
-    audience     = (body.get("audience") or "местные жители").strip()
-    style        = body.get("style", "cinematic")
-
-    if not description and not niche:
-        raise HTTPException(400, "niche or description required")
-
-    # Auto-generate description from niche if not provided
-    if not description and niche:
-        niche_prompts = {
-            "кофейня": "Уютная современная кофейня в Алматы, ароматный кофе, счастливые люди",
-            "фитнес": "Современный фитнес зал, люди тренируются, мотивация и здоровье",
-            "салон красоты": "Элегантный салон красоты, профессиональный уход, довольные клиентки",
-            "ресторан": "Красивый ресторан в Алматы, изысканные блюда, приятная атмосфера",
-            "автосервис": "Профессиональный автосервис, современное оборудование, чистый цех",
-            "стоматология": "Современная стоматологическая клиника, белые зубы, улыбающиеся пациенты",
-            "недвижимость": "Красивые современные квартиры в Алматы, уютный интерьер, панорамные окна",
-            "одежда": "Стильная модная одежда, модели в современном образе, яркие цвета",
-        }
-        description = niche_prompts.get(niche.lower(),
-            f"Professional advertising photo for {niche} business in Kazakhstan. "
-            f"High quality service, happy clients, modern environment"
-        )
-
-    style_prompts = {
-        "cinematic": (
-            f"Award-winning advertising photography for Facebook/Instagram ad campaign. Subject: {description}. "
-            "Shot by top commercial photographer. Perfect golden hour lighting or dramatic studio lighting. "
-            "Ultra-sharp focus, rich saturated colors, professional color grading. "
-            "Cinematic composition with rule of thirds. No text, no watermarks. "
-            "Photorealistic, 8K resolution, commercial advertising quality."
-        ),
-        "product": (
-            f"Premium product photography for social media advertising. Subject: {description}. "
-            "Shot in professional photography studio. Pure white or gradient background. "
-            "Three-point lighting setup, catchlights, perfect shadows. "
-            "Ultra-sharp details, vibrant colors, commercial photography standard. "
-            "No text, no watermarks. 8K resolution."
-        ),
-        "minimal": (
-            f"Modern minimalist advertising visual for social media. Subject: {description}. "
-            "Bold solid color background in deep blue, rich black, or warm terracotta. "
-            "Clean geometric composition, strong visual hierarchy. "
-            "High-end editorial photography style. Professional advertising aesthetic. "
-            "No text, no watermarks. Ultra-HD quality."
-        ),
-        "lifestyle": (
-            f"Authentic lifestyle photography for social media ad. Subject: {description}. "
-            "Real people in natural environments, candid emotion, genuine happiness. "
-            "Warm natural light, bokeh background, editorial magazine quality. "
-            "Aspirational but relatable. Kazakhstan/Central Asia setting if applicable. "
-            "No text, no watermarks. 8K photorealistic quality."
-        ),
+    # ── Step 1: AI Creative Director generates 3 concepts ──────────────────
+    brief = {
+        "niche":       niche,
+        "geo":         body.get("geo", "Казахстан"),
+        "description": description,
+        "offers":      description,
+        "audience":    audience,
+        "utp":         "",
+        "pains":       "",
+        "whatsapp_number": "",
     }
-    dalle_prompt = style_prompts.get(style, style_prompts["cinematic"])
-
     try:
-        image_bytes = await generate_dalle_image(dalle_prompt, size="1024x1536")
-    except RuntimeError as e:
-        raise HTTPException(503, str(e))
+        concepts_data = await generate_3_creatives_concept(brief)
+        variants      = concepts_data.get("variants", [])[:3]
     except Exception as e:
-        logger.error("DALL-E generation error: %s", e)
-        raise HTTPException(500, f"DALL-E error: {str(e)}")
+        logger.error("Creative concept error: %s", e)
+        raise HTTPException(500, f"Ошибка AI Creative Director: {str(e)}")
 
-    try:
-        photo_b64 = b64mod.b64encode(image_bytes).decode()
-        copy = await generate_ad_copy(niche or description, audience, photo_b64)
-        headlines = copy.get("headlines", [description] * 3)
-        bullets   = copy.get("bullets", [])
-        cta       = copy.get("cta", "Узнать больше")
-    except Exception as e:
-        logger.error("Ad copy generation error: %s", e)
-        headlines = [description, description, description]
-        bullets, cta = [], "Узнать больше"
+    if not variants:
+        raise HTTPException(500, "AI не вернул концепции, попробуйте ещё раз")
 
-    try:
-        banners = create_banners(image_bytes, headlines, bullets, cta)
-    except Exception as e:
-        logger.error("Banner compose error: %s", e)
-        raise HTTPException(500, f"Ошибка компоновки баннера: {str(e)}")
+    # ── Step 2: Get images (user photo OR generate 3 in parallel) ──────────
+    if image_b64:
+        # User uploaded their own photo — use it for all 3 variants
+        try:
+            img_bytes_list = [b64mod.b64decode(image_b64)] * len(variants)
+        except Exception as e:
+            raise HTTPException(400, f"Неверный формат изображения: {e}")
+    else:
+        # Generate 3 unique images in parallel (one per concept)
+        async def _gen_img(prompt: str):
+            try:
+                return await generate_dalle_image(prompt, size="1024x1536")
+            except Exception as ex:
+                logger.error("Image gen error: %s", ex)
+                return None
 
+        results = await _asyncio.gather(*[_gen_img(v["image_prompt_en"]) for v in variants])
+        img_bytes_list = list(results)
+
+    # ── Step 3: Compose banners ─────────────────────────────────────────────
+    banners = []
+    all_headlines, all_bullets, first_cta = [], [], ""
+    for i, (variant, img_bytes) in enumerate(zip(variants, img_bytes_list)):
+        if img_bytes is None:
+            continue
+        try:
+            banner_bytes = compose_creative_banner(
+                img_bytes,
+                variant.get("text_overlay", {}),
+                variant.get("color_scheme", {}),
+                variant.get("font_style", "bold_sans"),
+            )
+            import base64 as _b
+            b64 = _b.b64encode(banner_bytes).decode()
+            to  = variant.get("text_overlay", {})
+            banners.append({
+                "label":      variant.get("variant_name", f"Вариант {i+1}"),
+                "image":      f"data:image/jpeg;base64,{b64}",
+                "size":       "1080×1350",
+                "post_copy":  variant.get("post_copy", ""),
+                "hashtags":   variant.get("hashtags", []),
+                "concept":    variant.get("concept_explanation", ""),
+            })
+            hl = to.get("hook_headline", "")
+            if hl:
+                all_headlines.append(hl)
+            all_bullets = to.get("bullets") or all_bullets
+            if not first_cta:
+                first_cta = to.get("cta_button", "")
+        except Exception as e:
+            logger.error("Banner compose error variant %d: %s", i, e)
+
+    if not banners:
+        raise HTTPException(500, "Не удалось создать ни одного баннера")
+
+    # ── Step 4: Instagram copy + audience ──────────────────────────────────
     try:
         insta = await generate_instagram_copy(niche or description, description, audience)
-    except Exception as e:
-        logger.error("Instagram copy error: %s", e)
-        insta = {}
+    except Exception:
+        # Use post_copy from first variant as fallback
+        insta = {"caption": banners[0].get("post_copy", ""),
+                 "hashtags": " ".join(banners[0].get("hashtags", []))}
 
     try:
-        from image_generator import suggest_audience
-        audience_suggestion = await suggest_audience(niche or description, description)
-    except Exception as e:
-        logger.error("Audience suggest error: %s", e)
-        audience_suggestion = {}
+        aud_sug = await suggest_audience(niche or description, description)
+    except Exception:
+        aud_sug = {}
 
+    # ── Step 5: Track generation ────────────────────────────────────────────
+    left = 9
     try:
         increment_generations(user_id)
         left = generations_left(user_id)
     except Exception as e:
         logger.error("DB generations update error: %s", e)
-        left = 9
 
     return {
-        "banners": banners,
-        "copy": {"headlines": headlines, "bullets": bullets, "cta": cta},
-        "instagram": insta,
-        "audience": audience_suggestion,
+        "banners":          banners,
+        "copy":             {"headlines": all_headlines, "bullets": all_bullets, "cta": first_cta},
+        "instagram":        insta,
+        "audience":         aud_sug,
         "generations_left": left,
     }
 
