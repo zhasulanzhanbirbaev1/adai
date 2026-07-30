@@ -93,6 +93,18 @@ def _check_admin(x_admin_key: str = Header(None, alias="X-Admin-Key")):
         raise HTTPException(403, "Forbidden")
 
 
+@app.post("/admin/reset-generations", dependencies=[Depends(_check_admin)])
+async def admin_reset_generations(request: Request):
+    body = await request.json()
+    uid  = int(body.get("user_id", 0))
+    if not uid:
+        raise HTTPException(400, "user_id required")
+    from database import get_conn
+    with get_conn() as conn:
+        conn.execute("UPDATE users SET generations_used = 0 WHERE id = %s", (uid,))
+    return {"status": "ok", "user_id": uid, "generations_used": 0}
+
+
 @app.post("/admin/activate", dependencies=[Depends(_check_admin)])
 async def admin_activate(request: Request):
     body = await request.json()
