@@ -352,6 +352,29 @@ async def api_studio_launch(request: Request, user_id: int = Depends(_get_uid)):
     return {"campaign_id": camp_id, "adset_id": adset_id, "ad_id": ad_id, "status": "launched"}
 
 
+@app.get("/api/facebook/pages")
+async def api_facebook_pages(user_id: int = Depends(_get_uid)):
+    """Fetch user's Facebook Pages using saved token."""
+    fb = get_fb_token(user_id)
+    if not fb or not fb.get("access_token"):
+        raise HTTPException(400, "Facebook не подключён")
+    token = fb["access_token"]
+    async with httpx.AsyncClient(timeout=10) as client:
+        r = await client.get("https://graph.facebook.com/v19.0/me/accounts", params={
+            "access_token": token,
+            "fields": "id,name,category,fan_count",
+        })
+    data = r.json()
+    if "error" in data:
+        raise HTTPException(400, data["error"].get("message", "Ошибка Facebook"))
+    pages = data.get("data", [])
+    return {
+        "pages": pages,
+        "ad_account_id": fb.get("ad_account_id", ""),
+        "connected": True,
+    }
+
+
 @app.put("/api/settings/facebook")
 async def api_save_facebook(request: Request, user_id: int = Depends(_get_uid)):
     body = await request.json()

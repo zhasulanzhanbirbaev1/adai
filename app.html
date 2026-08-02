@@ -1169,6 +1169,39 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
 
     <!-- Step 3 -->
     <div id="wiz-pane-2" style="display:none">
+      <!-- Facebook connection status -->
+      <div id="wiz-fb-block" style="margin-bottom:16px">
+        <div id="wiz-fb-loading" style="text-align:center;padding:20px;color:var(--muted);font-size:13px">
+          Проверяем подключение Facebook...
+        </div>
+        <!-- Shown when NOT connected -->
+        <div id="wiz-fb-connect" style="display:none;background:rgba(24,119,242,.08);border:1px solid rgba(24,119,242,.25);border-radius:12px;padding:16px;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">🔵</div>
+          <div style="font-weight:700;margin-bottom:6px">Подключи Facebook</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Чтобы запустить рекламу, нужно подключить рекламный кабинет</div>
+          <button class="fb-connect-btn" onclick="connectFacebookWiz()" style="width:auto;padding:12px 28px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            Подключить Facebook
+          </button>
+        </div>
+        <!-- Shown when connected -->
+        <div id="wiz-fb-connected" style="display:none">
+          <div style="background:rgba(16,217,160,.08);border:1px solid rgba(16,217,160,.2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <span style="font-size:20px">✅</span>
+            <div>
+              <div style="font-weight:700;font-size:14px">Facebook подключён</div>
+              <div id="wiz-fb-account" style="font-size:12px;color:var(--muted)"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Страница Facebook / Instagram</label>
+            <select class="form-input form-select" id="dir-page-id">
+              <option value="">Загрузка страниц...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div class="form-group">
         <label class="form-label">Рекламное фото / баннер</label>
         <div class="upload-area" id="dir-upload-area" onclick="document.getElementById('dir-file-input').click()">
@@ -1177,11 +1210,6 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
           <span style="color:var(--muted);font-size:12px">JPG, PNG до 10 МБ</span>
         </div>
         <input type="file" id="dir-file-input" accept="image/*" style="display:none" onchange="handleDirUpload(this)"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Facebook Page ID</label>
-        <input class="form-input" id="dir-page-id" placeholder="Ваш Page ID из Facebook Business"/>
-        <div style="font-size:11px;color:var(--muted);margin-top:5px">Найти: facebook.com/settings → Page Info → Page ID</div>
       </div>
       <div class="form-group">
         <label class="form-label">Текст объявления</label>
@@ -2350,6 +2378,46 @@ function wizGo(step, noAnim) {
   }
   const m=document.querySelector('#modal-direction .modal');
   if (m) m.scrollTop=0;
+  if (step === 2) loadWizFacebook();
+}
+
+async function loadWizFacebook() {
+  document.getElementById('wiz-fb-loading').style.display = 'block';
+  document.getElementById('wiz-fb-connect').style.display  = 'none';
+  document.getElementById('wiz-fb-connected').style.display = 'none';
+  try {
+    const data = await api(`/api/facebook/pages?user_id=${UID}`);
+    document.getElementById('wiz-fb-loading').style.display = 'none';
+    if (!data || !data.connected) {
+      document.getElementById('wiz-fb-connect').style.display = 'block';
+      return;
+    }
+    document.getElementById('wiz-fb-connected').style.display = 'block';
+    document.getElementById('wiz-fb-account').textContent = data.ad_account_id || '';
+    const sel = document.getElementById('dir-page-id');
+    if (data.pages && data.pages.length > 0) {
+      sel.innerHTML = data.pages.map(p =>
+        `<option value="${p.id}">${p.name}${p.category ? ' · ' + p.category : ''}</option>`
+      ).join('');
+    } else {
+      sel.innerHTML = '<option value="">Страницы не найдены — введите ID вручную</option>';
+      // Show manual input as fallback
+      sel.insertAdjacentHTML('afterend',
+        '<input class="form-input" id="dir-page-id-manual" placeholder="ID страницы вручную" style="margin-top:8px"/>');
+    }
+  } catch(e) {
+    document.getElementById('wiz-fb-loading').style.display = 'none';
+    document.getElementById('wiz-fb-connect').style.display = 'block';
+  }
+}
+
+function connectFacebookWiz() {
+  if (!UID) return;
+  window.Telegram?.WebApp?.openLink
+    ? window.Telegram.WebApp.openLink(`${location.origin}/fb/connect?user_id=${UID}`)
+    : window.open(`${location.origin}/fb/connect?user_id=${UID}`, '_blank');
+  // Reload FB status after 8 seconds (user returns from OAuth)
+  setTimeout(loadWizFacebook, 8000);
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
