@@ -254,24 +254,22 @@ def compose_creative_banner(image_bytes: bytes, text_overlay: dict,
     W, H = FEED_W, FEED_H
     base = _cover_crop(image_bytes)
 
-    # Parse colors
-    bg_color  = _hex_to_rgb(color_scheme.get("primary_bg",  "#050912"), (5, 9, 18))
-    txt_color = _hex_to_rgb(color_scheme.get("text_color",  "#FFFFFF"), (255, 255, 255))
-    cta_bg    = _hex_to_rgb(color_scheme.get("cta_bg",      "#2563EB"), (37, 99, 235))
-    cta_txt   = _hex_to_rgb(color_scheme.get("cta_text",    "#FFFFFF"), (255, 255, 255))
+    # Parse colors — only bg and CTA use AI colors; ALL text is white
+    bg_color = _hex_to_rgb(color_scheme.get("primary_bg", "#050912"), (5, 9, 18))
+    cta_bg   = _hex_to_rgb(color_scheme.get("cta_bg",     "#2563EB"), (37, 99, 235))
 
-    # Accent color: slightly lighter version of cta_bg for bullets
-    accent = tuple(min(255, c + 60) for c in cta_bg)
+    WHITE      = (255, 255, 255)
+    WHITE_DIM  = (220, 220, 220)   # subheadline — slightly dimmer white
 
     # Apply gradients: top 42% fades to transparent, bottom 55% fades to dark
-    img = _gradient_overlay_top(base,  int(H * 0.42), bg_color, alpha_start=195, alpha_end=0)
-    img = _gradient_overlay(img,       int(H * 0.52), bg_color, alpha_start=0,   alpha_end=222)
+    img = _gradient_overlay_top(base, int(H * 0.42), bg_color, alpha_start=195, alpha_end=0)
+    img = _gradient_overlay(img,      int(H * 0.52), bg_color, alpha_start=0,   alpha_end=222)
 
     draw = ImageDraw.Draw(img)
     fh_path, fb_path = _get_fonts(font_style)
 
     fh  = _font(fh_path, 88)   # headline
-    fsb = _font(fh_path, 40)   # subheadline / bullets
+    fsb = _font(fb_path, 40)   # subheadline / bullets
     fc  = _font(fh_path, 44)   # CTA
     fct = _font(fb_path, 28)   # city tag
 
@@ -286,36 +284,35 @@ def compose_creative_banner(image_bytes: bytes, text_overlay: dict,
         rx = W - cw - px * 2 - 24
         ry = 28
         draw.rounded_rectangle([rx, ry, rx + cw + px * 2, ry + ch + py * 2],
-                                radius=8, fill=(*bg_color, 180))
-        draw.text((rx + px, ry + py), city, font=fct, fill=(255, 255, 255))
+                                radius=8, fill=(*bg_color, 160))
+        draw.text((rx + px, ry + py), city, font=fct, fill=WHITE)
 
-    # ── Hook headline (top zone, y ≈ 70–280) ─────────────────────────────────
+    # ── Hook headline (top zone) ──────────────────────────────────────────────
     headline = (text_overlay.get("hook_headline") or "").strip()
     y = 70
     if font_style == "modern_display":
         headline = headline.upper()
     for line in _wrap(headline, fh, tw, draw)[:2]:
-        draw.text((margin, y), line, font=fh, fill=txt_color)
+        draw.text((margin, y), line, font=fh, fill=WHITE)
         y += 106
 
-    # ── Subheadline (optional, just below headline) ───────────────────────────
+    # ── Subheadline ───────────────────────────────────────────────────────────
     sub = (text_overlay.get("subheadline") or "").strip()
     if sub:
         y += 8
-        draw.text((margin, y), sub, font=fsb, fill=(*accent, 255) if len(accent) == 3 else accent)
-        y += 48
+        draw.text((margin, y), sub, font=fsb, fill=WHITE_DIM)
 
-    # ── Bullets (bottom zone, y ≈ 870–1060) ──────────────────────────────────
+    # ── Bullets (bottom zone) ─────────────────────────────────────────────────
     bullets = text_overlay.get("bullets") or []
     y_b = int(H * 0.645)
     for b in bullets[:3]:
-        draw.text((margin, y_b), f"✦  {b}", font=fsb, fill=(*accent,))
-        y_b += 52
+        draw.text((margin, y_b), f"— {b}", font=fsb, fill=WHITE)
+        y_b += 56
 
     # ── CTA button (near bottom) ──────────────────────────────────────────────
     cta = (text_overlay.get("cta_button") or "Узнать цену").strip()
     y_cta = int(H * 0.835)
-    _pill(draw, margin, y_cta, cta, fc, bg=cta_bg, fg=cta_txt)
+    _pill(draw, margin, y_cta, cta, fc, bg=cta_bg, fg=WHITE)
 
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=94)
