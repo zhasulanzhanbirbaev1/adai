@@ -1333,6 +1333,28 @@ function loadPage(page) {
   if (page==='analytics')   loadAnalytics('7');
   if (page==='settings')    loadSettings();
   if (page==='history')     loadHistory();
+  if (page==='marketolog')  loadStudio();
+}
+
+function loadStudio() {
+  // Restore last generation if banners are gone but localStorage has them
+  if (_lastGeneratedBanners.length > 0) return; // already in memory
+  try {
+    const saved = localStorage.getItem('adai_last_gen');
+    if (!saved) return;
+    const { data, ts } = JSON.parse(saved);
+    if (Date.now() - ts > 24 * 60 * 60 * 1000) return; // older than 24h
+    _lastGeneratedBanners = data.banners || [];
+    if (_lastGeneratedBanners.length > 0) {
+      renderGeneratedBanners(data);
+      document.getElementById('gen-status').textContent = '';
+      document.getElementById('launch-block').style.display = 'block';
+      if (data.generations_left !== undefined) {
+        const el = document.getElementById('gen-counter');
+        if (el) el.textContent = data.generations_left > 100 ? '' : `Осталось бесплатных генераций: ${data.generations_left}`;
+      }
+    }
+  } catch(_) {}
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
@@ -1789,6 +1811,8 @@ async function generateBannersDalle() {
     if (!r.ok) { status.textContent = data.detail||'Ошибка генерации'; container.innerHTML=''; return; }
     _lastGeneratedBanners = data.banners || [];
     renderGeneratedBanners(data);
+    // Persist last generation so it survives navigation
+    try { localStorage.setItem('adai_last_gen', JSON.stringify({ data, ts: Date.now() })); } catch(_){}
     status.textContent='';
     if (data.generations_left !== undefined) {
       const el = document.getElementById('gen-counter');
