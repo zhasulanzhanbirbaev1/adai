@@ -186,6 +186,18 @@ def init_db():
                 created_at TEXT DEFAULT (NOW()::TEXT)
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS banner_history (
+                id SERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL REFERENCES users(id),
+                niche TEXT,
+                label TEXT,
+                concept TEXT,
+                post_copy TEXT,
+                image_b64 TEXT,
+                created_at TEXT DEFAULT (NOW()::TEXT)
+            )
+        """)
         for col_sql in [
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS target_cpl REAL DEFAULT 0",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp TEXT",
@@ -592,6 +604,32 @@ def save_user_page_id(user_id: int, page_id: str):
 def save_user_ad_account_id(user_id: int, ad_account_id: str):
     with get_conn() as conn:
         conn.execute("UPDATE users SET fb_ad_account_id = %s WHERE id = %s", (ad_account_id, user_id))
+
+
+def save_banner_history(user_id: int, niche: str, label: str, concept: str, post_copy: str, image_b64: str):
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO banner_history (user_id, niche, label, concept, post_copy, image_b64) VALUES (%s,%s,%s,%s,%s,%s)",
+            (user_id, niche, label, concept, post_copy, image_b64),
+        )
+
+
+def get_banner_history(user_id: int, limit: int = 30) -> list:
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT id, niche, label, concept, post_copy, created_at FROM banner_history WHERE user_id=%s ORDER BY id DESC LIMIT %s",
+            (user_id, limit),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_banner_history_image(banner_id: int, user_id: int) -> str | None:
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT image_b64 FROM banner_history WHERE id=%s AND user_id=%s",
+            (banner_id, user_id),
+        ).fetchone()
+    return row["image_b64"] if row else None
 
 
 def update_direction_ad_text(direction_id: int, ad_text: str):

@@ -20,6 +20,7 @@ from database import (
     get_agent_conversations, get_conversation_detail,
     can_generate, increment_generations, generations_left, FREE_GENERATIONS,
     save_user_page_id,
+    save_banner_history, get_banner_history, get_banner_history_image,
 )
 load_dotenv()
 BOT_TOKEN     = os.getenv("BOT_TOKEN", "")
@@ -708,6 +709,26 @@ async def api_banner_file(token: str):
     )
 
 
+@app.get("/api/history")
+async def api_history(user_id: int = Depends(_get_uid)):
+    """Return list of past generated banners (no image bytes)."""
+    items = get_banner_history(user_id, limit=30)
+    return {"items": items}
+
+
+@app.get("/api/history/{banner_id}/image")
+async def api_history_image(banner_id: int, user_id: int = Query(...)):
+    """Return banner image as JPEG."""
+    from fastapi.responses import Response
+    img_b64 = get_banner_history_image(banner_id, user_id)
+    if not img_b64:
+        raise HTTPException(404, "Баннер не найден")
+    import base64 as _bimg
+    img_bytes = _bimg.b64decode(img_b64)
+    return Response(content=img_bytes, media_type="image/jpeg",
+                    headers={"Content-Disposition": "inline; filename=\"banner.jpg\""})
+
+
 @app.post("/api/generate-banner")
 async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)):
     try:
@@ -831,13 +852,28 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
     except Exception:
         aud_sug = {}
 
-    # ── Step 5: Track generation ────────────────────────────────────────────
+    # ── Step 5: Track generation + save history ─────────────────────────────
     left = 9
     try:
         increment_generations(user_id)
         left = generations_left(user_id)
     except Exception as e:
         logger.error("DB generations update error: %s", e)
+
+    try:
+        import base64 as _bh
+        for banner in banners:
+            raw_b64 = banner["image"].split(",", 1)[-1]
+            save_banner_history(
+                user_id=user_id,
+                niche=niche or description or "",
+                label=banner.get("label", ""),
+                concept=banner.get("concept", ""),
+                post_copy=banner.get("post_copy", ""),
+                image_b64=raw_b64,
+            )
+    except Exception as e:
+        logger.error("History save error: %s", e)
 
     return {
         "banners":          banners,

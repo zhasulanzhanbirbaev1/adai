@@ -311,6 +311,8 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
     <a class="nav-item" data-page="marketolog" onclick="navigate('marketolog')"><span class="icon">🎨</span>AI Маркетолог</a>
     <div class="nav-section">Аналитика</div>
     <a class="nav-item" data-page="analytics" onclick="navigate('analytics')"><span class="icon">📈</span>Аналитика</a>
+    <a class="nav-item" data-page="history" onclick="navigate('history')"><span class="icon">🗂</span>История</a>
+    <a class="nav-item" data-page="help" onclick="navigate('help')"><span class="icon">❓</span>Инструкция</a>
     <a class="nav-item" data-page="settings" onclick="navigate('settings')"><span class="icon">⚙️</span>Настройки</a>
   </nav>
   <div class="sidebar-footer">
@@ -326,14 +328,14 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
   <a class="bn-item active" data-page="dashboard" onclick="navigate('dashboard')">
     <span class="bn-icon">📊</span><span class="bn-label">Дашборд</span>
   </a>
-  <a class="bn-item" data-page="campaigns" onclick="navigate('campaigns')">
-    <span class="bn-icon">🎯</span><span class="bn-label">Кампании</span>
-  </a>
   <a class="bn-item" data-page="targetolog" onclick="navigate('targetolog')">
     <span class="bn-icon">🤖</span><span class="bn-label">AI</span>
   </a>
   <a class="bn-item" data-page="marketolog" onclick="navigate('marketolog')">
     <span class="bn-icon">🎨</span><span class="bn-label">Студия</span>
+  </a>
+  <a class="bn-item" data-page="history" onclick="navigate('history')">
+    <span class="bn-icon">🗂</span><span class="bn-label">История</span>
   </a>
   <a class="bn-item" data-page="settings" onclick="navigate('settings')">
     <span class="bn-icon">⚙️</span><span class="bn-label">Настройки</span>
@@ -520,6 +522,15 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
               </div>
             </div>
 
+            <div class="form-group">
+              <label class="form-label">Пол аудитории</label>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+                <div class="type-opt active" data-val="all" onclick="selectGenGender(this)"><div class="t-label">👥 Все</div></div>
+                <div class="type-opt" data-val="female" onclick="selectGenGender(this)"><div class="t-label">👩 Женщины</div></div>
+                <div class="type-opt" data-val="male" onclick="selectGenGender(this)"><div class="t-label">👨 Мужчины</div></div>
+              </div>
+            </div>
+
             <button class="btn btn-primary" id="gen-btn" onclick="generateBannersDalle()" style="width:100%;font-size:16px;padding:14px">✨ Создать рекламные баннеры</button>
             <div id="gen-status" style="margin-top:12px;color:var(--muted);font-size:13px;text-align:center"></div>
             <div id="gen-counter" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
@@ -622,6 +633,101 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
           <thead><tr><th>Кампания</th><th>Показы</th><th>Клики</th><th>CTR</th><th>Заявки</th><th>CPL</th><th>Потрачено</th></tr></thead>
           <tbody id="analytics-table"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Загрузка...</td></tr></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- ══════════════ ИНСТРУКЦИЯ ══════════════ -->
+    <div class="page" id="page-help">
+      <div class="two-col">
+        <div>
+          <h2 style="margin-bottom:4px">❓ Инструкция</h2>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:24px">Как пользоваться Adai</div>
+
+          <!-- Быстрый старт -->
+          <div class="chart-box" style="margin-bottom:16px">
+            <div class="box-header"><div class="box-title">🚀 Быстрый старт — 4 шага</div></div>
+            <div style="display:flex;flex-direction:column;gap:14px;padding-top:4px">
+              <div style="display:flex;gap:14px;align-items:flex-start">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+                <div><strong>Открой Студию</strong><br><span style="font-size:13px;color:var(--muted)">Нажми 🎨 «Студия» внизу экрана</span></div>
+              </div>
+              <div style="display:flex;gap:14px;align-items:flex-start">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+                <div><strong>Введи нишу и оффер</strong><br><span style="font-size:13px;color:var(--muted)">Пример: «Салон красоты» → «Маникюр от 3000₸»</span></div>
+              </div>
+              <div style="display:flex;gap:14px;align-items:flex-start">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+                <div><strong>Нажми «Создать рекламные баннеры»</strong><br><span style="font-size:13px;color:var(--muted)">AI создаёт 3 варианта за ~60 сек</span></div>
+              </div>
+              <div style="display:flex;gap:14px;align-items:flex-start">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div>
+                <div><strong>Выбери лучший баннер</strong><br><span style="font-size:13px;color:var(--muted)">Нажми на баннер → просмотри → поделись или скачай</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Студия -->
+          <div class="chart-box" style="margin-bottom:16px">
+            <div class="box-header"><div class="box-title">🎨 Студия — генерация баннеров</div></div>
+            <div style="font-size:14px;line-height:1.7;color:var(--fg)">
+              <p style="margin:0 0 10px"><strong>Своё фото:</strong> Загрузи фото товара — AI создаст баннер с ним. Нажми на иконку 📸 над полем ниши.</p>
+              <p style="margin:0 0 10px"><strong>Без фото:</strong> AI нарисует фон сам в выбранном стиле (кинематичный, продуктовый, лайфстайл, минимализм).</p>
+              <p style="margin:0 0 10px"><strong>Пол аудитории:</strong> Выбери Все / Женщины / Мужчины — влияет на концепцию текста.</p>
+              <p style="margin:0"><strong>Результат:</strong> 3 варианта баннера 1080×1350 + готовый текст для поста + хэштеги.</p>
+            </div>
+          </div>
+
+          <!-- Просмотр и скачивание -->
+          <div class="chart-box" style="margin-bottom:16px">
+            <div class="box-header"><div class="box-title">📥 Просмотр и скачивание</div></div>
+            <div style="font-size:14px;line-height:1.7;color:var(--fg)">
+              <p style="margin:0 0 10px"><strong>Нажми на баннер</strong> — откроется полноэкранный просмотр.</p>
+              <p style="margin:0 0 10px"><strong>Стрелки ← →</strong> — переключай между 3 вариантами.</p>
+              <p style="margin:0 0 10px"><strong>«Поделиться»</strong> — открывает нативное меню. Сохрани в галерею или выложи сразу в Instagram/WhatsApp.</p>
+              <p style="margin:0 0 10px"><strong>«Выбрать этот»</strong> — переносит баннер в раздел запуска рекламы.</p>
+              <p style="margin:0"><strong>«Отправить в Telegram»</strong> — бот пришлёт баннер в твой чат.</p>
+            </div>
+          </div>
+
+          <!-- История -->
+          <div class="chart-box" style="margin-bottom:16px">
+            <div class="box-header"><div class="box-title">🗂 История генераций</div></div>
+            <div style="font-size:14px;line-height:1.7;color:var(--fg)">
+              <p style="margin:0 0 10px">Все сгенерированные баннеры сохраняются автоматически.</p>
+              <p style="margin:0">Найди их в разделе <strong>«История»</strong> в нижнем меню. Нажми на баннер — откроется на весь экран.</p>
+            </div>
+          </div>
+
+          <!-- Лимиты -->
+          <div class="chart-box" style="margin-bottom:16px">
+            <div class="box-header"><div class="box-title">💳 Бесплатный план</div></div>
+            <div style="font-size:14px;line-height:1.7;color:var(--fg)">
+              <p style="margin:0 0 10px"><strong>10 бесплатных генераций</strong> при регистрации.</p>
+              <p style="margin:0">1 генерация = 3 варианта баннера. Остаток показывается под кнопкой «Создать».</p>
+            </div>
+          </div>
+
+          <!-- AI Таргетолог -->
+          <div class="chart-box">
+            <div class="box-header"><div class="box-title">🤖 AI Таргетолог</div></div>
+            <div style="font-size:14px;line-height:1.7;color:var(--fg)">
+              <p style="margin:0 0 10px">Раздел 🤖 «AI» — задай любой вопрос по таргетингу.</p>
+              <p style="margin:0">Подключи Facebook Ads в Настройках — AI будет управлять кампаниями автоматически.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ ИСТОРИЯ ══════════════ -->
+    <div class="page" id="page-history">
+      <div class="two-col">
+        <div>
+          <h2 style="margin-bottom:16px">🗂 История генераций</h2>
+          <div id="history-list">
+            <div style="text-align:center;color:var(--muted);padding:40px 0;font-size:14px">Загрузка...</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -855,7 +961,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
     </button>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <button id="bv-dl-btn" onclick="bvDownload()"
-        style="padding:13px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:10px;font-size:14px;cursor:pointer">📥 Скачать</button>
+        style="padding:13px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:10px;font-size:14px;cursor:pointer">📤 Поделиться</button>
       <button id="bv-tg-btn" onclick="bvSendTelegram()"
         style="padding:13px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:10px;font-size:14px;cursor:pointer">📤 В Telegram</button>
     </div>
@@ -1181,10 +1287,18 @@ function fmtKZT(n) { return Number(n).toLocaleString('ru') + ' ₸'; }
 const PAGE_TITLES = {
   dashboard:'Дашборд', campaigns:'Кампании', directions:'Направления',
   targetolog:'AI Таргетолог', marketolog:'AI Маркетолог',
-  analytics:'Аналитика', settings:'Настройки'
+  analytics:'Аналитика', settings:'Настройки',
+  history:'История', help:'Инструкция'
 };
 
-function navigate(page) {
+// Navigation stack for back button
+let _navStack = [];
+
+function navigate(page, addToStack = true) {
+  if (addToStack && currentPage && currentPage !== page) {
+    _navStack.push(currentPage);
+    if (_navStack.length > 20) _navStack.shift();
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.bn-item').forEach(n => n.classList.remove('active'));
@@ -1195,11 +1309,17 @@ function navigate(page) {
   loadPage(page);
   document.querySelector('.main')?.scrollTo(0, 0);
   if (window.innerWidth < 900) closeSidebar();
-  // Telegram back button
+  // Telegram back button — show when there's history
   if (window.Telegram?.WebApp?.BackButton) {
-    if (page === 'dashboard') Telegram.WebApp.BackButton.hide();
-    else Telegram.WebApp.BackButton.show();
+    if (_navStack.length > 0) Telegram.WebApp.BackButton.show();
+    else Telegram.WebApp.BackButton.hide();
   }
+}
+
+function navigateBack() {
+  if (_navStack.length === 0) return;
+  const prev = _navStack.pop();
+  navigate(prev, false);
 }
 
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
@@ -1212,6 +1332,7 @@ function loadPage(page) {
   if (page==='targetolog')  loadTargetolog();
   if (page==='analytics')   loadAnalytics('7');
   if (page==='settings')    loadSettings();
+  if (page==='history')     loadHistory();
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
@@ -1651,8 +1772,8 @@ async function generateBannersDalle() {
 
   try {
     const payload = _studioPhotoB64
-      ? {offer: desc || niche, niche, image_base64: _studioPhotoB64, audience}
-      : {description: desc, niche, audience, style: _genStyle};
+      ? {offer: desc || niche, niche, image_base64: _studioPhotoB64, audience, gender: _genGender}
+      : {description: desc, niche, audience, style: _genStyle, gender: _genGender};
     const r = await fetch(`${API}/api/generate-banner?user_id=${UID}`,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(payload)});
     const data = await r.json();
@@ -1922,7 +2043,7 @@ function _bvRender() {
   document.getElementById('bv-counter').textContent = `${_bvIdx + 1} / ${_lastGeneratedBanners.length}`;
   document.getElementById('bv-concept').textContent = b.concept || '';
   document.getElementById('bv-status').textContent  = '';
-  document.getElementById('bv-dl-btn').textContent  = '📥 Скачать';
+  document.getElementById('bv-dl-btn').textContent  = '📤 Поделиться';
   document.getElementById('bv-tg-btn').textContent  = '📤 В Telegram';
   document.getElementById('bv-dl-btn').disabled     = false;
   document.getElementById('bv-tg-btn').disabled     = false;
@@ -1964,7 +2085,24 @@ async function bvDownload() {
   btn.disabled = true; btn.textContent = '⏳';
   const statusEl = document.getElementById('bv-status');
   try {
-    // Get a real server URL for the banner (works in Telegram Mini App)
+    // Fetch image as blob
+    const imgResp = await fetch(b.image);
+    const blob    = await imgResp.blob();
+    const filename = `adai-${(b.label||'banner').toLowerCase().replace(/\s+/g,'-')}-1080x1350.jpg`;
+
+    // Try Web Share API with file — works on iOS for saving to gallery / sharing to apps
+    if (navigator.share && navigator.canShare) {
+      const file = new File([blob], filename, { type: 'image/jpeg' });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Adai баннер' });
+        btn.textContent = '✅ Поделились';
+        statusEl.textContent = '';
+        setTimeout(() => { btn.textContent = '📤 Поделиться'; btn.disabled = false; }, 2500);
+        return;
+      }
+    }
+
+    // Fallback: get server URL → openLink (Telegram) or open in new tab
     const resp = await fetch(`${API}/api/banner-url?user_id=${UID}`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -1972,7 +2110,6 @@ async function bvDownload() {
     });
     const data = await resp.json();
     if (!resp.ok) throw new Error();
-    // Open in Telegram or browser — user can long-press → Save to gallery
     if (window.Telegram?.WebApp?.openLink) {
       window.Telegram.WebApp.openLink(data.url);
     } else {
@@ -1981,22 +2118,10 @@ async function bvDownload() {
     btn.textContent = '✅ Открыто';
     statusEl.textContent = 'Зажмите фото → Сохранить в галерею';
   } catch(e) {
-    // Fallback: blob download
-    try {
-      const res  = await fetch(b.image);
-      const blob = await res.blob();
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href = url;
-      a.download = `adai-${(b.label||'banner').toLowerCase().replace(/\s+/g,'-')}-1080x1350.jpg`;
-      a.click();
-      URL.revokeObjectURL(url);
-      btn.textContent = '✅ Скачано';
-    } catch(_) {
-      btn.textContent = '❌ Ошибка';
-    }
+    btn.textContent = '❌ Ошибка';
+    statusEl.textContent = String(e);
   }
-  setTimeout(() => { btn.textContent = '📥 Скачать'; btn.disabled = false; }, 3000);
+  setTimeout(() => { btn.textContent = '📤 Поделиться'; btn.disabled = false; }, 3000);
 }
 
 async function bvSendTelegram() {
@@ -2273,13 +2398,68 @@ function _obRender() {
   if (btn) btn.textContent = _OB_LABELS[_obSlide];
 }
 
+// ── GENDER SELECTOR ───────────────────────────────────────────────────────────
+let _genGender = 'all';
+function selectGenGender(el) {
+  document.querySelectorAll('[onclick^="selectGenGender"]').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  _genGender = el.dataset.val;
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────────────────
+async function loadHistory() {
+  const el = document.getElementById('history-list');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:14px">Загрузка...</div>';
+  try {
+    const data = await api(`/api/history?user_id=${UID}`);
+    if (!data || !data.items || data.items.length === 0) {
+      el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:60px 0;font-size:14px">Генераций пока нет.<br><br><button class="btn btn-primary btn-sm" onclick="navigate(\'marketolog\')">Создать первый баннер</button></div>';
+      return;
+    }
+    el.innerHTML = `
+      <div class="banners-grid" style="margin-top:4px">
+        ${data.items.map(item => `
+          <div onclick="openHistoryBanner(${item.id})" style="cursor:pointer;border-radius:12px;overflow:hidden;background:var(--surface);position:relative">
+            <img src="${API}/api/history/${item.id}/image?user_id=${UID}" loading="lazy"
+              style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"
+              onerror="this.parentElement.style.background='var(--border)'">
+            <div style="padding:8px 10px">
+              <div style="font-size:12px;font-weight:700;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.label || 'Баннер'}</div>
+              <div style="font-size:11px;color:var(--muted)">${item.niche || ''}</div>
+              <div style="font-size:10px;color:var(--muted)">${(item.created_at||'').slice(0,10)}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 0">Ошибка загрузки</div>';
+  }
+}
+
+async function openHistoryBanner(id) {
+  const url = `${API}/api/history/${id}/image?user_id=${UID}`;
+  // Load into fullscreen viewer
+  _lastGeneratedBanners = [{ image: url, label: 'Из истории', concept: '', post_copy: '' }];
+  _bvIdx = 0;
+  document.getElementById('bv-img').src = url;
+  document.getElementById('bv-label').textContent = 'Из истории';
+  document.getElementById('bv-counter').textContent = '1 / 1';
+  document.getElementById('bv-concept').textContent = '';
+  document.getElementById('bv-status').textContent = '';
+  const v = document.getElementById('banner-viewer');
+  v.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
 // ── TELEGRAM MINI APP INIT ────────────────────────────────────────────────────
 (function() {
   const tg = window.Telegram?.WebApp;
   if (!tg) return;
   tg.ready();
   tg.expand();
-  tg.BackButton.onClick(() => navigate('dashboard'));
+  tg.BackButton.onClick(() => navigateBack());
 })();
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
