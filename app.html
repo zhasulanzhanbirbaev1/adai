@@ -692,6 +692,137 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
   </div><!-- /content -->
 </main>
 
+<!-- ONBOARDING -->
+<div id="onboarding" style="display:none;position:fixed;inset:0;z-index:10000;background:var(--bg);flex-direction:column">
+
+  <!-- Slides -->
+  <div id="ob-slides" style="flex:1;overflow:hidden;position:relative">
+
+    <!-- Slide 1: Welcome -->
+    <div class="ob-slide" style="padding:48px 28px 0">
+      <div style="font-size:72px;text-align:center;margin-bottom:20px">🚀</div>
+      <div style="font-size:28px;font-weight:800;text-align:center;line-height:1.25;margin-bottom:16px">Привет! Я <span style="color:var(--accent)">Adai</span> —<br>твой AI‑таргетолог</div>
+      <div style="font-size:15px;color:var(--muted);text-align:center;line-height:1.65">
+        Создаю профессиональные рекламные баннеры и запускаю рекламу в Instagram и Facebook — вместо тебя.
+      </div>
+      <div style="margin-top:36px;background:var(--surface);border-radius:16px;padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <span style="font-size:28px">🎨</span>
+          <div><div style="font-weight:700;font-size:14px">AI создаёт баннеры</div><div style="font-size:12px;color:var(--muted)">3 варианта за 60 секунд</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <span style="font-size:28px">🎯</span>
+          <div><div style="font-weight:700;font-size:14px">Подбирает аудиторию</div><div style="font-size:12px;color:var(--muted)">Возраст, пол, интересы</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <span style="font-size:28px">📊</span>
+          <div><div style="font-weight:700;font-size:14px">Управляет кампаниями</div><div style="font-size:12px;color:var(--muted)">Паузирует слабые, масштабирует сильные</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: How it works -->
+    <div class="ob-slide" style="display:none;padding:48px 28px 0">
+      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px">Как это работает?</div>
+      <div style="font-size:14px;color:var(--muted);text-align:center;margin-bottom:32px">4 шага до запущенной рекламы</div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:flex-start;gap:16px">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+          <div><div style="font-weight:700;font-size:15px;margin-bottom:3px">Введи нишу и оффер</div><div style="font-size:13px;color:var(--muted);line-height:1.5">Например: «Салон красоты — маникюр от 3000₸»</div></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:16px">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+          <div><div style="font-weight:700;font-size:15px;margin-bottom:3px">AI создаёт 3 баннера</div><div style="font-size:13px;color:var(--muted);line-height:1.5">Разные концепции, тексты и цвета — как у Ogilvy</div></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:16px">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+          <div><div style="font-weight:700;font-size:15px;margin-bottom:3px">Выбери лучший</div><div style="font-size:13px;color:var(--muted);line-height:1.5">Нажми на баннер — просмотр на весь экран, листай стрелками</div></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:16px">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div>
+          <div><div style="font-weight:700;font-size:15px;margin-bottom:3px">Запусти рекламу</div><div style="font-size:13px;color:var(--muted);line-height:1.5">Подключи Facebook — AI сам управляет кампанией</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: Features -->
+    <div class="ob-slide" style="display:none;padding:48px 28px 0">
+      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px">Что ты получаешь</div>
+      <div style="font-size:14px;color:var(--muted);text-align:center;margin-bottom:28px">Всё в одном месте</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="background:var(--surface);border-radius:14px;padding:18px 16px;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">✨</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">AI баннеры</div>
+          <div style="font-size:11px;color:var(--muted)">3 варианта 1080×1350</div>
+        </div>
+        <div style="background:var(--surface);border-radius:14px;padding:18px 16px;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">📝</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">Готовые тексты</div>
+          <div style="font-size:11px;color:var(--muted)">Caption, Stories, хэштеги</div>
+        </div>
+        <div style="background:var(--surface);border-radius:14px;padding:18px 16px;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">🎯</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">AI аудитория</div>
+          <div style="font-size:11px;color:var(--muted)">Возраст и пол автоматически</div>
+        </div>
+        <div style="background:var(--surface);border-radius:14px;padding:18px 16px;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">🤖</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">AI таргетолог</div>
+          <div style="font-size:11px;color:var(--muted)">Оптимизирует 24/7</div>
+        </div>
+        <div style="background:var(--surface);border-radius:14px;padding:18px 16px;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">📱</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">Скачать / Telegram</div>
+          <div style="font-size:11px;color:var(--muted)">Сохрани в галерею</div>
+        </div>
+        <div style="background:var(--surface);border-radius:14px;padding:18px 16px;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">🛡</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">Проверка Meta</div>
+          <div style="font-size:11px;color:var(--muted)">Текст перед запуском</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: Start -->
+    <div class="ob-slide" style="display:none;padding:48px 28px 0;align-items:center;justify-content:center;flex-direction:column;text-align:center">
+      <div style="font-size:80px;margin-bottom:24px">🎉</div>
+      <div style="font-size:26px;font-weight:800;margin-bottom:12px">Готов к старту!</div>
+      <div style="font-size:15px;color:var(--muted);line-height:1.65;margin-bottom:32px">
+        У тебя <strong style="color:var(--accent)">10 бесплатных генераций</strong>.<br>Создай первый баннер прямо сейчас.
+      </div>
+      <div style="background:var(--surface);border-radius:14px;padding:16px 20px;font-size:13px;color:var(--muted);line-height:1.6;text-align:left;width:100%">
+        💡 <strong>Совет:</strong> Загрузи своё фото товара — баннер получится с реальным продуктом, а не AI-картинкой
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom controls -->
+  <div style="padding:20px 28px 32px">
+    <!-- Progress dots -->
+    <div id="ob-dots" style="display:flex;justify-content:center;gap:8px;margin-bottom:20px">
+      <div class="ob-dot ob-dot-active"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+    </div>
+    <button id="ob-next-btn" onclick="obNext()"
+      style="width:100%;padding:16px;background:var(--accent);border:none;color:#fff;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer">
+      Далее →
+    </button>
+    <button onclick="obSkip()"
+      style="width:100%;padding:12px;background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;margin-top:8px">
+      Пропустить
+    </button>
+  </div>
+</div>
+
+<style>
+.ob-dot { width:8px;height:8px;border-radius:50%;background:var(--border);transition:.3s }
+.ob-dot-active { width:24px;border-radius:4px;background:var(--accent) }
+.ob-slide { position:absolute;inset:0;overflow-y:auto;transition:transform .35s cubic-bezier(.4,0,.2,1) }
+</style>
+
 <!-- FULLSCREEN BANNER VIEWER -->
 <div id="banner-viewer" style="display:none;position:fixed;inset:0;z-index:9999;background:#000;flex-direction:column;align-items:center;justify-content:space-between">
 
@@ -2100,6 +2231,48 @@ function showToast(msg, ok=true) {
 
 function openTelegram() { window.open(`https://t.me/zhasclaude_bot`,'_blank'); }
 
+// ── ONBOARDING ────────────────────────────────────────────────────────────────
+let _obSlide = 0;
+const _OB_TOTAL = 4;
+const _OB_LABELS = ['Далее →', 'Далее →', 'Далее →', 'Начать!'];
+
+function showOnboarding() {
+  _obSlide = 0;
+  _obRender();
+  const el = document.getElementById('onboarding');
+  if (el) { el.style.display = 'flex'; el.style.flexDirection = 'column'; }
+}
+
+function obSkip() {
+  localStorage.setItem('adai_onboarded', '1');
+  const el = document.getElementById('onboarding');
+  if (el) el.style.display = 'none';
+}
+
+function obNext() {
+  if (_obSlide < _OB_TOTAL - 1) {
+    _obSlide++;
+    _obRender();
+  } else {
+    obSkip();
+    navigate('studio');
+  }
+}
+
+function _obRender() {
+  const slides = document.querySelectorAll('.ob-slide');
+  slides.forEach((s, i) => {
+    s.style.display = i === _obSlide ? 'block' : 'none';
+    if (i === 3 && i === _obSlide) { s.style.display = 'flex'; }
+  });
+  const dots = document.querySelectorAll('.ob-dot');
+  dots.forEach((d, i) => {
+    d.classList.toggle('ob-dot-active', i === _obSlide);
+  });
+  const btn = document.getElementById('ob-next-btn');
+  if (btn) btn.textContent = _OB_LABELS[_obSlide];
+}
+
 // ── TELEGRAM MINI APP INIT ────────────────────────────────────────────────────
 (function() {
   const tg = window.Telegram?.WebApp;
@@ -2110,6 +2283,9 @@ function openTelegram() { window.open(`https://t.me/zhasclaude_bot`,'_blank'); }
 })();
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+if (!localStorage.getItem('adai_onboarded')) {
+  showOnboarding();
+}
 loadDashboard();
 </script>
 </body>
