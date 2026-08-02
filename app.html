@@ -1831,21 +1831,41 @@ async function bvDownload() {
   if (!b) return;
   const btn = document.getElementById('bv-dl-btn');
   btn.disabled = true; btn.textContent = '⏳';
+  const statusEl = document.getElementById('bv-status');
   try {
-    const res  = await fetch(b.image);
-    const blob = await res.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url;
-    a.download = `adai-${(b.label||'banner').toLowerCase().replace(/\s+/g,'-')}-1080x1350.jpg`;
-    a.click();
-    URL.revokeObjectURL(url);
-    btn.textContent = '✅ Скачано';
-    document.getElementById('bv-status').textContent = 'Файл сохранён';
+    // Get a real server URL for the banner (works in Telegram Mini App)
+    const resp = await fetch(`${API}/api/banner-url?user_id=${UID}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ image_b64: b.image, label: b.label || 'banner' }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error();
+    // Open in Telegram or browser — user can long-press → Save to gallery
+    if (window.Telegram?.WebApp?.openLink) {
+      window.Telegram.WebApp.openLink(data.url);
+    } else {
+      window.open(data.url, '_blank');
+    }
+    btn.textContent = '✅ Открыто';
+    statusEl.textContent = 'Зажмите фото → Сохранить в галерею';
   } catch(e) {
-    btn.textContent = '❌ Ошибка';
+    // Fallback: blob download
+    try {
+      const res  = await fetch(b.image);
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = `adai-${(b.label||'banner').toLowerCase().replace(/\s+/g,'-')}-1080x1350.jpg`;
+      a.click();
+      URL.revokeObjectURL(url);
+      btn.textContent = '✅ Скачано';
+    } catch(_) {
+      btn.textContent = '❌ Ошибка';
+    }
   }
-  setTimeout(() => { btn.textContent = '📥 Скачать'; btn.disabled = false; }, 2500);
+  setTimeout(() => { btn.textContent = '📥 Скачать'; btn.disabled = false; }, 3000);
 }
 
 async function bvSendTelegram() {

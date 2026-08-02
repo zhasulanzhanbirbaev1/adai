@@ -35,6 +35,10 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Adai API", docs_url="/docs", redoc_url=None)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
+# Temporary in-memory cache for banner file downloads (token → (bytes, label))
+import hashlib as _hashlib, time as _time
+_BANNER_CACHE: dict = {}  # token -> (img_bytes, label, expires_at)
+
 
 @app.exception_handler(Exception)
 async def _global_exc(request: Request, exc: Exception):
@@ -663,6 +667,45 @@ async def api_send_banner(request: Request, user_id: int = Depends(_get_uid)):
     caption   = f"🎨 Ваш баннер *{label}*\n📐 1080×1350 — готов для Instagram/Facebook рекламы"
     await _notify_photo(user_id, img_bytes, caption)
     return {"ok": True}
+
+
+@app.post("/api/banner-url")
+async def api_banner_url(request: Request, user_id: int = Depends(_get_uid)):
+    """Save banner to temp cache and return a direct download URL."""
+    import base64 as b64mod
+    body      = await request.json()
+    image_b64 = body.get("image_b64", "")
+    label     = body.get("label", "banner")
+    if not image_b64:
+        raise HTTPException(400, "image_b64 required")
+    if "," in image_b64:
+        image_b64 = image_b64.split(",")[1]
+    img_bytes = b64mod.b64decode(image_b64)
+    token = _hashlib.md5(f"{user_id}{_time.time()}".encode()).hexdigest()[:16]
+    _BANNER_CACHE[token] = (img_bytes, label, _time.time() + 3600)
+    # Clean expired entries
+    expired = [k for k, v in _BANNER_CACHE.items() if v[2] < _time.time()]
+    for k in expired:
+        del _BANNER_CACHE[k]
+    url = f"{_BASE_URL}/api/banner-file/{token}"
+    filename = f"adai-{label.lower().replace(' ', '-')}-1080x1350.jpg"
+    return {"url": url, "filename": filename}
+
+
+@app.get("/api/banner-file/{token}")
+async def api_banner_file(token: str):
+    """Serve banner as JPEG file for direct download / gallery save."""
+    from fastapi.responses import Response
+    item = _BANNER_CACHE.get(token)
+    if not item or item[2] < _time.time():
+        raise HTTPException(404, "Ссылка устарела, сгенерируйте новую")
+    img_bytes, label, _ = item
+    filename = f"adai-{label.lower().replace(' ', '-')}-1080x1350.jpg"
+    return Response(
+        content=img_bytes,
+        media_type="image/jpeg",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
 
 
 @app.post("/api/generate-banner")
