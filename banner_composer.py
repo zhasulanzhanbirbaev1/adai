@@ -254,16 +254,16 @@ def compose_creative_banner(image_bytes: bytes, text_overlay: dict,
     W, H = FEED_W, FEED_H
     base = _cover_crop(image_bytes)
 
-    # Parse colors — only bg and CTA use AI colors; ALL text is white
-    bg_color = _hex_to_rgb(color_scheme.get("primary_bg", "#050912"), (5, 9, 18))
-    cta_bg   = _hex_to_rgb(color_scheme.get("cta_bg",     "#2563EB"), (37, 99, 235))
+    # Text is always white. Only CTA button uses AI color.
+    # Gradient is always pure black for a clean professional look.
+    cta_bg  = _hex_to_rgb(color_scheme.get("cta_bg", "#2563EB"), (37, 99, 235))
+    BLACK   = (0, 0, 0)
+    WHITE   = (255, 255, 255)
+    WHITE_DIM = (200, 200, 200)
 
-    WHITE      = (255, 255, 255)
-    WHITE_DIM  = (220, 220, 220)   # subheadline — slightly dimmer white
-
-    # Apply gradients: top 42% fades to transparent, bottom 55% fades to dark
-    img = _gradient_overlay_top(base, int(H * 0.42), bg_color, alpha_start=195, alpha_end=0)
-    img = _gradient_overlay(img,      int(H * 0.52), bg_color, alpha_start=0,   alpha_end=222)
+    # Pure black gradients — top fades in, bottom fades in, clear window in center for product
+    img = _gradient_overlay_top(base, int(H * 0.44), BLACK, alpha_start=210, alpha_end=0)
+    img = _gradient_overlay(img,      int(H * 0.50), BLACK, alpha_start=0,   alpha_end=230)
 
     draw = ImageDraw.Draw(img)
     fh_path, fb_path = _get_fonts(font_style)
@@ -284,7 +284,7 @@ def compose_creative_banner(image_bytes: bytes, text_overlay: dict,
         rx = W - cw - px * 2 - 24
         ry = 28
         draw.rounded_rectangle([rx, ry, rx + cw + px * 2, ry + ch + py * 2],
-                                radius=8, fill=(*bg_color, 160))
+                                radius=8, fill=(0, 0, 0, 160))
         draw.text((rx + px, ry + py), city, font=fct, fill=WHITE)
 
     # ── Hook headline (top zone) ──────────────────────────────────────────────
