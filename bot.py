@@ -186,6 +186,27 @@ async def cmd_ailog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
 
+async def cmd_setup(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != OWNER_ID:
+        return
+    if not WEBAPP_URL:
+        await update.message.reply_text("❌ WEBAPP_URL не задан в .env")
+        return
+    try:
+        from telegram import MenuButtonWebApp, WebAppInfo
+        await context.bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(
+                text="📊 Открыть Adai",
+                web_app=WebAppInfo(url=WEBAPP_URL),
+            )
+        )
+        await update.message.reply_text(
+            f"✅ Домен зарегистрирован!\n\nMenu button → {WEBAPP_URL}\n\nТеперь Mini App откроется без ошибки."
+        )
+    except Exception as e:
+        await update.message.reply_text(f"❌ Ошибка: {e}")
+
+
 async def cmd_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != OWNER_ID:
         await update.message.reply_text("❌ Доступ закрыт.")
@@ -328,6 +349,7 @@ def build_app() -> Application:
     app.add_handler(CommandHandler("token",    cmd_token))
     app.add_handler(CommandHandler("ailog",    cmd_ailog))
     app.add_handler(CommandHandler("admin",    cmd_admin))
+    app.add_handler(CommandHandler("setup",    cmd_setup))
     app.add_handler(CommandHandler("sync",     cmd_sync))
     app.add_handler(CommandHandler("creative", cmd_creative))
     app.add_handler(CallbackQueryHandler(handle_inline, pattern=r"^open_"))
