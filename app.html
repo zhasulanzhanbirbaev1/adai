@@ -345,8 +345,9 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
 <!-- MAIN -->
 <main class="main">
   <header class="topbar">
-    <div style="display:flex;align-items:center;gap:14px">
-      <button class="mob-menu-btn" onclick="toggleSidebar()">☰</button>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button id="back-btn" onclick="navigateBack()" style="display:none;background:none;border:none;color:var(--accent);font-size:15px;font-weight:600;cursor:pointer;padding:4px 8px 4px 0">‹ Назад</button>
+      <button class="mob-menu-btn" id="menu-btn" onclick="toggleSidebar()">☰</button>
       <div class="topbar-title" id="topbarTitle">Дашборд</div>
     </div>
     <div class="topbar-actions">
@@ -1351,6 +1352,11 @@ function navigate(page, addToStack = true) {
     if (_navStack.length > 0) Telegram.WebApp.BackButton.show();
     else Telegram.WebApp.BackButton.hide();
   }
+  // Visible back button in topbar
+  const backBtn = document.getElementById('back-btn');
+  const menuBtn = document.getElementById('menu-btn');
+  if (backBtn) backBtn.style.display = _navStack.length > 0 ? '' : 'none';
+  if (menuBtn) menuBtn.style.display = _navStack.length > 0 ? 'none' : '';
 }
 
 function navigateBack() {
