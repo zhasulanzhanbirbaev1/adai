@@ -574,8 +574,14 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
 
                 <div class="form-row">
                   <div class="form-group">
-                    <label class="form-label">Бюджет в день (₸)</label>
-                    <input class="form-input" id="launch-budget" type="number" value="5000" min="1000"/>
+                    <label class="form-label">Бюджет в день (₸) <span style="color:var(--muted);font-size:11px;font-weight:400">мин. 2 000 ₸</span></label>
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px">
+                      <button type="button" onclick="document.getElementById('launch-budget').value=2000" style="padding:7px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--fg)">2 000</button>
+                      <button type="button" onclick="document.getElementById('launch-budget').value=5000" style="padding:7px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--fg)">5 000</button>
+                      <button type="button" onclick="document.getElementById('launch-budget').value=10000" style="padding:7px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--fg)">10 000</button>
+                      <button type="button" onclick="document.getElementById('launch-budget').value=20000" style="padding:7px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--fg)">20 000</button>
+                    </div>
+                    <input class="form-input" id="launch-budget" type="number" value="2000" min="2000" step="500"/>
                   </div>
                   <div class="form-group">
                     <label class="form-label">WhatsApp</label>
@@ -1121,13 +1127,25 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
           <input class="form-input" id="dir-wa" placeholder="+77771234567"/>
         </div>
         <div class="form-group">
-          <label class="form-label">Дневной бюджет, ₸</label>
-          <input class="form-input" type="number" id="dir-budget" placeholder="5000" value="5000"/>
+          <label class="form-label">Дневной бюджет, ₸ <span style="color:var(--muted);font-size:11px;font-weight:400">мин. 2 000 ₸</span></label>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px">
+            <button type="button" onclick="document.getElementById('dir-budget').value=2000" style="padding:7px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--fg)">2 000</button>
+            <button type="button" onclick="document.getElementById('dir-budget').value=5000" style="padding:7px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--fg)">5 000</button>
+            <button type="button" onclick="document.getElementById('dir-budget').value=10000" style="padding:7px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--fg)">10 000</button>
+            <button type="button" onclick="document.getElementById('dir-budget').value=20000" style="padding:7px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--fg)">20 000</button>
+          </div>
+          <input class="form-input" type="number" id="dir-budget" placeholder="2000" value="2000" min="2000" step="500"/>
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Целевой CPL, ₸</label>
-        <input class="form-input" type="number" id="dir-cpl" placeholder="1500" value="1500"/>
+        <label class="form-label">Целевой CPL, ₸ <span style="color:var(--muted);font-size:11px;font-weight:400">цена за заявку</span></label>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px">
+          <button type="button" onclick="document.getElementById('dir-cpl').value=500" style="padding:7px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--fg)">500</button>
+          <button type="button" onclick="document.getElementById('dir-cpl').value=1000" style="padding:7px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--fg)">1 000</button>
+          <button type="button" onclick="document.getElementById('dir-cpl').value=1500" style="padding:7px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--fg)">1 500</button>
+          <button type="button" onclick="document.getElementById('dir-cpl').value=3000" style="padding:7px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--fg)">3 000</button>
+        </div>
+        <input class="form-input" type="number" id="dir-cpl" placeholder="500" value="500" min="200" step="100"/>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end">
         <button class="btn btn-secondary" onclick="closeModal('modal-direction')">Отмена</button>
@@ -2224,7 +2242,7 @@ function openDirModal() {
   document.getElementById('dir-modal-title').textContent='Новое направление';
   ['dir-name','dir-niche','dir-desc','dir-utp','dir-audience','dir-pains','dir-offers','dir-wa','dir-ad-text','dir-page-id']
     .forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
-  document.getElementById('dir-budget').value='5000';
+  document.getElementById('dir-budget').value='2000';
   document.getElementById('dir-cpl').value='1500';
   wizGo(0,true);
   openModal('modal-direction');
