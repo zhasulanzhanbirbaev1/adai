@@ -320,21 +320,8 @@ async def handle_creative_niche(update: Update, context: ContextTypes.DEFAULT_TY
         await update.message.reply_text("❌ Ошибка генерации. Попробуйте позже.")
 
 
-async def _post_init(app: Application):
-    """Set bot menu button and allowed domains on startup."""
-    from telegram import MenuButtonWebApp, WebAppInfo
-    if WEBAPP_URL:
-        try:
-            await app.bot.set_chat_menu_button(
-                menu_button=MenuButtonWebApp(text="📊 Открыть Adai", web_app=WebAppInfo(url=WEBAPP_URL))
-            )
-            logger.info("Menu button set to %s", WEBAPP_URL)
-        except Exception as e:
-            logger.warning("Could not set menu button: %s", e)
-
-
 def build_app() -> Application:
-    app = Application.builder().token(BOT_TOKEN).post_init(_post_init).build()
+    app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(build_launch_handler())
     app.add_handler(build_launch_activate_handler())
     app.add_handler(CommandHandler("start",    cmd_start))
