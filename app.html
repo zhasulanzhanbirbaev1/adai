@@ -2579,6 +2579,17 @@ async function openHistoryBanner(id) {
   tg.BackButton.onClick(() => navigateBack());
 })();
 
+// When user returns from external browser (Facebook OAuth), refresh settings
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden && (currentPage === 'settings' || currentPage === 'directions')) {
+    if (currentPage === 'settings') loadSettings();
+    if (currentPage === 'directions') {
+      // If wizard is open on step 3 (Facebook), refresh FB status
+      if (typeof _wizStep !== 'undefined' && _wizStep === 2) loadWizFacebook();
+    }
+  }
+});
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 if (!localStorage.getItem('adai_onboarded')) {
   showOnboarding();

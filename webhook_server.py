@@ -57,6 +57,25 @@ async def _notify(user_id: int, text: str):
             logger.error("TG notify failed: %s", e)
 
 
+async def _notify_webapp(user_id: int, text: str):
+    """Send Telegram notification with a WebApp button to open the Mini App."""
+    webapp_url = f"{_BASE_URL}/app?user_id={user_id}"
+    async with httpx.AsyncClient(timeout=8) as client:
+        try:
+            await client.post(f"{TG_API}/sendMessage", json={
+                "chat_id": user_id,
+                "text": text,
+                "parse_mode": "Markdown",
+                "reply_markup": {
+                    "inline_keyboard": [[
+                        {"text": "📊 Открыть кабинет", "web_app": {"url": webapp_url}}
+                    ]]
+                }
+            })
+        except Exception as e:
+            logger.error("TG webapp notify failed: %s", e)
+
+
 async def _notify_photo(user_id: int, img_bytes: bytes, caption: str = ""):
     async with httpx.AsyncClient(timeout=30) as client:
         try:
@@ -403,11 +422,20 @@ async def api_save_profile(request: Request, user_id: int = Depends(_get_uid)):
 
 _FB_SUCCESS_TMPL = """<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>*{{box-sizing:border-box}}body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px}}.card{{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px 32px;text-align:center;max-width:400px;width:100%}}.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:22px;font-weight:700;margin-bottom:8px}}.sub{{color:#64748b;font-size:15px;line-height:1.6;margin-bottom:24px}}.btn{{display:inline-block;background:#1877f2;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:12px;text-decoration:none;margin-top:8px}}</style>
+<style>*{box-sizing:border-box}body{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px}.card{background:#0f172a;border:1px solid #1e293b;border-radius:20px;padding:40px 32px;text-align:center;max-width:400px;width:100%}.icon{font-size:64px;margin-bottom:16px}.title{font-size:24px;font-weight:700;margin-bottom:10px}.sub{color:#64748b;font-size:15px;line-height:1.7;margin-bottom:28px}.btn{display:block;background:linear-gradient(135deg,#2481cc,#1a6aad);color:#fff;font-weight:700;font-size:16px;padding:16px 28px;border-radius:14px;text-decoration:none;transition:opacity .2s}.btn:hover{opacity:.9}.hint{margin-top:16px;font-size:12px;color:#374151}</style>
+<script>
+  // Try to open Telegram automatically on mobile
+  setTimeout(function(){
+    try { window.location.href = 'https://t.me/zhasclaude_bot'; } catch(e){}
+  }, 1800);
+</script>
 </head>
-<body><div class="card"><div class="icon">✅</div><div class="title">Facebook подключён!</div>
-<div class="sub">Кампании синхронизированы.<br>Вернитесь в Telegram и нажмите «Обновить».</div>
-<a class="btn" href="https://t.me/zhasclaude_bot">← Открыть Telegram</a>
+<body><div class="card">
+  <div class="icon">✅</div>
+  <div class="title">Facebook подключён!</div>
+  <div class="sub">Кампании синхронизированы.<br>Telegram уже прислал уведомление — откройте его и нажмите <b>«Открыть кабинет»</b>.</div>
+  <a class="btn" href="https://t.me/zhasclaude_bot">Вернуться в Telegram →</a>
+  <div class="hint">Страница автоматически перейдёт через 2 секунды</div>
 </div></body></html>"""
 
 _FB_ERROR = """<!DOCTYPE html><html><head><meta charset="utf-8">
@@ -497,14 +525,14 @@ async def fb_callback(code: str = Query(None), state: str = Query(None),
     count = await asyncio.get_event_loop().run_in_executor(
         None, sync_fb_campaigns, user_id, long_token, ad_account_id
     )
-    sync_text = f"рџ“Љ РЎРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ РєР°РјРїР°РЅРёР№: *{count}*" if count > 0 else "рџ“Љ РђРєС‚РёРІРЅС‹С… РєР°РјРїР°РЅРёР№ РЅРµ РЅР°Р№РґРµРЅРѕ"
+    sync_text = f”📊 Синхронизировано кампаний: *{count}*” if count > 0 else “📊 Активных кампаний не найдено”
 
-    await _notify(user_id,
-        f"вњ… *Facebook РїРѕРґРєР»СЋС‡С‘РЅ Рё СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅ!*\n\n"
-        f"РђРєРєР°СѓРЅС‚: `{ad_account_id}`\n"
-        f"{sync_text}")
-    dashboard_url = f"{_BASE_URL}/app?user_id={user_id}"
-    return HTMLResponse(_FB_SUCCESS_TMPL.format(dashboard_url=dashboard_url))
+    await _notify_webapp(user_id,
+        f"✅ *Facebook подключён и синхронизирован!*\n\n"
+        f"Аккаунт: `{ad_account_id}`\n"
+        f"{sync_text}\n\n"
+        f"Нажмите кнопку ниже чтобы открыть кабинет 👇")
+    return HTMLResponse(_FB_SUCCESS_TMPL)
 
 
 @app.get("/fb/select")
@@ -514,11 +542,11 @@ async def fb_select(user_id: int = Query(...), token: str = Query(...), account_
     count = await asyncio.get_event_loop().run_in_executor(
         None, sync_fb_campaigns, user_id, token, account_id
     )
-    sync_text = f"рџ“Љ РЎРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ РєР°РјРїР°РЅРёР№: *{count}*" if count > 0 else "рџ“Љ РђРєС‚РёРІРЅС‹С… РєР°РјРїР°РЅРёР№ РЅРµ РЅР°Р№РґРµРЅРѕ"
-    await _notify(user_id,
-        f"вњ… *Facebook РїРѕРґРєР»СЋС‡С‘РЅ!*\n\nРђРєРєР°СѓРЅС‚: `{account_id}`\n{sync_text}")
-    dashboard_url = f"{_BASE_URL}/app?user_id={user_id}"
-    return HTMLResponse(_FB_SUCCESS_TMPL.format(dashboard_url=dashboard_url))
+    sync_text = f”📊 Синхронизировано кампаний: *{count}*” if count > 0 else “📊 Активных кампаний не найдено”
+    await _notify_webapp(user_id,
+        f"✅ *Facebook подключён!*\n\nАккаунт: `{account_id}`\n{sync_text}\n\n"
+        f"Нажмите кнопку ниже чтобы открыть кабинет 👇")
+    return HTMLResponse(_FB_SUCCESS_TMPL)
 
 
 # в”Ђв”Ђ Directions API в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
