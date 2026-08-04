@@ -403,10 +403,12 @@ async def api_save_profile(request: Request, user_id: int = Depends(_get_uid)):
 
 _FB_SUCCESS_TMPL = """<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>*{{box-sizing:border-box}}body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}.card{{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;text-align:center;max-width:400px}}.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:22px;font-weight:700;margin-bottom:8px}}.sub{{color:#64748b;font-size:15px;line-height:1.6}}</style>
-<script>setTimeout(()=>location.href='{dashboard_url}',2000)</script></head>
-<body><div class="card"><div class="icon">вњ…</div><div class="title">Facebook РїРѕРґРєР»СЋС‡С‘РЅ!</div>
-<div class="sub">РљР°РјРїР°РЅРёРё СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅС‹.<br><br>РћС‚РєСЂС‹РІР°СЋ РґР°С€Р±РѕСЂРґ...</div></div></body></html>"""
+<style>*{{box-sizing:border-box}}body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px}}.card{{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px 32px;text-align:center;max-width:400px;width:100%}}.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:22px;font-weight:700;margin-bottom:8px}}.sub{{color:#64748b;font-size:15px;line-height:1.6;margin-bottom:24px}}.btn{{display:inline-block;background:#1877f2;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:12px;text-decoration:none;margin-top:8px}}</style>
+</head>
+<body><div class="card"><div class="icon">✅</div><div class="title">Facebook подключён!</div>
+<div class="sub">Кампании синхронизированы.<br>Вернитесь в Telegram и нажмите «Обновить».</div>
+<a class="btn" href="https://t.me/zhasclaude_bot">← Открыть Telegram</a>
+</div></body></html>"""
 
 _FB_ERROR = """<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>*{{box-sizing:border-box}}body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}.card{{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;text-align:center;max-width:400px}}.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:22px;font-weight:700;margin-bottom:8px}}.sub{{color:#64748b;font-size:15px}}</style></head>
