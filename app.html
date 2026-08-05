@@ -743,13 +743,10 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
       <div class="two-col">
         <div>
           <div class="settings-section">
-            <h3>📸 Instagram & Facebook Ads</h3>
+            <h3>📸 Подключённые аккаунты</h3>
             <div id="fb-status-block">
-              <button onclick="connectFacebook()" style="width:100%;padding:14px 18px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border:none;border-radius:12px;color:#fff;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                Подключить Instagram
-              </button>
-              <div style="margin-top:8px;font-size:12px;color:var(--muted);text-align:center">Подключает Instagram и Facebook Ads через Meta</div>
+              <!-- Shown while loading -->
+              <div id="fb-loading" style="text-align:center;padding:16px;color:var(--muted);font-size:13px">Загрузка...</div>
             </div>
           </div>
 
@@ -1607,16 +1604,48 @@ async function loadSettings() {
   const data = useMock() ? MOCK.settings : await api('/api/settings');
   if (!data) return;
   window._settings = data;
-  document.getElementById('fb-account').value  = data.facebook?.ad_account_id||'';
+  // fb-account now shown in card, not in input
   document.getElementById('target-cpl').value  = data.user?.target_cpl||'';
   document.getElementById('whatsapp').value    = data.user?.whatsapp||'';
   document.getElementById('fb-page-id').value  = data.user?.fb_page_id||'';
 
+  const fbBlock = document.getElementById('fb-status-block');
   if (data.facebook?.connected) {
-    document.getElementById('fb-status-block').innerHTML=`
-      <div class="fb-connected">
-        <span style="font-size:20px">✅</span>
-        <div><strong>Instagram подключён ✅</strong><div style="font-size:12px;color:var(--muted)">Аккаунт ${data.facebook.ad_account_id}</div></div>
+    fbBlock.innerHTML = `
+      <div style="background:rgba(16,217,160,.07);border:1.5px solid rgba(16,217,160,.25);border-radius:14px;padding:18px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📸</div>
+          <div>
+            <div style="font-weight:700;font-size:15px">Instagram & Facebook Ads</div>
+            <div style="font-size:12px;color:#10d9a0;font-weight:600">✅ Подключено</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+          <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--surface);border-radius:8px">
+            <span style="color:var(--muted)">Рекламный аккаунт</span>
+            <span style="font-weight:600;font-family:monospace">${data.facebook.ad_account_id}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--surface);border-radius:8px">
+            <span style="color:var(--muted)">Дата подключения</span>
+            <span style="font-weight:600">${data.facebook.connected_at || '—'}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--surface);border-radius:8px">
+            <span style="color:var(--muted)">Статус токена</span>
+            <span style="color:#10d9a0;font-weight:600">Активен ✓</span>
+          </div>
+        </div>
+        <button onclick="connectFacebook()" style="width:100%;margin-top:12px;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer">🔄 Переподключить</button>
+      </div>`;
+  } else {
+    fbBlock.innerHTML = `
+      <div style="background:rgba(244,84,106,.06);border:1.5px solid rgba(244,84,106,.2);border-radius:14px;padding:18px;margin-bottom:12px;text-align:center">
+        <div style="font-size:40px;margin-bottom:10px">📵</div>
+        <div style="font-weight:700;margin-bottom:6px">Instagram не подключён</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Подключи чтобы запускать рекламу и видеть статистику</div>
+        <button onclick="connectFacebook()" style="width:100%;padding:14px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border:none;border-radius:12px;color:#fff;font-weight:700;font-size:15px;cursor:pointer">
+          📸 Подключить Instagram & Facebook
+        </button>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted)">Авторизация через официальный Meta OAuth</div>
       </div>`;
   }
 
