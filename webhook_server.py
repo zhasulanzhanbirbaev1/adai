@@ -481,8 +481,8 @@ async def fb_callback(code: str = Query(None), state: str = Query(None),
         token_data = r.json()
 
     if "error" in token_data:
-        msg = token_data["error"].get("message", "РћС€РёР±РєР° Facebook")
-        return HTMLResponse(_FB_ERROR.format(title="РћС€РёР±РєР° Facebook", msg=msg))
+        msg = token_data["error"].get("message", "Ошибка Facebook")
+        return HTMLResponse(_FB_ERROR.format(title="Ошибка Facebook", msg=msg))
 
     short_token = token_data["access_token"]
 
@@ -518,7 +518,7 @@ async def fb_callback(code: str = Query(None), state: str = Query(None),
         return HTMLResponse(f"""<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;padding:32px;max-width:480px;margin:0 auto}}</style></head>
-<body><h2>Р’С‹Р±РµСЂРёС‚Рµ СЂРµРєР»Р°РјРЅС‹Р№ Р°РєРєР°СѓРЅС‚</h2>{items}</body></html>""")
+<body><h2>Выберите рекламный аккаунтРєР°СѓРЅС‚</h2>{items}</body></html>""")
 
     from ai_manager import sync_fb_campaigns
     import asyncio

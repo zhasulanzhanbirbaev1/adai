@@ -49,49 +49,43 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     is_new = get_user(user.id) is None
     create_user(user.id, user.username or "", user.first_name or "")
 
+    webapp_url = f"{WEBAPP_URL}?user_id={user.id}" if WEBAPP_URL else None
+
     if is_new:
-        base_url = os.getenv("BASE_URL", "https://like-ai-production.up.railway.app").rstrip("/")
         text = (
             f"👋 Привет, *{user.first_name}*!\n\n"
-            "Добро пожаловать в *Adai* — ИИ-таргетолог для рекламы в Facebook и Instagram.\n\n"
-            "🎁 *Пробный период активирован* — все функции открыты прямо сейчас.\n\n"
-            "Чтобы запустить первую кампанию за 5 минут:\n\n"
-            "1️⃣ Подключи рекламный кабинет Facebook → /token\n"
-            "2️⃣ Создай направление (бриф бизнеса) в дашборде\n"
-            "3️⃣ Запусти кампанию — ИИ возьмёт всё под контроль\n\n"
-            "Отчёты каждое утро в 9:00. ИИ паузирует плохие кампании и масштабирует хорошие."
+            "Добро пожаловать в *Adai* — ИИ-маркетолог для рекламы в Instagram и Facebook.\n\n"
+            "🎁 *10 бесплатных генераций активированы* — начни прямо сейчас!\n\n"
+            "Нажми кнопку ниже чтобы открыть кабинет 👇"
         )
-        base_kb = InlineKeyboardMarkup([[
-            InlineKeyboardButton("🔗 Подключить Facebook", url=f"{base_url}/fb/connect?user_id={user.id}"),
-        ]])
     else:
+        fb = get_fb_token(user.id)
+        fb_status = f"✅ Facebook подключён" if fb else "❌ Facebook не подключён"
         if is_trial_active(user.id):
-            status = "🟡 Пробный период активен"
+            status = "🟡 Пробный период"
         else:
             sub = get_active_subscription(user.id)
-            if sub:
-                plan_name = PLANS.get(sub["plan"], {}).get("name", sub["plan"])
-                expires = sub["expires_at"][:10]
-                status = f"🟢 Подписка: {plan_name} (до {expires})"
-            else:
-                status = "🔴 Подписка истекла"
-
-        fb = get_fb_token(user.id)
-        fb_status = f"✅ `{fb['ad_account_id']}`" if fb else "❌ не подключён"
+            status = f"🟢 {PLANS.get(sub['plan'], {}).get('name', sub['plan'])}" if sub else "🔴 Нет подписки"
 
         text = (
             f"👋 С возвращением, *{user.first_name}*!\n\n"
             f"Статус: {status}\n"
-            f"Facebook: {fb_status}\n\n"
-            "🔗 /token — подключить Facebook Ads\n"
-            "🔄 /sync — синхронизировать кампании\n"
-            "🎨 /creative — сгенерировать рекламный креатив\n"
-            "🤖 /ailog — решения ИИ\n"
+            f"{fb_status}\n\n"
+            "Открой кабинет чтобы управлять рекламой 👇"
         )
 
-    kb = base_kb if is_new else _main_keyboard(user.id)
+    buttons = []
+    if webapp_url:
+        buttons.append([InlineKeyboardButton("📊 Открыть кабинет", web_app=WebAppInfo(url=webapp_url))])
+
+    fb = get_fb_token(user.id)
+    if not fb:
+        base_url = os.getenv("BASE_URL", "").rstrip("/")
+        buttons.append([InlineKeyboardButton("🔗 Подключить Instagram / Facebook",
+                                             url=f"{base_url}/fb/connect?user_id={user.id}")])
+
+    kb = InlineKeyboardMarkup(buttons) if buttons else None
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
-    await update.message.reply_text("Выберите действие:", reply_markup=_reply_keyboard())
 
 
 async def cmd_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
