@@ -1,7 +1,7 @@
 import os
 import logging
 import base64
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, ReplyKeyboardMarkup, KeyboardButton
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv
 
@@ -23,68 +23,34 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(na
 logger = logging.getLogger(__name__)
 
 
-def _main_keyboard(user_id: int):
-    inline_buttons = []
-    if WEBAPP_URL:
-        url = f"{WEBAPP_URL}?user_id={user_id}"
-        inline_buttons.append([InlineKeyboardButton("📊 Открыть кабинет", web_app=WebAppInfo(url=url))])
-    inline_buttons.append([
-        InlineKeyboardButton("🤖 Лог ИИ", callback_data="open_ailog"),
-    ])
-    return InlineKeyboardMarkup(inline_buttons)
-
-
-def _reply_keyboard():
-    buttons = [
-        [KeyboardButton("🚀 Запустить кампанию")],
-        [KeyboardButton("🎨 Креатив"), KeyboardButton("🤖 Лог ИИ")],
-        [KeyboardButton("🔗 Facebook"), KeyboardButton("🔄 Синхронизация")],
-        [KeyboardButton("📊 Статус")],
-    ]
-    return ReplyKeyboardMarkup(buttons, resize_keyboard=True, persistent=True)
+def _webapp_keyboard(user_id: int):
+    if not WEBAPP_URL:
+        return None
+    url = f"{WEBAPP_URL}?user_id={user_id}"
+    return InlineKeyboardMarkup([[InlineKeyboardButton("🚀 Открыть Adai", web_app=WebAppInfo(url=url))]])
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    is_new = get_user(user.id) is None
     create_user(user.id, user.username or "", user.first_name or "")
 
     webapp_url = f"{WEBAPP_URL}?user_id={user.id}" if WEBAPP_URL else None
 
-    if is_new:
-        text = (
-            f"👋 Привет, *{user.first_name}*!\n\n"
-            "Добро пожаловать в *Adai* — ИИ-маркетолог для рекламы в Instagram и Facebook.\n\n"
-            "🎁 *10 бесплатных генераций активированы* — начни прямо сейчас!\n\n"
-            "Нажми кнопку ниже чтобы открыть кабинет 👇"
-        )
-    else:
-        fb = get_fb_token(user.id)
-        fb_status = f"✅ Facebook подключён" if fb else "❌ Facebook не подключён"
-        if is_trial_active(user.id):
-            status = "🟡 Пробный период"
-        else:
-            sub = get_active_subscription(user.id)
-            status = f"🟢 {PLANS.get(sub['plan'], {}).get('name', sub['plan'])}" if sub else "🔴 Нет подписки"
+    text = (
+        f"👋 Привет, *{user.first_name}*!\n\n"
+        "Я *Adai* — ИИ-маркетолог для рекламы в Instagram и Facebook.\n\n"
+        "🎨 Генерирую рекламные баннеры под твой бизнес\n"
+        "🎯 Запускаю таргетированные кампании в Facebook Ads\n"
+        "📊 Слежу за результатами и оптимизирую бюджет\n"
+        "🤖 Работаю автоматически — ты только смотришь на лиды\n\n"
+        "🎁 *10 бесплатных генераций уже активированы*\n\n"
+        "Нажми кнопку и начни прямо сейчас 👇"
+    )
 
-        text = (
-            f"👋 С возвращением, *{user.first_name}*!\n\n"
-            f"Статус: {status}\n"
-            f"{fb_status}\n\n"
-            "Открой кабинет чтобы управлять рекламой 👇"
-        )
+    kb = InlineKeyboardMarkup([[
+        InlineKeyboardButton("🚀 Открыть Adai", web_app=WebAppInfo(url=webapp_url))
+    ]]) if webapp_url else None
 
-    buttons = []
-    if webapp_url:
-        buttons.append([InlineKeyboardButton("📊 Открыть кабинет", web_app=WebAppInfo(url=webapp_url))])
-
-    fb = get_fb_token(user.id)
-    if not fb:
-        base_url = os.getenv("BASE_URL", "").rstrip("/")
-        buttons.append([InlineKeyboardButton("🔗 Подключить Instagram / Facebook",
-                                             url=f"{base_url}/fb/connect?user_id={user.id}")])
-
-    kb = InlineKeyboardMarkup(buttons) if buttons else None
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
 
 
