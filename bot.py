@@ -77,7 +77,7 @@ async def cmd_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    base_url = os.getenv("BASE_URL", "https://like-ai-production.up.railway.app").rstrip("/")
+    base_url = os.getenv("BASE_URL", "https://adai-zkif.onrender.com").rstrip("/")
     oauth_link = f"{base_url}/fb/connect?user_id={user.id}"
     existing = get_fb_token(user.id)
     if existing:
@@ -184,13 +184,6 @@ async def cmd_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def handle_inline(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query
-    await q.answer()
-    if q.data == "open_ailog":
-        await cmd_ailog(update, context)
-
-
 async def cmd_creative(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     if not has_access(user.id):
@@ -205,19 +198,7 @@ async def cmd_creative(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def handle_menu_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    if text == "🎨 Креатив":
-        await cmd_creative(update, context)
-    elif text == "🤖 Лог ИИ":
-        await cmd_ailog(update, context)
-    elif text == "🔗 Facebook":
-        await cmd_token(update, context)
-    elif text == "🔄 Синхронизация":
-        await cmd_sync(update, context)
-    elif text == "📊 Статус":
-        await cmd_start(update, context)
-    else:
-        await handle_creative_niche(update, context)
+    await handle_creative_niche(update, context)
 
 
 async def handle_creative_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -312,7 +293,6 @@ def build_app() -> Application:
     app.add_handler(CommandHandler("setup",    cmd_setup))
     app.add_handler(CommandHandler("sync",     cmd_sync))
     app.add_handler(CommandHandler("creative", cmd_creative))
-    app.add_handler(CallbackQueryHandler(handle_inline, pattern=r"^open_"))
     app.add_handler(MessageHandler(filters.PHOTO, handle_creative_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_menu_buttons))
     return app
