@@ -36,6 +36,13 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Adai API", docs_url="/docs", redoc_url=None)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
+_bot_app = None  # set by main.py before server starts
+
+
+def set_bot_app(application):
+    global _bot_app
+    _bot_app = application
+
 # Temporary in-memory cache for banner file downloads (token → (bytes, label))
 import hashlib as _hashlib, time as _time
 _BANNER_CACHE: dict = {}  # token -> (img_bytes, label, expires_at)
@@ -46,6 +53,22 @@ async def _global_exc(request: Request, exc: Exception):
     import traceback
     logger.error("Unhandled %s at %s: %s\n%s", type(exc).__name__, request.url.path, exc, traceback.format_exc())
     return JSONResponse(status_code=500, content={"detail": f"Внутренняя ошибка: {type(exc).__name__}"})
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
+@app.post("/webhook")
+async def telegram_webhook(request: Request):
+    if _bot_app is None:
+        return JSONResponse(status_code=503, content={"ok": False, "error": "bot not ready"})
+    from telegram import Update
+    data = await request.json()
+    update = Update.de_json(data, _bot_app.bot)
+    await _bot_app.process_update(update)
+    return {"ok": True}
 
 
 async def _notify(user_id: int, text: str):

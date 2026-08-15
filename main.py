@@ -13,21 +13,20 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 PORT = int(os.getenv("PORT", 8000))
-
-# Debug: show what env vars Railway provides
-_token = os.getenv("BOT_TOKEN", "")
-logger.info("BOT_TOKEN present: %s, length: %d", bool(_token), len(_token))
+BASE_URL = os.getenv("BASE_URL", "").rstrip("/")
 
 
 async def main():
     from database import init_db
     from bot import build_app
     from ai_manager import build_scheduler
-    from webhook_server import app as web_app
+    from webhook_server import app as web_app, set_bot_app
 
     init_db()
 
     bot_app = build_app()
+    set_bot_app(bot_app)
+
     scheduler = build_scheduler(bot_app.bot)
 
     config = uvicorn.Config(web_app, host="0.0.0.0", port=PORT, log_level="info")
@@ -37,15 +36,24 @@ async def main():
         scheduler.start()
         logger.info("AI scheduler started")
 
+        await bot_app.initialize()
         await bot_app.start()
-        await bot_app.updater.start_polling(drop_pending_updates=True)
-        logger.info("Bot started on port %d", PORT)
+
+        # Register webhook with Telegram
+        webhook_url = f"{BASE_URL}/webhook"
+        await bot_app.bot.set_webhook(
+            url=webhook_url,
+            drop_pending_updates=True,
+            allowed_updates=["message", "callback_query", "inline_query"],
+        )
+        logger.info("Webhook registered: %s", webhook_url)
 
         await server.serve()
 
+        await bot_app.bot.delete_webhook()
         scheduler.shutdown(wait=False)
-        await bot_app.updater.stop()
         await bot_app.stop()
+        await bot_app.shutdown()
 
 
 if __name__ == "__main__":
