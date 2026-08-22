@@ -36,10 +36,8 @@ async def main():
         scheduler.start()
         logger.info("AI scheduler started")
 
-        await bot_app.initialize()
         await bot_app.start()
 
-        # Register webhook with Telegram
         webhook_url = f"{BASE_URL}/webhook"
         await bot_app.bot.set_webhook(
             url=webhook_url,
@@ -50,10 +48,9 @@ async def main():
 
         await server.serve()
 
-        await bot_app.bot.delete_webhook()
         scheduler.shutdown(wait=False)
+        await bot_app.updater.stop() if bot_app.updater else None
         await bot_app.stop()
-        await bot_app.shutdown()
 
 
 if __name__ == "__main__":

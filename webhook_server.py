@@ -55,11 +55,6 @@ async def _global_exc(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": f"Внутренняя ошибка: {type(exc).__name__}"})
 
 
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
-
-
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
     if _bot_app is None:
