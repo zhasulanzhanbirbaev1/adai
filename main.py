@@ -26,31 +26,38 @@ async def main():
 
     bot_app = build_app()
     set_bot_app(bot_app)
-
     scheduler = build_scheduler(bot_app.bot)
+
+    await bot_app.initialize()
+    await bot_app.start()
+    scheduler.start()
+    logger.info("Bot and scheduler started")
+
+    if BASE_URL:
+        try:
+            await bot_app.bot.set_webhook(
+                f"{BASE_URL}/webhook",
+                drop_pending_updates=True,
+                allowed_updates=["message", "callback_query", "inline_query"],
+            )
+            logger.info("Webhook registered: %s/webhook", BASE_URL)
+        except Exception as e:
+            logger.error("Webhook registration failed: %s", e)
 
     config = uvicorn.Config(web_app, host="0.0.0.0", port=PORT, log_level="info")
     server = uvicorn.Server(config)
 
-    async with bot_app:
-        scheduler.start()
-        logger.info("AI scheduler started")
-
-        await bot_app.start()
-
-        webhook_url = f"{BASE_URL}/webhook"
-        await bot_app.bot.set_webhook(
-            url=webhook_url,
-            drop_pending_updates=True,
-            allowed_updates=["message", "callback_query", "inline_query"],
-        )
-        logger.info("Webhook registered: %s", webhook_url)
-
+    try:
         await server.serve()
-
+    finally:
+        logger.info("Shutting down...")
         scheduler.shutdown(wait=False)
-        await bot_app.updater.stop() if bot_app.updater else None
+        try:
+            await bot_app.bot.delete_webhook()
+        except Exception:
+            pass
         await bot_app.stop()
+        await bot_app.shutdown()
 
 
 if __name__ == "__main__":
