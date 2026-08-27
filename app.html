@@ -793,135 +793,159 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
   </div><!-- /content -->
 </main>
 
-<!-- ONBOARDING -->
+<!-- ONBOARDING WIZARD -->
 <div id="onboarding" style="display:none;position:fixed;inset:0;z-index:10000;background:var(--bg);flex-direction:column">
 
-  <!-- Slides -->
-  <div id="ob-slides" style="flex:1;overflow:hidden;position:relative">
+  <!-- Header: progress bar -->
+  <div style="padding:16px 20px 0;flex-shrink:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:13px;color:var(--muted)" id="ob-step-label">Шаг 1 из 5</div>
+      <button onclick="obSkip()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:4px 8px">Пропустить</button>
+    </div>
+    <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+      <div id="ob-progress-bar" style="height:100%;background:var(--accent);border-radius:2px;transition:width .35s;width:20%"></div>
+    </div>
+  </div>
 
-    <!-- Slide 1: Welcome -->
-    <div class="ob-slide" style="padding:48px 28px 0">
-      <div style="font-size:72px;text-align:center;margin-bottom:20px">🚀</div>
-      <div style="font-size:28px;font-weight:800;text-align:center;line-height:1.25;margin-bottom:16px">Привет! Я <span style="color:var(--accent)">Adai</span> —<br>твой AI‑таргетолог</div>
-      <div style="font-size:15px;color:var(--muted);text-align:center;line-height:1.65">
-        Создаю профессиональные рекламные баннеры и запускаю рекламу в Instagram и Facebook — вместо тебя.
+  <!-- Slide area -->
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+    <!-- Шаг 1: Ваш бизнес -->
+    <div class="ob-slide" style="padding:28px 24px 20px">
+      <div style="font-size:40px;text-align:center;margin-bottom:14px">🏢</div>
+      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:6px">Расскажите о бизнесе</div>
+      <div style="font-size:14px;color:var(--muted);text-align:center;margin-bottom:24px">AI настроит рекламу именно под вас</div>
+
+      <div class="form-group">
+        <label class="form-label">Ниша / тип бизнеса <span style="color:var(--accent)">*</span></label>
+        <input class="form-input" id="ob-niche" placeholder="Салон красоты, кофейня, фитнес, стройматериалы..." style="font-size:16px"/>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Что вы продаёте или какую услугу оказываете?</div>
       </div>
-      <div style="margin-top:36px;background:var(--surface);border-radius:16px;padding:20px 24px;display:flex;flex-direction:column;gap:14px">
-        <div style="display:flex;align-items:center;gap:14px">
-          <span style="font-size:28px">🎨</span>
-          <div><div style="font-weight:700;font-size:14px">AI создаёт баннеры</div><div style="font-size:12px;color:var(--muted)">3 варианта за 60 секунд</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px">
-          <span style="font-size:28px">🎯</span>
-          <div><div style="font-weight:700;font-size:14px">Подбирает аудиторию</div><div style="font-size:12px;color:var(--muted)">Возраст, пол, интересы</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px">
-          <span style="font-size:28px">📊</span>
-          <div><div style="font-weight:700;font-size:14px">Управляет кампаниями</div><div style="font-size:12px;color:var(--muted)">Паузирует слабые, масштабирует сильные</div></div>
-        </div>
+
+      <div class="form-group">
+        <label class="form-label">Ваш оффер <span style="color:var(--muted);font-weight:400">(необязательно)</span></label>
+        <textarea class="form-input" id="ob-offer" rows="2" placeholder="Маникюр от 3000₸, первый урок бесплатно, доставка за 30 минут..."></textarea>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Чем вы привлекаете клиентов?</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Город <span style="color:var(--accent)">*</span></label>
+        <input class="form-input" id="ob-city" placeholder="Алматы" style="font-size:16px" value="Алматы"/>
       </div>
     </div>
 
-    <!-- Slide 2: How it works -->
-    <div class="ob-slide" style="display:none;padding:48px 28px 0">
-      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px">Как это работает?</div>
-      <div style="font-size:14px;color:var(--muted);text-align:center;margin-bottom:32px">4 шага до запущенной рекламы</div>
-      <div style="display:flex;flex-direction:column;gap:16px">
-        <div style="display:flex;align-items:flex-start;gap:16px">
-          <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
-          <div><div style="font-weight:700;font-size:15px;margin-bottom:3px">Введи нишу и оффер</div><div style="font-size:13px;color:var(--muted);line-height:1.5">Например: «Салон красоты — маникюр от 3000₸»</div></div>
+    <!-- Шаг 2: Ваша аудитория -->
+    <div class="ob-slide" style="display:none;padding:28px 24px 20px">
+      <div style="font-size:40px;text-align:center;margin-bottom:14px">🎯</div>
+      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:6px">Кто ваши клиенты?</div>
+      <div style="font-size:14px;color:var(--muted);text-align:center;margin-bottom:24px">AI подберёт аудиторию автоматически, уточните если нужно</div>
+
+      <div class="form-group">
+        <label class="form-label">Пол аудитории</label>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="ob-gender-opts">
+          <div class="type-opt active" data-val="all" onclick="obSelectGender(this)" style="text-align:center;padding:12px 8px"><div style="font-size:18px">👥</div><div class="t-label">Все</div></div>
+          <div class="type-opt" data-val="female" onclick="obSelectGender(this)" style="text-align:center;padding:12px 8px"><div style="font-size:18px">👩</div><div class="t-label">Женщины</div></div>
+          <div class="type-opt" data-val="male" onclick="obSelectGender(this)" style="text-align:center;padding:12px 8px"><div style="font-size:18px">👨</div><div class="t-label">Мужчины</div></div>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:16px">
-          <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
-          <div><div style="font-weight:700;font-size:15px;margin-bottom:3px">AI создаёт 3 баннера</div><div style="font-size:13px;color:var(--muted);line-height:1.5">Разные концепции, тексты и цвета — как у Ogilvy</div></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Возраст аудитории</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <input class="form-input" id="ob-age-min" type="number" value="22" min="18" max="65" style="text-align:center"/>
+          <span style="color:var(--muted);flex-shrink:0">—</span>
+          <input class="form-input" id="ob-age-max" type="number" value="45" min="18" max="65" style="text-align:center"/>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:16px">
-          <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
-          <div><div style="font-weight:700;font-size:15px;margin-bottom:3px">Выбери лучший</div><div style="font-size:13px;color:var(--muted);line-height:1.5">Нажми на баннер — просмотр на весь экран, листай стрелками</div></div>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:16px">
-          <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div>
-          <div><div style="font-weight:700;font-size:15px;margin-bottom:3px">Запусти рекламу</div><div style="font-size:13px;color:var(--muted);line-height:1.5">Подключи Facebook — AI сам управляет кампанией</div></div>
-        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">WhatsApp для заявок <span style="color:var(--accent)">*</span></label>
+        <input class="form-input" id="ob-whatsapp" type="tel" placeholder="+7 777 123 45 67" style="font-size:16px"/>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">На этот номер будут приходить лиды от рекламы</div>
       </div>
     </div>
 
-    <!-- Slide 3: Features -->
-    <div class="ob-slide" style="display:none;padding:48px 28px 0">
-      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px">Что ты получаешь</div>
-      <div style="font-size:14px;color:var(--muted);text-align:center;margin-bottom:28px">Всё в одном месте</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div style="background:var(--surface);border-radius:14px;padding:18px 16px;text-align:center">
-          <div style="font-size:32px;margin-bottom:8px">✨</div>
-          <div style="font-weight:700;font-size:13px;margin-bottom:4px">AI баннеры</div>
-          <div style="font-size:11px;color:var(--muted)">3 варианта 1080×1350</div>
+    <!-- Шаг 3: Бюджет -->
+    <div class="ob-slide" style="display:none;padding:28px 24px 20px">
+      <div style="font-size:40px;text-align:center;margin-bottom:14px">💰</div>
+      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:6px">Рекламный бюджет</div>
+      <div style="font-size:14px;color:var(--muted);text-align:center;margin-bottom:24px">Сколько готовы тратить в день?</div>
+
+      <div class="form-group">
+        <label class="form-label">Бюджет в день, ₸ <span style="color:var(--accent)">*</span></label>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
+          <button type="button" onclick="document.getElementById('ob-budget').value=2000;obHighlightBudget(this)" class="ob-budget-btn" style="padding:10px 6px;background:var(--surface);border:1.5px solid var(--accent);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;color:var(--fg)">2 000</button>
+          <button type="button" onclick="document.getElementById('ob-budget').value=5000;obHighlightBudget(this)" class="ob-budget-btn" style="padding:10px 6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;color:var(--fg)">5 000</button>
+          <button type="button" onclick="document.getElementById('ob-budget').value=10000;obHighlightBudget(this)" class="ob-budget-btn" style="padding:10px 6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;color:var(--fg)">10 000</button>
+          <button type="button" onclick="document.getElementById('ob-budget').value=20000;obHighlightBudget(this)" class="ob-budget-btn" style="padding:10px 6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;color:var(--fg)">20 000</button>
         </div>
-        <div style="background:var(--surface);border-radius:14px;padding:18px 16px;text-align:center">
-          <div style="font-size:32px;margin-bottom:8px">📝</div>
-          <div style="font-weight:700;font-size:13px;margin-bottom:4px">Готовые тексты</div>
-          <div style="font-size:11px;color:var(--muted)">Caption, Stories, хэштеги</div>
-        </div>
-        <div style="background:var(--surface);border-radius:14px;padding:18px 16px;text-align:center">
-          <div style="font-size:32px;margin-bottom:8px">🎯</div>
-          <div style="font-weight:700;font-size:13px;margin-bottom:4px">AI аудитория</div>
-          <div style="font-size:11px;color:var(--muted)">Возраст и пол автоматически</div>
-        </div>
-        <div style="background:var(--surface);border-radius:14px;padding:18px 16px;text-align:center">
-          <div style="font-size:32px;margin-bottom:8px">🤖</div>
-          <div style="font-weight:700;font-size:13px;margin-bottom:4px">AI таргетолог</div>
-          <div style="font-size:11px;color:var(--muted)">Оптимизирует 24/7</div>
-        </div>
-        <div style="background:var(--surface);border-radius:14px;padding:18px 16px;text-align:center">
-          <div style="font-size:32px;margin-bottom:8px">📱</div>
-          <div style="font-weight:700;font-size:13px;margin-bottom:4px">Скачать / Telegram</div>
-          <div style="font-size:11px;color:var(--muted)">Сохрани в галерею</div>
-        </div>
-        <div style="background:var(--surface);border-radius:14px;padding:18px 16px;text-align:center">
-          <div style="font-size:32px;margin-bottom:8px">🛡</div>
-          <div style="font-weight:700;font-size:13px;margin-bottom:4px">Проверка Meta</div>
-          <div style="font-size:11px;color:var(--muted)">Текст перед запуском</div>
-        </div>
+        <input class="form-input" id="ob-budget" type="number" value="2000" min="1000" step="500" placeholder="Введите сумму"/>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Минимум 2 000 ₸/день — Facebook не принимает меньше</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Целевая стоимость заявки (CPL), ₸</label>
+        <input class="form-input" id="ob-cpl" type="number" placeholder="1500" min="500" step="100"/>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Во сколько вам должна обходиться одна заявка? AI будет оптимизировать под эту цель</div>
+      </div>
+
+      <div style="background:rgba(16,217,160,.07);border:1px solid rgba(16,217,160,.2);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--muted);line-height:1.6">
+        💡 Например: бюджет 5 000 ₸/день, CPL 1 500 ₸ → ожидаем ~3 заявки в день
       </div>
     </div>
 
-    <!-- Slide 4: Start -->
-    <div class="ob-slide" style="display:none;padding:48px 28px 0;align-items:center;justify-content:center;flex-direction:column;text-align:center">
-      <div style="font-size:80px;margin-bottom:24px">🎉</div>
-      <div style="font-size:26px;font-weight:800;margin-bottom:12px">Готов к старту!</div>
-      <div style="font-size:15px;color:var(--muted);line-height:1.65;margin-bottom:32px">
-        У тебя <strong style="color:var(--accent)">10 бесплатных генераций</strong>.<br>Создай первый баннер прямо сейчас.
+    <!-- Шаг 4: Подключить Facebook -->
+    <div class="ob-slide" style="display:none;padding:28px 24px 20px">
+      <div style="font-size:40px;text-align:center;margin-bottom:14px">📱</div>
+      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:6px">Подключите Facebook</div>
+      <div style="font-size:14px;color:var(--muted);text-align:center;margin-bottom:24px">Нужно для запуска рекламы. Баннеры создаются и без этого.</div>
+
+      <div id="ob-fb-status" style="margin-bottom:20px"></div>
+
+      <button onclick="obConnectFb()" style="width:100%;padding:16px;background:linear-gradient(135deg,#1877F2,#0d5dbf);border:none;color:#fff;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:12px">
+        🔗 Подключить Facebook Ads
+      </button>
+      <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:20px">Авторизация через официальный Meta OAuth — безопасно</div>
+
+      <div style="background:var(--surface);border-radius:12px;padding:16px;font-size:13px;line-height:1.7;color:var(--muted)">
+        <div style="font-weight:700;color:var(--fg);margin-bottom:8px">Что даёт подключение:</div>
+        <div>✅ Запуск рекламы прямо из приложения</div>
+        <div>✅ AI управляет бюджетом автоматически</div>
+        <div>✅ Статистика и заявки в реальном времени</div>
       </div>
-      <div style="background:var(--surface);border-radius:14px;padding:16px 20px;font-size:13px;color:var(--muted);line-height:1.6;text-align:left;width:100%">
-        💡 <strong>Совет:</strong> Загрузи своё фото товара — баннер получится с реальным продуктом, а не AI-картинкой
+    </div>
+
+    <!-- Шаг 5: Готово -->
+    <div class="ob-slide" style="display:none;padding:28px 24px 20px;text-align:center">
+      <div style="font-size:72px;margin-bottom:20px">🎉</div>
+      <div style="font-size:26px;font-weight:800;margin-bottom:12px">Всё готово!</div>
+      <div style="font-size:15px;color:var(--muted);line-height:1.65;margin-bottom:28px">
+        Настройка завершена. У вас <strong style="color:var(--accent)">10 бесплатных генераций</strong> — создайте первый рекламный баннер прямо сейчас.
       </div>
+
+      <div id="ob-summary" style="background:var(--surface);border-radius:14px;padding:16px 20px;text-align:left;margin-bottom:24px;font-size:13px;line-height:1.8"></div>
+
+      <button onclick="obFinish()" style="width:100%;padding:18px;background:linear-gradient(135deg,var(--accent),#0ea5e9);border:none;color:#fff;border-radius:14px;font-size:17px;font-weight:800;cursor:pointer;margin-bottom:10px">
+        🎨 Создать первый баннер
+      </button>
+      <button onclick="obSkip()" style="width:100%;padding:12px;background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer">
+        Перейти в кабинет
+      </button>
     </div>
 
   </div>
 
-  <!-- Bottom controls -->
-  <div style="padding:20px 28px 32px">
-    <!-- Progress dots -->
-    <div id="ob-dots" style="display:flex;justify-content:center;gap:8px;margin-bottom:20px">
-      <div class="ob-dot ob-dot-active"></div>
-      <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
-      <div class="ob-dot"></div>
-    </div>
+  <!-- Bottom button (steps 1-4) -->
+  <div id="ob-bottom" style="padding:16px 24px 28px;flex-shrink:0">
     <button id="ob-next-btn" onclick="obNext()"
       style="width:100%;padding:16px;background:var(--accent);border:none;color:#fff;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer">
       Далее →
-    </button>
-    <button onclick="obSkip()"
-      style="width:100%;padding:12px;background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;margin-top:8px">
-      Пропустить
     </button>
   </div>
 </div>
 
 <style>
-.ob-dot { width:8px;height:8px;border-radius:50%;background:var(--border);transition:.3s }
-.ob-dot-active { width:24px;border-radius:4px;background:var(--accent) }
-.ob-slide { position:absolute;inset:0;overflow-y:auto;transition:transform .35s cubic-bezier(.4,0,.2,1) }
+.ob-slide { display:block }
 </style>
 
 <!-- FULLSCREEN BANNER VIEWER -->
@@ -2536,8 +2560,9 @@ function openTelegram() { window.open(`https://t.me/AdaiKZBot`,'_blank'); }
 
 // ── ONBOARDING ────────────────────────────────────────────────────────────────
 let _obSlide = 0;
-const _OB_TOTAL = 4;
-const _OB_LABELS = ['Далее →', 'Далее →', 'Далее →', 'Начать!'];
+const _OB_TOTAL = 5;
+let _obGender = 'all';
+let _obData = {};
 
 function showOnboarding() {
   _obSlide = 0;
@@ -2552,28 +2577,162 @@ function obSkip() {
   if (el) el.style.display = 'none';
 }
 
-function obNext() {
+function obSelectGender(el) {
+  document.querySelectorAll('#ob-gender-opts .type-opt').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  _obGender = el.dataset.val;
+}
+
+function obHighlightBudget(el) {
+  document.querySelectorAll('.ob-budget-btn').forEach(b => {
+    b.style.border = '1px solid var(--border)';
+  });
+  el.style.border = '1.5px solid var(--accent)';
+}
+
+function obConnectFb() {
+  if (!UID) { showToast('Откройте приложение из Telegram'); return; }
+  const url = `${location.origin}/fb/connect?user_id=${UID}`;
+  if (window.Telegram?.WebApp?.openLink) window.Telegram.WebApp.openLink(url);
+  else window.open(url, '_blank');
+  // After 8 sec check if connected
+  setTimeout(obCheckFb, 8000);
+}
+
+async function obCheckFb() {
+  const data = await api('/api/settings');
+  const statusEl = document.getElementById('ob-fb-status');
+  if (data?.facebook?.connected) {
+    if (statusEl) statusEl.innerHTML = `
+      <div style="background:rgba(16,217,160,.1);border:1.5px solid rgba(16,217,160,.3);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:28px">✅</span>
+        <div>
+          <div style="font-weight:700;font-size:14px;color:var(--fg)">Facebook подключён!</div>
+          <div style="font-size:12px;color:var(--muted)">${data.facebook.ad_account_id}</div>
+        </div>
+      </div>`;
+    _obData.fb_connected = true;
+  } else {
+    if (statusEl) statusEl.innerHTML = `
+      <div style="background:rgba(244,84,106,.06);border:1px solid rgba(244,84,106,.2);border-radius:12px;padding:12px 16px;font-size:13px;color:var(--muted)">
+        Ещё не подключено. Нажмите кнопку выше — откроется Facebook авторизация.
+      </div>`;
+  }
+}
+
+async function obNext() {
+  const slides = document.querySelectorAll('.ob-slide');
+
+  // Validate and collect data per step
+  if (_obSlide === 0) {
+    const niche = document.getElementById('ob-niche')?.value.trim();
+    const city = document.getElementById('ob-city')?.value.trim();
+    if (!niche) { showToast('Введите нишу бизнеса'); return; }
+    if (!city) { showToast('Введите город'); return; }
+    _obData.niche = niche;
+    _obData.offer = document.getElementById('ob-offer')?.value.trim() || '';
+    _obData.city = city;
+  } else if (_obSlide === 1) {
+    const wa = document.getElementById('ob-whatsapp')?.value.trim();
+    if (!wa) { showToast('Введите WhatsApp номер'); return; }
+    _obData.whatsapp = wa;
+    _obData.gender = _obGender;
+    _obData.age_min = parseInt(document.getElementById('ob-age-min')?.value) || 22;
+    _obData.age_max = parseInt(document.getElementById('ob-age-max')?.value) || 45;
+  } else if (_obSlide === 2) {
+    const budget = parseInt(document.getElementById('ob-budget')?.value) || 2000;
+    if (budget < 1000) { showToast('Минимальный бюджет 1 000 ₸'); return; }
+    _obData.budget = budget;
+    _obData.cpl = parseInt(document.getElementById('ob-cpl')?.value) || 0;
+  } else if (_obSlide === 3) {
+    // Check FB status before going to step 5
+    await obCheckFb();
+    _obRenderSummary();
+  }
+
   if (_obSlide < _OB_TOTAL - 1) {
     _obSlide++;
     _obRender();
-  } else {
-    obSkip();
-    navigate('marketolog');
+    if (_obSlide === 3) obCheckFb();
   }
+}
+
+function _obRenderSummary() {
+  const el = document.getElementById('ob-summary');
+  if (!el) return;
+  el.innerHTML = [
+    _obData.niche ? `<div>🏢 <strong>Бизнес:</strong> ${_obData.niche}${_obData.city ? ', ' + _obData.city : ''}</div>` : '',
+    _obData.offer ? `<div>🎁 <strong>Оффер:</strong> ${_obData.offer}</div>` : '',
+    _obData.whatsapp ? `<div>📱 <strong>WhatsApp:</strong> ${_obData.whatsapp}</div>` : '',
+    _obData.budget ? `<div>💰 <strong>Бюджет:</strong> ${_obData.budget.toLocaleString('ru')} ₸/день</div>` : '',
+    _obData.fb_connected ? `<div>✅ <strong>Facebook:</strong> подключён</div>` : `<div>⚠️ <strong>Facebook:</strong> не подключён (можно подключить позже)</div>`,
+  ].filter(Boolean).join('');
+}
+
+async function obFinish() {
+  // Save profile (whatsapp + cpl)
+  if (UID && _obData.whatsapp) {
+    await api('/api/settings/profile', {
+      method: 'PUT',
+      body: JSON.stringify({ whatsapp: _obData.whatsapp, target_cpl: _obData.cpl || null }),
+    });
+  }
+
+  // Create first direction
+  if (UID && _obData.niche) {
+    await api('/api/directions', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: _obData.niche,
+        niche: _obData.niche,
+        description: _obData.offer || '',
+        geo: _obData.city || 'Алматы',
+        gender: _obData.gender || 'all',
+        daily_budget: _obData.budget || 2000,
+        target_cpl: _obData.cpl || null,
+        whatsapp_number: _obData.whatsapp || '',
+        audience: `Возраст ${_obData.age_min || 22}–${_obData.age_max || 45}`,
+      }),
+    });
+  }
+
+  localStorage.setItem('adai_onboarded', '1');
+  document.getElementById('onboarding').style.display = 'none';
+
+  // Pre-fill banner generator with their niche
+  if (_obData.niche) {
+    const nicheEl = document.getElementById('gen-niche');
+    if (nicheEl) nicheEl.value = _obData.niche;
+    const descEl = document.getElementById('gen-description');
+    if (descEl && _obData.offer) descEl.value = _obData.offer;
+  }
+
+  navigate('marketolog');
+  showToast('🎉 Настройка завершена! Создайте первый баннер');
 }
 
 function _obRender() {
   const slides = document.querySelectorAll('.ob-slide');
-  slides.forEach((s, i) => {
-    s.style.display = i === _obSlide ? 'block' : 'none';
-    if (i === 3 && i === _obSlide) { s.style.display = 'flex'; }
-  });
-  const dots = document.querySelectorAll('.ob-dot');
-  dots.forEach((d, i) => {
-    d.classList.toggle('ob-dot-active', i === _obSlide);
-  });
+  slides.forEach((s, i) => s.style.display = i === _obSlide ? 'block' : 'none');
+
+  // Progress bar
+  const pct = Math.round((_obSlide + 1) / _OB_TOTAL * 100);
+  const bar = document.getElementById('ob-progress-bar');
+  if (bar) bar.style.width = pct + '%';
+
+  // Step label
+  const lbl = document.getElementById('ob-step-label');
+  if (lbl) lbl.textContent = `Шаг ${_obSlide + 1} из ${_OB_TOTAL}`;
+
+  // Bottom button
+  const bottom = document.getElementById('ob-bottom');
   const btn = document.getElementById('ob-next-btn');
-  if (btn) btn.textContent = _OB_LABELS[_obSlide];
+  if (_obSlide === _OB_TOTAL - 1) {
+    if (bottom) bottom.style.display = 'none'; // step 5 has its own buttons
+  } else {
+    if (bottom) bottom.style.display = 'block';
+    if (btn) btn.textContent = _obSlide === 3 ? 'Продолжить →' : 'Далее →';
+  }
 }
 
 // ── GENDER SELECTOR ───────────────────────────────────────────────────────────
