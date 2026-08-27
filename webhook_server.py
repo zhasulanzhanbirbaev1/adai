@@ -299,6 +299,31 @@ async def api_settings(user_id: int = Depends(_get_uid)):
     user = get_user(user_id)
     fb   = get_fb_token(user_id)
     sub  = get_active_subscription(user_id)
+
+    instagram = None
+    if fb:
+        try:
+            async with httpx.AsyncClient(timeout=6) as client:
+                r = await client.get(
+                    "https://graph.facebook.com/v19.0/me/accounts",
+                    params={
+                        "access_token": fb["access_token"],
+                        "fields": "id,name,instagram_business_account{id,username,profile_picture_url}",
+                    },
+                )
+                pages = r.json().get("data", [])
+                for page in pages:
+                    ig = page.get("instagram_business_account")
+                    if ig:
+                        instagram = {
+                            "username": ig.get("username"),
+                            "profile_picture_url": ig.get("profile_picture_url"),
+                            "page_name": page.get("name"),
+                        }
+                        break
+        except Exception:
+            pass
+
     return {
         "user": {"id": user["id"], "first_name": user["first_name"],
                  "username": user["username"], "target_cpl": user["target_cpl"],
@@ -307,6 +332,7 @@ async def api_settings(user_id: int = Depends(_get_uid)):
         "facebook": {"connected": fb is not None,
                      "ad_account_id": fb["ad_account_id"] if fb else None,
                      "connected_at": fb["connected_at"][:10] if fb else None},
+        "instagram": instagram,
         "subscription": {"active": sub is not None or is_trial_active(user_id),
                          "plan": sub["plan"] if sub else "trial",
                          "expires": sub["expires_at"][:10] if sub else None,
