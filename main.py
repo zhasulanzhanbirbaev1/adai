@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import uvicorn
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,53 +16,65 @@ logger = logging.getLogger(__name__)
 PORT = int(os.getenv("PORT", 8000))
 BASE_URL = os.getenv("BASE_URL", "").rstrip("/")
 
+_bot_app_global = None
+_scheduler_global = None
 
-async def main():
+
+@asynccontextmanager
+async def lifespan(app):
+    global _bot_app_global, _scheduler_global
+
     from database import init_db
     from bot import build_app
     from ai_manager import build_scheduler
-    from webhook_server import app as web_app, set_bot_app
+    from webhook_server import set_bot_app
 
     init_db()
+    logger.info("DB initialized")
 
-    bot_app = build_app()
-    set_bot_app(bot_app)
-    scheduler = build_scheduler(bot_app.bot)
+    try:
+        bot_app = build_app()
+        set_bot_app(bot_app)
+        _bot_app_global = bot_app
 
-    await bot_app.initialize()
-    await bot_app.start()
-    scheduler.start()
-    logger.info("Bot and scheduler started")
+        await bot_app.initialize()
+        await bot_app.start()
+        logger.info("Bot started")
 
-    if BASE_URL:
-        try:
+        scheduler = build_scheduler(bot_app.bot)
+        scheduler.start()
+        _scheduler_global = scheduler
+        logger.info("Scheduler started")
+
+        if BASE_URL:
             await bot_app.bot.set_webhook(
                 f"{BASE_URL}/webhook",
                 drop_pending_updates=True,
                 allowed_updates=["message", "callback_query", "inline_query"],
             )
-            logger.info("Webhook registered: %s/webhook", BASE_URL)
-        except Exception as e:
-            logger.error("Webhook registration failed: %s", e)
+            logger.info("Webhook: %s/webhook", BASE_URL)
 
-    config = uvicorn.Config(web_app, host="0.0.0.0", port=PORT, log_level="info")
-    server = uvicorn.Server(config)
+    except Exception as e:
+        logger.error("Bot startup error: %s", e, exc_info=True)
 
-    try:
-        await server.serve()
-    finally:
-        logger.info("Shutting down...")
-        scheduler.shutdown(wait=False)
+    yield  # server runs here
+
+    logger.info("Shutting down...")
+    if _scheduler_global:
         try:
-            await bot_app.bot.delete_webhook()
+            _scheduler_global.shutdown(wait=False)
         except Exception:
             pass
-        await bot_app.stop()
-        await bot_app.shutdown()
+    if _bot_app_global:
+        try:
+            await _bot_app_global.bot.delete_webhook()
+            await _bot_app_global.stop()
+            await _bot_app_global.shutdown()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        logger.info("Stopped.")
+    from webhook_server import app
+    app.router.lifespan_context = lifespan
+    uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="info")
