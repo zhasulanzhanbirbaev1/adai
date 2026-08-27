@@ -950,8 +950,12 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
 
   <!-- Action buttons -->
   <div style="width:100%;padding:12px 16px 24px;display:flex;flex-direction:column;gap:10px">
+    <button id="bv-launch-btn" onclick="bvLaunchAd()"
+      style="width:100%;padding:15px;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);border:none;color:#fff;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">
+      🚀 Запустить рекламу
+    </button>
     <button id="bv-select-btn" onclick="bvSelectThis()"
-      style="width:100%;padding:15px;background:#2563EB;border:none;color:#fff;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">
+      style="width:100%;padding:13px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer">
       ✅ Выбрать этот баннер
     </button>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -1988,16 +1992,15 @@ async function launchCampaign() {
   const status = document.getElementById('launch-status');
   const niche  = document.getElementById('gen-niche').value.trim();
 
-  if (!_lastGeneratedBanners.length) { alert('Сначала создайте баннер'); return; }
-
   const selectedImg = (() => {
     const sel = document.querySelector('#gen-banners .banner-preview.selected img');
     if (sel) return sel.src;
     const first = document.querySelector('#gen-banners .banner-preview img');
-    return first ? first.src : _lastGeneratedBanners[0]?.image;
+    if (first) return first.src;
+    return _lastGeneratedBanners[_bvIdx]?.image || _lastGeneratedBanners[0]?.image || null;
   })();
 
-  if (!selectedImg) { alert('Выберите баннер'); return; }
+  if (!selectedImg) { alert('Сначала выберите баннер из галереи или истории'); return; }
 
   const pageId = window._settings?.user?.fb_page_id || '';
   if (!pageId) {
@@ -2159,6 +2162,33 @@ function _bvRender() {
   const show = _lastGeneratedBanners.length > 1;
   document.getElementById('bv-prev').style.visibility = show ? 'visible' : 'hidden';
   document.getElementById('bv-next').style.visibility = show ? 'visible' : 'hidden';
+}
+
+function bvLaunchAd() {
+  const b = _lastGeneratedBanners[_bvIdx];
+  if (!b) { alert('Нет баннера'); return; }
+
+  closeBannerViewer();
+  navigate('marketolog');
+
+  // Show launch block immediately
+  const lb = document.getElementById('launch-block');
+  if (lb) lb.style.display = 'block';
+
+  // Pre-fill ad text if banner has copy
+  const to = b.text_overlay || {};
+  const bullets = to.bullets || b.bullets || [];
+  const adText = [to.hook_headline || '', ...bullets.map(x => '✓ ' + x)].filter(Boolean).join('\n\n');
+  const launchText = document.getElementById('launch-ad-text');
+  if (launchText && adText) launchText.value = adText;
+
+  // Pre-fill WhatsApp if saved
+  const wa = document.getElementById('launch-whatsapp');
+  if (wa && !wa.value) wa.value = window._settings?.user?.whatsapp || '';
+
+  setTimeout(() => {
+    if (lb) lb.scrollIntoView({ behavior: 'smooth' });
+  }, 150);
 }
 
 function bvSelectThis() {
