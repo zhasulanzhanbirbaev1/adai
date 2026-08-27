@@ -33,15 +33,60 @@ FB_REDIRECT   = f"{_BASE_URL}/fb/callback"
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Adai API", docs_url="/docs", redoc_url=None)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-
-_bot_app = None  # set by main.py before server starts
+_bot_app = None
 
 
 def set_bot_app(application):
     global _bot_app
     _bot_app = application
+
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def _lifespan(app):
+    """Start bot + scheduler inside FastAPI lifespan so they run with the server."""
+    import os as _os
+    _base_url = _os.getenv("BASE_URL", "").rstrip("/")
+    try:
+        from database import init_db
+        from bot import build_app
+        from ai_manager import build_scheduler
+        init_db()
+        bot = build_app()
+        set_bot_app(bot)
+        await bot.initialize()
+        await bot.start()
+        sched = build_scheduler(bot.bot)
+        sched.start()
+        if _base_url:
+            await bot.bot.set_webhook(
+                f"{_base_url}/webhook",
+                drop_pending_updates=True,
+                allowed_updates=["message", "callback_query", "inline_query"],
+            )
+            logger.info("Webhook registered: %s/webhook", _base_url)
+        logger.info("Bot + scheduler ready")
+    except Exception as exc:
+        logger.error("Bot startup failed (server still runs): %s", exc, exc_info=True)
+        sched = None
+        bot = None
+
+    yield
+
+    try:
+        if sched:
+            sched.shutdown(wait=False)
+        if bot:
+            await bot.bot.delete_webhook()
+            await bot.stop()
+            await bot.shutdown()
+    except Exception:
+        pass
+
+
+app = FastAPI(title="Adai API", docs_url="/docs", redoc_url=None, lifespan=_lifespan)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 # Temporary in-memory cache for banner file downloads (token → (bytes, label))
 import hashlib as _hashlib, time as _time
