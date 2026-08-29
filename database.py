@@ -8,10 +8,9 @@ load_dotenv()
 _DSN = os.getenv("DATABASE_URL", "")
 
 PLANS = {
-    "month_1": {"name": "1 месяц",  "days": 30,  "price_kzt": 30000,  "campaign_limit": 3},
-    "month_2": {"name": "Квартал",  "days": 90,  "price_kzt": 54000,  "campaign_limit": None},
-    "month_3": {"name": "Полгода",  "days": 180, "price_kzt": 80000,  "campaign_limit": None},
-    "month_6": {"name": "Год",      "days": 365, "price_kzt": 140000, "campaign_limit": None},
+    "month_1": {"name": "1 месяц",  "days": 30,  "price_kzt": 30000, "campaign_limit": None},
+    "month_2": {"name": "2 месяца", "days": 60,  "price_kzt": 60000, "campaign_limit": None},
+    "month_3": {"name": "3 месяца", "days": 90,  "price_kzt": 90000, "campaign_limit": None},
 }
 
 
@@ -529,7 +528,7 @@ def get_admin_stats() -> dict:
         trial   = conn.execute("SELECT COUNT(*) as c FROM users WHERE trial_ends_at > NOW()::TEXT").fetchone()["c"]
         camps   = conn.execute("SELECT COUNT(*) as c FROM campaigns WHERE active=1").fetchone()["c"]
         revenue = conn.execute(
-            "SELECT COALESCE(SUM(CASE plan WHEN 'month_1' THEN 30000 WHEN 'month_2' THEN 54000 WHEN 'month_3' THEN 80000 WHEN 'month_6' THEN 140000 ELSE 0 END),0) as r "
+            "SELECT COALESCE(SUM(CASE plan WHEN 'month_1' THEN 30000 WHEN 'month_2' THEN 60000 WHEN 'month_3' THEN 90000 ELSE 0 END),0) as r "
             "FROM subscriptions WHERE active=1 AND expires_at > NOW()::TEXT"
         ).fetchone()["r"]
     return {"total_users": total, "paying": paying, "trial": trial, "campaigns": camps, "mrr": revenue}

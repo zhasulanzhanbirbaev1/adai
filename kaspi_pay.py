@@ -10,16 +10,14 @@ load_dotenv()
 
 PLAN_PRICES_KZT = {
     "month_1": 30000,
-    "month_2": 54000,
-    "month_3": 80000,
-    "month_6": 140000,
+    "month_2": 60000,
+    "month_3": 90000,
 }
 
 PLAN_NAMES = {
-    "month_1": "like.ai — 1 месяц",
-    "month_2": "like.ai — 2 месяца",
-    "month_3": "like.ai — 3 месяца",
-    "month_6": "like.ai — 6 месяцев",
+    "month_1": "Adai — 1 месяц",
+    "month_2": "Adai — 2 месяца",
+    "month_3": "Adai — 3 месяца",
 }
 
 KASPI_MERCHANT_ID = os.getenv("KASPI_MERCHANT_ID", "")

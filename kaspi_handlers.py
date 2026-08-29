@@ -7,20 +7,19 @@ from kaspi_pay import PLAN_NAMES  # PLAN_PRICES_KZT и create_payment подкл
 
 async def show_plans(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
-        "💎 *like.ai — все функции включены*\n\n"
+        "💎 *Adai — все функции включены*\n\n"
         "✅ Безлимит кампаний\n"
-        "✅ Видео, фото, Reels реклама\n"
-        "✅ ИИ-автопилот 24/7\n"
-        "✅ Генерация баннеров\n"
+        "✅ AI генерация баннеров\n"
+        "✅ AI таргетолог 24/7\n"
+        "✅ Запуск рекламы в Facebook/Instagram\n"
         "✅ Ежедневный отчёт в Telegram\n"
-        "✅ Статистика кампаний\n\n"
+        "✅ Аналитика и статистика\n\n"
         "Выберите период подписки:"
     )
     keyboard = [
         [InlineKeyboardButton("1 месяц — 30 000 ₸", callback_data="kaspi_pay_month_1")],
-        [InlineKeyboardButton("2 месяца — 54 000 ₸ (−10%)", callback_data="kaspi_pay_month_2")],
-        [InlineKeyboardButton("3 месяца — 80 000 ₸ (−11%)", callback_data="kaspi_pay_month_3")],
-        [InlineKeyboardButton("6 месяцев — 140 000 ₸ (−22%) 💎", callback_data="kaspi_pay_month_6")],
+        [InlineKeyboardButton("2 месяца — 60 000 ₸", callback_data="kaspi_pay_month_2")],
+        [InlineKeyboardButton("3 месяца — 90 000 ₸", callback_data="kaspi_pay_month_3")],
     ]
     if update.callback_query:
         await update.callback_query.edit_message_text(
@@ -55,7 +54,7 @@ async def handle_pay_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"✅ *Отличный выбор!*\n\n"
         f"Тариф: *{plan_info['name']}*\n"
         f"Сумма: *{amount:,} ₸*\n\n"
-        f"Напишите мне — я выставлю счёт и активирую доступ вручную:\n\n"
+        f"Напишите нам — выставим счёт на Kaspi и активируем доступ:\n\n"
         f"📱 WhatsApp: +7 707 901 11 92\n"
         f"✈️ Telegram: @ZhasulanZhanbirbaev",
         parse_mode="Markdown",
