@@ -8,7 +8,7 @@ load_dotenv()
 _DSN = os.getenv("DATABASE_URL", "")
 
 PLANS = {
-    "month_1": {"name": "1 месяц",  "days": 30,  "price_kzt": 30000, "campaign_limit": None},
+    "month_1": {"name": "1 месяц",  "days": 30,  "price_kzt": 30000, "campaign_limit": 1},
     "month_2": {"name": "2 месяца", "days": 60,  "price_kzt": 60000, "campaign_limit": None},
     "month_3": {"name": "3 месяца", "days": 90,  "price_kzt": 90000, "campaign_limit": None},
 }

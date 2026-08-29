@@ -282,6 +282,14 @@ async def api_campaigns(user_id: int = Depends(_get_uid)):
 
 @app.post("/api/campaigns")
 async def api_create_campaign(request: Request, user_id: int = Depends(_get_uid)):
+    sub = get_active_subscription(user_id)
+    plan_key = sub["plan"] if sub else ("trial" if is_trial_active(user_id) else None)
+    plan_info = PLANS.get(plan_key, {})
+    limit = plan_info.get("campaign_limit")
+    if limit is not None:
+        existing = get_campaigns(user_id)
+        if len(existing) >= limit:
+            raise HTTPException(403, f"На тарифе «1 месяц» доступен {limit} рекламный кабинет. Повысьте тариф для добавления.")
     body = await request.json()
     cid = create_campaign(
         user_id,
