@@ -68,7 +68,7 @@ def create_fb_campaign(access_token: str, ad_account_id: str,
         "access_token": access_token,
         "name": name,
         "objective": objective,
-        "status": "PAUSED",
+        "status": "ACTIVE",
         "special_ad_categories": "[]",
     })
     data = resp.json()

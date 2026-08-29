@@ -172,6 +172,14 @@ async def health():
 async def serve_app():
     return FileResponse(os.path.join(os.path.dirname(__file__), "app.html"))
 
+@app.get("/privacy")
+async def serve_privacy():
+    return FileResponse(os.path.join(os.path.dirname(__file__), "privacy.html"))
+
+@app.get("/terms")
+async def serve_terms():
+    return FileResponse(os.path.join(os.path.dirname(__file__), "terms.html"))
+
 
 # в"Ђв"Ђ Manual Activation в"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђ
 

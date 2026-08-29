@@ -11,6 +11,7 @@ from database import (
     get_admin_stats, PLANS, save_fb_token, get_fb_token,
 )
 from launch_handler import build_launch_handler, build_launch_activate_handler
+from kaspi_handlers import show_plans, register_kaspi_handlers
 
 load_dotenv()
 BOT_TOKEN       = os.getenv("BOT_TOKEN", "").strip()
@@ -286,13 +287,15 @@ def build_app() -> Application:
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(build_launch_handler())
     app.add_handler(build_launch_activate_handler())
-    app.add_handler(CommandHandler("start",    cmd_start))
-    app.add_handler(CommandHandler("token",    cmd_token))
-    app.add_handler(CommandHandler("ailog",    cmd_ailog))
-    app.add_handler(CommandHandler("admin",    cmd_admin))
-    app.add_handler(CommandHandler("setup",    cmd_setup))
-    app.add_handler(CommandHandler("sync",     cmd_sync))
-    app.add_handler(CommandHandler("creative", cmd_creative))
+    app.add_handler(CommandHandler("start",     cmd_start))
+    app.add_handler(CommandHandler("token",     cmd_token))
+    app.add_handler(CommandHandler("ailog",     cmd_ailog))
+    app.add_handler(CommandHandler("admin",     cmd_admin))
+    app.add_handler(CommandHandler("setup",     cmd_setup))
+    app.add_handler(CommandHandler("sync",      cmd_sync))
+    app.add_handler(CommandHandler("creative",  cmd_creative))
+    app.add_handler(CommandHandler("subscribe", show_plans))
+    register_kaspi_handlers(app)
     app.add_handler(MessageHandler(filters.PHOTO, handle_creative_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_menu_buttons))
     return app

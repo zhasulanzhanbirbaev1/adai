@@ -245,6 +245,12 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
 .dir-add-card{border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:150px;color:var(--muted);font-size:13px;font-weight:500}
 .dir-add-card:hover{border-color:var(--accent);color:var(--accent)}
 
+/* PLAN CARDS */
+.plan-card{background:var(--surface);border:2px solid var(--border);border-radius:16px;padding:18px 20px;cursor:pointer;transition:border-color .2s,background .2s,transform .15s}
+.plan-card:hover{border-color:rgba(99,102,241,.5);transform:translateY(-1px)}
+.plan-card.selected{border-color:var(--accent);background:rgba(99,102,241,.08)}
+.plan-popular{border-color:rgba(99,102,241,.4)}
+
 /* EMPTY */
 .empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
 .empty-state .empty-icon{font-size:44px;margin-bottom:14px;opacity:.4}
@@ -358,6 +364,9 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
   </a>
   <a class="bn-item" data-page="history" onclick="navigate('history')">
     <span class="bn-icon">🗂</span><span class="bn-label">История</span>
+  </a>
+  <a class="bn-item" data-page="subscribe" onclick="navigate('subscribe')">
+    <span class="bn-icon">💎</span><span class="bn-label">Тариф</span>
   </a>
   <a class="bn-item" data-page="settings" onclick="navigate('settings')">
     <span class="bn-icon">⚙️</span><span class="bn-label">Настройки</span>
@@ -758,6 +767,79 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
           <div id="history-list">
             <div style="text-align:center;color:var(--muted);padding:40px 0;font-size:14px">Загрузка...</div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ ПОДПИСКА ══════════════ -->
+    <div class="page" id="page-subscribe">
+      <div style="max-width:560px;margin:0 auto">
+
+        <div id="sub-current-block" style="margin-bottom:24px"></div>
+
+        <div style="text-align:center;margin-bottom:28px">
+          <div style="font-size:32px;margin-bottom:8px">🚀</div>
+          <div style="font-size:22px;font-weight:800;margin-bottom:6px">Выберите тариф</div>
+          <div style="color:var(--muted);font-size:14px">Все тарифы включают полный доступ к AI генерации баннеров, запуску рекламы и аналитике</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px">
+
+          <div class="plan-card" data-plan="month_1" onclick="selectPlan('month_1')">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:17px;font-weight:700">1 месяц</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:3px">1 рекламный кабинет</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:22px;font-weight:800;color:var(--accent2)">30 000 ₸</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="plan-card plan-popular" data-plan="month_2" onclick="selectPlan('month_2')">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:17px;font-weight:700">2 месяца <span style="font-size:11px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:50px;margin-left:6px;vertical-align:middle">Популярный</span></div>
+                <div style="font-size:12px;color:var(--muted);margin-top:3px">Без лимитов · 30 000 ₸/мес</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:22px;font-weight:800;color:var(--accent2)">60 000 ₸</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="plan-card" data-plan="month_3" onclick="selectPlan('month_3')">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:17px;font-weight:700">3 месяца</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:3px">Без лимитов · 30 000 ₸/мес</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:22px;font-weight:800;color:var(--accent2)">90 000 ₸</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:24px">
+          <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.4px">Все тарифы включают</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="color:var(--green)">✓</span> AI генерация рекламных баннеров</div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="color:var(--green)">✓</span> Запуск рекламы в Facebook и Instagram</div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="color:var(--green)">✓</span> AI таргетолог — мониторинг 24/7</div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="color:var(--green)">✓</span> Ежедневные отчёты в Telegram</div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="color:var(--green)">✓</span> Аналитика и статистика кампаний</div>
+          </div>
+        </div>
+
+        <button id="sub-pay-btn" class="btn btn-primary" style="width:100%;padding:16px;font-size:16px;border-radius:14px;justify-content:center" onclick="paySelected()">
+          Оплатить через Kaspi
+        </button>
+        <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:12px">
+          После оплаты напишите нам — активируем в течение часа<br>
+          <a href="https://wa.me/77079011192" style="color:var(--accent)">WhatsApp</a> ·
+          <a href="https://t.me/ZhasulanZhanbirbaev" style="color:var(--accent)">Telegram</a>
         </div>
       </div>
     </div>
@@ -1378,7 +1460,7 @@ const PAGE_TITLES = {
   dashboard:'Дашборд', campaigns:'Кампании', directions:'Направления',
   targetolog:'AI Таргетолог', marketolog:'AI Маркетолог',
   analytics:'Аналитика', settings:'Настройки',
-  history:'История', help:'Инструкция'
+  history:'История', help:'Инструкция', subscribe:'Тариф и оплата'
 };
 
 // Navigation stack for back button
@@ -1429,6 +1511,59 @@ function loadPage(page) {
   if (page==='settings')    loadSettings();
   if (page==='history')     loadHistory();
   if (page==='marketolog')  loadStudio();
+  if (page==='subscribe')   loadSubscribe();
+}
+
+// ── SUBSCRIBE PAGE ─────────────────────────────────────────────────────────────
+const PLAN_PRICES = { month_1: 30000, month_2: 60000, month_3: 90000 };
+const PLAN_LABELS = { month_1: '1 месяц', month_2: '2 месяца', month_3: '3 месяца' };
+let _selectedPlan = 'month_2';
+
+function loadSubscribe() {
+  selectPlan(_selectedPlan);
+  const sub = window._currentSub || {};
+  const block = document.getElementById('sub-current-block');
+  if (sub.active && sub.plan !== 'trial') {
+    block.innerHTML = `
+      <div style="background:rgba(16,217,160,.08);border:1px solid rgba(16,217,160,.2);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:22px">✅</span>
+        <div>
+          <div style="font-weight:700;font-size:14px">Подписка активна: ${PLAN_LABELS[sub.plan]||sub.plan}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Действует до ${sub.expires||'—'}</div>
+        </div>
+      </div>`;
+  } else if (sub.active && sub.plan === 'trial') {
+    block.innerHTML = `
+      <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:22px">🎁</span>
+        <div>
+          <div style="font-weight:700;font-size:14px">Пробный период активен</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Выберите тариф для продолжения работы</div>
+        </div>
+      </div>`;
+  } else {
+    block.innerHTML = '';
+  }
+}
+
+function selectPlan(plan) {
+  _selectedPlan = plan;
+  document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`[data-plan="${plan}"]`)?.classList.add('selected');
+  const price = PLAN_PRICES[plan] || 0;
+  document.getElementById('sub-pay-btn').textContent = `Оплатить ${price.toLocaleString('ru')} ₸ через Kaspi`;
+}
+
+function paySelected() {
+  const plan = _selectedPlan;
+  const price = PLAN_PRICES[plan];
+  const label = PLAN_LABELS[plan];
+  const msg = encodeURIComponent(`Хочу оплатить Adai — ${label} — ${price.toLocaleString('ru')} ₸`);
+  if (window.Telegram?.WebApp) {
+    Telegram.WebApp.openLink(`https://wa.me/77079011192?text=${msg}`);
+  } else {
+    window.open(`https://wa.me/77079011192?text=${msg}`, '_blank');
+  }
 }
 
 function loadStudio() {
@@ -1506,6 +1641,7 @@ async function loadDashboard() {
 
   // Status
   const sub = data.subscription || {};
+  window._currentSub = sub;
   const badge = document.getElementById('statusBadge');
   if (sub.active && sub.plan==='trial') {
     badge.className='status-badge status-trial'; badge.textContent='🟡 Пробный период';

@@ -116,7 +116,7 @@ async def _show_final_preview(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"• Пол: {d.get('gender') or 'все'}\n"
         f"• Бюджет: {budget:.0f} ₸/день\n"
         f"• WhatsApp: {d.get('whatsapp_number') or '—'}\n"
-        f"• Статус после создания: PAUSED\n\n"
+        f"• Статус: запустится сразу после создания\n\n"
         f"*Текст:*\n{ad_text[:300]}{'…' if len(ad_text) > 300 else ''}"
     )
     kb = _ik(
