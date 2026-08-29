@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse, FileResponse, HTMLResponse, Redirect
 from dotenv import load_dotenv
 
 from database import (
-    activate_subscription, get_user, PLANS,
+    activate_subscription, get_user, create_user, PLANS,
     get_campaigns, create_campaign, toggle_campaign,
     get_fb_token, save_fb_token,
     get_user_stats_summary, get_ai_log, get_today_ai_log,
@@ -153,7 +153,7 @@ async def _notify_photo(user_id: int, img_bytes: bytes, caption: str = ""):
 
 def _get_uid(user_id: int = Query(..., description="Telegram user ID")) -> int:
     if not get_user(user_id):
-        raise HTTPException(404, "User not found")
+        create_user(user_id, "", "")
     return user_id
 
 
