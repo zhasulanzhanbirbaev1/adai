@@ -157,11 +157,34 @@ async def generate_dalle_image(prompt: str, size: str = "1024x1024") -> bytes:
     if not client:
         raise RuntimeError("OPENAI_API_KEY not set")
     import base64 as _b64
+    import logging as _log
+    _logger = _log.getLogger(__name__)
+
+    # Try gpt-image-1 (requires special OpenAI org access)
+    try:
+        response = await client.images.generate(
+            model="gpt-image-1",
+            prompt=prompt,
+            size=size,
+            quality="medium",
+            n=1,
+        )
+        return _b64.b64decode(response.data[0].b64_json)
+    except Exception as _e:
+        _logger.warning("gpt-image-1 failed (%s), falling back to dall-e-3", _e)
+
+    # Fallback: dall-e-3 (portrait 1024x1792, square 1024x1024)
+    try:
+        parts = size.split("x")
+        dalle_size = "1024x1792" if len(parts) == 2 and int(parts[0]) < int(parts[1]) else "1024x1024"
+    except Exception:
+        dalle_size = "1024x1024"
     response = await client.images.generate(
-        model="gpt-image-1",
+        model="dall-e-3",
         prompt=prompt,
-        size=size,
-        quality="medium",
+        size=dalle_size,
+        quality="standard",
+        response_format="b64_json",
         n=1,
     )
     return _b64.b64decode(response.data[0].b64_json)

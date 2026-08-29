@@ -947,6 +947,7 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
         raise HTTPException(500, "AI не вернул концепции, попробуйте ещё раз")
 
     # ── Step 2: Get images (user photo OR generate 3 in parallel) ──────────
+    _last_img_error: list = []
     if image_b64:
         # User uploaded their own photo — use it for all 3 variants
         try:
@@ -955,11 +956,13 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
             raise HTTPException(400, f"Неверный формат изображения: {e}")
     else:
         # Generate 3 unique images in parallel (one per concept)
+
         async def _gen_img(prompt: str):
             try:
                 return await generate_dalle_image(prompt, size="1024x1536")
             except Exception as ex:
                 logger.error("Image gen error: %s", ex)
+                _last_img_error.append(str(ex))
                 return None
 
         results = await _asyncio.gather(*[_gen_img(v["image_prompt_en"]) for v in variants])
@@ -999,7 +1002,8 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
             logger.error("Banner compose error variant %d: %s", i, e)
 
     if not banners:
-        raise HTTPException(500, "Не удалось создать ни одного баннера")
+        err_detail = _last_img_error[0] if _last_img_error else "неизвестная ошибка генерации изображений"
+        raise HTTPException(500, f"Не удалось создать баннеры: {err_detail}")
 
     # ── Step 4: Instagram copy + audience ──────────────────────────────────
     try:
