@@ -37,22 +37,47 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     webapp_url = f"{WEBAPP_URL}?user_id={user.id}" if WEBAPP_URL else None
 
-    text = (
-        f"👋 Привет, *{user.first_name}*!\n\n"
-        "Я *Adai* — ИИ-маркетолог для рекламы в Instagram и Facebook.\n\n"
-        "🎨 Генерирую рекламные баннеры под твой бизнес\n"
-        "🎯 Запускаю таргетированные кампании в Facebook Ads\n"
-        "📊 Слежу за результатами и оптимизирую бюджет\n"
-        "🤖 Работаю автоматически — ты только смотришь на лиды\n\n"
-        "🎁 *10 бесплатных генераций уже активированы*\n\n"
-        "Нажми кнопку и начни прямо сейчас 👇"
+    # ── Экран 1: кто мы ──────────────────────────────────────────────────────
+    intro = (
+        f"👋 *{user.first_name}, привет!*\n\n"
+        "Я — *Adai*, ваш персональный ИИ-маркетолог.\n\n"
+        "Помогаю малому бизнесу в Казахстане запускать рекламу "
+        "в Facebook и Instagram — быстро, дёшево и без таргетолога.\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "🎨 *Генерация баннеров*\n"
+        "3 профессиональных варианта под ваш бизнес за 30 секунд. "
+        "Текст, дизайн, подпись к посту — всё включено.\n\n"
+        "🚀 *Запуск рекламы*\n"
+        "Подключаете Facebook Ads — я сам создаю кампанию, "
+        "настраиваю аудиторию и запускаю. Никаких настроек вручную.\n\n"
+        "📊 *Умный мониторинг*\n"
+        "ИИ проверяет кампании каждые 6 часов: останавливает "
+        "убыточные, масштабирует рабочие. Вы только получаете лиды.\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "*Для кого:*\n"
+        "Стоматологии · Автосервисы · Салоны красоты · Кофейни "
+        "· Фитнес · Автосалоны · Онлайн-школы · Цветочные\n\n"
+        "💰 *Тарифы:* от 30 000 ₸/мес\n"
+        "🎁 *Вам активированы 10 бесплатных генераций баннеров*\n\n"
+        "Нажмите кнопку ниже и начните прямо сейчас 👇"
     )
 
-    kb = InlineKeyboardMarkup([[
-        InlineKeyboardButton("🚀 Открыть Adai", web_app=WebAppInfo(url=webapp_url))
-    ]]) if webapp_url else None
+    buttons = []
+    if webapp_url:
+        buttons.append([InlineKeyboardButton("🚀 Открыть Adai", web_app=WebAppInfo(url=webapp_url))])
+    buttons.append([
+        InlineKeyboardButton("💎 Тарифы", callback_data="start_plans"),
+        InlineKeyboardButton("📞 Поддержка", url="https://wa.me/77079011192"),
+    ])
+    kb = InlineKeyboardMarkup(buttons)
 
-    await update.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
+    await update.message.reply_text(intro, parse_mode="Markdown", reply_markup=kb)
+
+
+async def cb_start_plans(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Кнопка 'Тарифы' из /start — показываем планы."""
+    await update.callback_query.answer()
+    await show_plans(update, context)
 
 
 async def cmd_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -296,6 +321,7 @@ def build_app() -> Application:
     app.add_handler(CommandHandler("creative",  cmd_creative))
     app.add_handler(CommandHandler("subscribe", show_plans))
     register_kaspi_handlers(app)
+    app.add_handler(CallbackQueryHandler(cb_start_plans, pattern="^start_plans$"))
     app.add_handler(MessageHandler(filters.PHOTO, handle_creative_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_menu_buttons))
     return app
