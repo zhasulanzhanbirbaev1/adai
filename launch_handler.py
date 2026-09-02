@@ -122,7 +122,10 @@ async def _show_final_preview(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"💰 *Бюджет: {budget:,.0f} ₸ / день*\n"
         f"━━━━━━━━━━━━━━━━━━\n\n"
         f"📝 *Текст объявления:*\n{ad_text[:350]}{'…' if len(ad_text) > 350 else ''}\n\n"
-        f"⚠️ Реклама запустится сразу после нажатия кнопки."
+        f"⚠️ После запуска Facebook начнёт списывать *{budget:,.0f} ₸/день* "
+        f"с карты вашего рекламного кабинета.\n"
+        f"Убедитесь что карта добавлена в [Facebook Ads]"
+        f"(https://business.facebook.com/billing/payment_methods)."
     )
     kb = _ik(
         [("✅ Утвердить и запустить", "launch_go:create")],
@@ -377,15 +380,20 @@ async def launch_ad_text_selected(update: Update, context: ContextTypes.DEFAULT_
 
     # action == "use"
     direction = context.user_data["launch"]["direction"]
-    budget = float(direction.get("daily_budget") or 5000)
+    budget = float(direction.get("daily_budget") or 1000)
     context.user_data["launch"]["daily_budget"] = budget
     kb = _ik(
-        [("✅ Да", "launch_bud:yes")],
-        [("✏️ Изменить", "launch_bud:edit")],
+        [("500 ₸/день", "launch_bud:500"),   ("1 000 ₸/день", "launch_bud:1000")],
+        [("2 000 ₸/день", "launch_bud:2000"), ("5 000 ₸/день", "launch_bud:5000")],
+        [("✏️ Ввести свой", "launch_bud:edit")],
         [("❌ Отмена", "launch_bud:cancel")],
     )
     await q.edit_message_text(
-        f"💰 Дневной бюджет: *{budget:.0f} ₸/день*. Запускать с этим?",
+        f"💰 *Выберите дневной бюджет:*\n\n"
+        f"Текущий: *{budget:,.0f} ₸/день*\n\n"
+        f"⚡️ Минимум Facebook — 500 ₸/день (~$1)\n"
+        f"💡 Рекомендуем стартовать с 1 000–2 000 ₸ для теста\n\n"
+        f"💳 Списывается напрямую с карты вашего Facebook кабинета",
         parse_mode="Markdown",
         reply_markup=kb,
     )
@@ -403,18 +411,31 @@ async def launch_budget_selected(update: Update, context: ContextTypes.DEFAULT_T
         return ConversationHandler.END
 
     if action == "edit":
-        await q.edit_message_text("Введи бюджет числом (от 1 000 до 100 000):")
+        await q.edit_message_text(
+            "✏️ Введи дневной бюджет в тенге:\n\n"
+            "Минимум: *500 ₸* (минимум Facebook)\n"
+            "Максимум: *100 000 ₸*",
+            parse_mode="Markdown",
+        )
         return LAUNCH_WAIT_BUDGET_INPUT
 
+    # Preset buttons: 500, 1000, 2000, 5000
+    try:
+        context.user_data["launch"]["daily_budget"] = float(action)
+    except ValueError:
+        pass
     return await _show_final_preview(update, context)
 
 
 async def launch_wait_budget_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     try:
-        val = int(update.message.text.strip())
-        assert 1000 <= val <= 100_000
+        val = int(update.message.text.strip().replace(" ", "").replace(",", ""))
+        assert 500 <= val <= 100_000
     except (ValueError, AssertionError):
-        await update.message.reply_text("Введи число от 1 000 до 100 000.")
+        await update.message.reply_text(
+            "⚠️ Введи число от *500* до *100 000* ₸.",
+            parse_mode="Markdown",
+        )
         return LAUNCH_WAIT_BUDGET_INPUT
 
     context.user_data["launch"]["daily_budget"] = float(val)
@@ -478,7 +499,8 @@ async def launch_final_selected(update: Update, context: ContextTypes.DEFAULT_TY
             f"🎯 *Реклама создана и ждёт запуска*\n\n"
             f"📁 {d['name']}\n"
             f"💰 Бюджет: *{budget:,.0f} ₸/день*\n\n"
-            f"Нажми кнопку ниже чтобы запустить — деньги начнут списываться с Facebook кабинета.\n\n"
+            f"Деньги списываются с карты вашего Facebook кабинета.\n"
+            f"Нет карты? [Добавьте здесь](https://business.facebook.com/billing/payment_methods)\n\n"
             f"[Проверить в Ads Manager]({url})"
         )
         kb = InlineKeyboardMarkup([[
