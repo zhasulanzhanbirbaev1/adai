@@ -101,26 +101,32 @@ async def _ask_ad_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
 
 async def _show_final_preview(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Show summary before FB launch. Returns LAUNCH_FINAL_PREVIEW."""
+    """Show approval screen before FB launch. Returns LAUNCH_FINAL_PREVIEW."""
     chat_id = update.effective_chat.id
     d = context.user_data["launch"]["direction"]
     budget = context.user_data["launch"]["daily_budget"]
     ad_text = context.user_data["launch"]["ad_text"]
 
+    gender_map = {"male": "👨 Мужчины", "female": "👩 Женщины", "all": "👥 Все"}
+    gender_str = gender_map.get(d.get("gender", "all"), "👥 Все")
+
     text = (
-        f"📋 *Готов к запуску:*\n"
-        f"• Направление: {d['name']}\n"
-        f"• Ниша: {d.get('niche') or '—'}\n"
-        f"• Гео: {d.get('geo') or 'Казахстан'}\n"
-        f"• Возраст: {d.get('age_min') or 25}–{d.get('age_max') or 55}\n"
-        f"• Пол: {d.get('gender') or 'все'}\n"
-        f"• Бюджет: {budget:.0f} ₸/день\n"
-        f"• WhatsApp: {d.get('whatsapp_number') or '—'}\n"
-        f"• Статус: запустится сразу после создания\n\n"
-        f"*Текст:*\n{ad_text[:300]}{'…' if len(ad_text) > 300 else ''}"
+        f"✅ *Утвердите рекламу перед запуском*\n\n"
+        f"━━━━━━━━━━━━━━━━━━\n"
+        f"📁 *Направление:* {d['name']}\n"
+        f"🗂 *Ниша:* {d.get('niche') or '—'}\n"
+        f"📍 *Гео:* {d.get('geo') or 'Казахстан'}\n"
+        f"🎯 *Аудитория:* {gender_str}, {d.get('age_min') or 25}–{d.get('age_max') or 55} лет\n"
+        f"📱 *WhatsApp:* {d.get('whatsapp_number') or '—'}\n"
+        f"━━━━━━━━━━━━━━━━━━\n"
+        f"💰 *Бюджет: {budget:,.0f} ₸ / день*\n"
+        f"━━━━━━━━━━━━━━━━━━\n\n"
+        f"📝 *Текст объявления:*\n{ad_text[:350]}{'…' if len(ad_text) > 350 else ''}\n\n"
+        f"⚠️ Реклама запустится сразу после нажатия кнопки."
     )
     kb = _ik(
-        [("🚀 Создать в Facebook", "launch_go:create")],
+        [("✅ Утвердить и запустить", "launch_go:create")],
+        [("✏️ Изменить бюджет", "launch_go:edit_budget")],
         [("❌ Отмена", "launch_go:cancel")],
     )
     await context.bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=kb)
@@ -425,6 +431,11 @@ async def launch_final_selected(update: Update, context: ContextTypes.DEFAULT_TY
         context.user_data.pop("launch", None)
         return ConversationHandler.END
 
+    if action == "edit_budget":
+        await q.edit_message_text("✏️ Введи новый дневной бюджет (от 1 000 до 100 000 ₸):")
+        return LAUNCH_WAIT_BUDGET_INPUT
+
+    # action == "create" — user approved
     await q.edit_message_text("⏳ Создаю кампанию в Facebook…")
     chat_id = update.effective_chat.id
     uid = update.effective_user.id
@@ -441,7 +452,7 @@ async def launch_final_selected(update: Update, context: ContextTypes.DEFAULT_TY
         campaign_id = await asyncio.to_thread(
             fb.create_fb_campaign,
             fb_token["access_token"], fb_token["ad_account_id"],
-            f"AI-Launch / {d['name']}", "MESSAGES",
+            f"Adai / {d['name']}", "MESSAGES",
         )
         adset_id = await asyncio.to_thread(
             fb.create_fb_adset,
@@ -464,14 +475,17 @@ async def launch_final_selected(update: Update, context: ContextTypes.DEFAULT_TY
             f"?act={account_num}&selected_campaign_ids={campaign_id}"
         )
         msg = (
-            f"✅ *Кампания создана (PAUSED)*\n\n"
-            f"Campaign ID: `{campaign_id}`\n"
-            f"AdSet ID: `{adset_id}`\n"
-            f"Ad ID: `{ad_id}`\n\n"
-            f"[Открыть в Ads Manager]({url})"
+            f"🎯 *Реклама создана и ждёт запуска*\n\n"
+            f"📁 {d['name']}\n"
+            f"💰 Бюджет: *{budget:,.0f} ₸/день*\n\n"
+            f"Нажми кнопку ниже чтобы запустить — деньги начнут списываться с Facebook кабинета.\n\n"
+            f"[Проверить в Ads Manager]({url})"
         )
         kb = InlineKeyboardMarkup([[
-            InlineKeyboardButton("▶️ Запустить (ACTIVE)", callback_data=f"launch_act:{campaign_id}"),
+            InlineKeyboardButton(
+                f"▶️ Запустить рекламу — {budget:,.0f} ₸/день",
+                callback_data=f"launch_act:{campaign_id}:{adset_id}",
+            ),
         ]])
         await context.bot.send_message(chat_id, msg, parse_mode="Markdown", reply_markup=kb)
 
@@ -484,19 +498,29 @@ async def launch_final_selected(update: Update, context: ContextTypes.DEFAULT_TY
 
 
 async def launch_activate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Standalone handler (outside ConversationHandler) to activate a PAUSED campaign."""
+    """Activate campaign + adset. callback_data = launch_act:{campaign_id}:{adset_id}"""
     q = update.callback_query
     await q.answer()
-    campaign_id = q.data.split(":", 1)[1]
+    parts = q.data.split(":")
+    campaign_id = parts[1]
+    adset_id = parts[2] if len(parts) > 2 else None
     uid = update.effective_user.id
     fb_token = db.get_fb_token(uid)
     if not fb_token:
         await q.edit_message_text("FB-токен не найден.")
         return
     try:
-        await asyncio.to_thread(fb.set_campaign_status, fb_token["access_token"], campaign_id, "ACTIVE")
+        await asyncio.to_thread(
+            fb.set_campaign_status, fb_token["access_token"], campaign_id, "ACTIVE"
+        )
+        if adset_id:
+            await asyncio.to_thread(
+                fb.set_campaign_status, fb_token["access_token"], adset_id, "ACTIVE"
+            )
         await q.edit_message_text(
-            f"▶️ *Кампания запущена (ACTIVE)*\n\nID: `{campaign_id}`",
+            f"▶️ *Реклама запущена!*\n\n"
+            f"Кампания и группа объявлений переведены в ACTIVE.\n"
+            f"Facebook начнёт показывать рекламу в течение нескольких минут.",
             parse_mode="Markdown",
         )
     except Exception as e:
