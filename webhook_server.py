@@ -525,23 +525,149 @@ async def api_save_profile(request: Request, user_id: int = Depends(_get_uid)):
 
 # в"Ђв"Ђ Facebook OAuth в"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђ
 
+_BOT_LINK = "https://t.me/AdaikZ_bot"
+
 _FB_SUCCESS_TMPL = """<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>*{box-sizing:border-box}body{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px}.card{background:#0f172a;border:1px solid #1e293b;border-radius:20px;padding:40px 32px;text-align:center;max-width:400px;width:100%}.icon{font-size:64px;margin-bottom:16px}.title{font-size:24px;font-weight:700;margin-bottom:10px}.sub{color:#64748b;font-size:15px;line-height:1.7;margin-bottom:28px}.btn{display:block;background:linear-gradient(135deg,#2481cc,#1a6aad);color:#fff;font-weight:700;font-size:16px;padding:16px 28px;border-radius:14px;text-decoration:none;transition:opacity .2s}.btn:hover{opacity:.9}.hint{margin-top:16px;font-size:12px;color:#374151}</style>
-<script>
-  // Try to open Telegram automatically on mobile
-  setTimeout(function(){
-    try { window.location.href = 'https://t.me/zhasclaude_bot'; } catch(e){}
-  }, 1800);
-</script>
+<style>*{box-sizing:border-box}body{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px}.card{background:#0f172a;border:1px solid #1e293b;border-radius:20px;padding:40px 32px;text-align:center;max-width:400px;width:100%}.icon{font-size:64px;margin-bottom:16px}.title{font-size:24px;font-weight:700;margin-bottom:10px}.sub{color:#64748b;font-size:15px;line-height:1.7;margin-bottom:28px}.btn{display:block;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;font-weight:700;font-size:16px;padding:16px 28px;border-radius:14px;text-decoration:none;transition:opacity .2s}.btn:hover{opacity:.9}.hint{margin-top:16px;font-size:12px;color:#374151}</style>
+<script>setTimeout(function(){try{window.location.href='https://t.me/AdaikZ_bot';}catch(e){}},2000);</script>
 </head>
 <body><div class="card">
   <div class="icon">✅</div>
   <div class="title">Facebook подключён!</div>
-  <div class="sub">Кампании синхронизированы.<br>Telegram уже прислал уведомление — откройте его и нажмите <b>«Открыть кабинет»</b>.</div>
-  <a class="btn" href="https://t.me/zhasclaude_bot">Вернуться в Telegram →</a>
+  <div class="sub">Кампании синхронизированы.<br>Telegram уже прислал уведомление — нажмите <b>«Открыть кабинет»</b>.</div>
+  <a class="btn" href="https://t.me/AdaikZ_bot">Вернуться в Telegram →</a>
   <div class="hint">Страница автоматически перейдёт через 2 секунды</div>
 </div></body></html>"""
+
+_FB_SELECT_HTML = """<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Подключение Facebook — Adai</title>
+<style>
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{background:#05070f;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:20px}}
+.modal{{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.6)}}
+.logo{{display:flex;align-items:center;gap:10px;margin-bottom:20px}}
+.logo-mark{{width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#10d9a0);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}}
+.logo-name{{font-size:17px;font-weight:800;color:#1a1a2e}}
+.modal-title{{font-size:17px;font-weight:700;color:#1a1a2e;margin-bottom:4px}}
+.modal-sub{{font-size:13px;color:#6b7a99;margin-bottom:22px}}
+.field{{margin-bottom:14px}}
+.field-label{{font-size:11px;font-weight:600;color:#6b7a99;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}}
+.field select{{width:100%;padding:11px 36px 11px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#1a1a2e;background:#f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;-webkit-appearance:none;appearance:none;cursor:pointer}}
+.field select:focus{{outline:none;border-color:#6366f1}}
+.ig-row{{display:flex;align-items:center;gap:10px;background:#f0f4ff;border-radius:10px;padding:11px 12px}}
+.ig-icon{{width:30px;height:30px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}}
+.ig-text{{font-size:14px;color:#1a1a2e;font-weight:500}}
+.ig-empty{{font-size:13px;color:#94a3b8}}
+.btns{{display:flex;gap:10px;margin-top:22px}}
+.btn-cancel{{flex:1;padding:13px;border:1.5px solid #e2e8f0;border-radius:12px;background:#fff;color:#6b7a99;font-size:15px;font-weight:600;cursor:pointer}}
+.btn-connect{{flex:2;padding:13px;border:none;border-radius:12px;background:#6366f1;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:.2s}}
+.btn-connect:hover{{background:#4f46e5}}
+.btn-connect:disabled{{background:#a5b4fc;cursor:not-allowed}}
+.spinner-wrap{{text-align:center;padding:48px}}
+.spinner{{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}}
+@keyframes spin{{to{{transform:rotate(360deg)}}}}
+.spinner-text{{color:#6b7a99;font-size:14px}}
+</style></head>
+<body>
+<div class="modal" id="modal">
+  <div class="logo">
+    <div class="logo-mark">🎯</div>
+    <div class="logo-name">Adai</div>
+  </div>
+  <div class="spinner-wrap" id="loading">
+    <div class="spinner"></div>
+    <div class="spinner-text">Загружаем ваши аккаунты…</div>
+  </div>
+  <div id="content" style="display:none">
+    <div class="modal-title">Выберите ресурсы Facebook</div>
+    <div class="modal-sub">Выберите рекламный аккаунт и страницу для подключения</div>
+    <div class="field" id="pages-wrap">
+      <div class="field-label">Выберите страницу</div>
+      <select id="pages-select" onchange="onPage()"></select>
+    </div>
+    <div class="field">
+      <div class="field-label">Привязанный Instagram</div>
+      <div class="ig-row">
+        <div class="ig-icon">📷</div>
+        <div id="ig-text"><span class="ig-empty">Выберите страницу выше</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Выберите рекламный аккаунт</div>
+      <select id="acc-select"></select>
+    </div>
+    <div class="btns">
+      <button class="btn-cancel" onclick="cancel()">Отмена</button>
+      <button class="btn-connect" id="btn-ok" onclick="connect()">Подключить</button>
+    </div>
+  </div>
+</div>
+<script>
+const UID={user_id};
+const TOK={token_json};
+
+async function load(){{
+  try{{
+    const r=await fetch('/api/fb/resources?user_id='+UID+'&token='+encodeURIComponent(TOK));
+    const d=await r.json();
+    const pages=d.pages||[];
+    const accs=d.ad_accounts||[];
+    const psel=document.getElementById('pages-select');
+    psel.innerHTML=pages.length
+      ? pages.map(p=>`<option value="${{p.id}}" data-ig="${{(p.instagram_business_account||{{}}).username||''}}">${{p.name}}</option>`).join('')
+      : '<option value="">Страницы не найдены</option>';
+    const asel=document.getElementById('acc-select');
+    asel.innerHTML=accs.length
+      ? accs.map(a=>`<option value="${{a.id}}">${{a.name}}</option>`).join('')
+      : '<option value="">Аккаунты не найдены</option>';
+    onPage();
+    document.getElementById('loading').style.display='none';
+    document.getElementById('content').style.display='';
+  }}catch(e){{
+    document.getElementById('loading').innerHTML='<div style="color:#ef4444;text-align:center">Ошибка загрузки. Попробуйте снова.</div>';
+  }}
+}}
+function onPage(){{
+  const opt=document.getElementById('pages-select').selectedOptions[0];
+  const ig=opt?opt.getAttribute('data-ig'):'';
+  document.getElementById('ig-text').innerHTML=ig
+    ? `<span class="ig-text">@${{ig}}</span>`
+    : '<span class="ig-empty">Instagram не привязан к этой странице</span>';
+}}
+async function connect(){{
+  const page_id=document.getElementById('pages-select').value;
+  const acc_id=document.getElementById('acc-select').value;
+  if(!acc_id){{alert('Выберите рекламный аккаунт');return;}}
+  const btn=document.getElementById('btn-ok');
+  btn.disabled=true;btn.textContent='Подключаем…';
+  try{{
+    const r=await fetch('/api/fb/save-connection',{{
+      method:'POST',headers:{{'Content-Type':'application/json'}},
+      body:JSON.stringify({{user_id:UID,token:TOK,ad_account_id:acc_id,page_id:page_id}})
+    }});
+    if(r.ok){{
+      document.getElementById('modal').innerHTML=`
+        <div style="text-align:center;padding:20px">
+          <div style="font-size:56px;margin-bottom:16px">✅</div>
+          <div style="font-size:20px;font-weight:700;color:#1a1a2e;margin-bottom:8px">Facebook подключён!</div>
+          <div style="color:#6b7a99;font-size:14px;margin-bottom:24px">Возвращайтесь в Telegram</div>
+          <a href="https://t.me/AdaikZ_bot" style="display:inline-block;background:#6366f1;color:#fff;padding:13px 32px;border-radius:12px;text-decoration:none;font-weight:600">Открыть Adai →</a>
+        </div>`;
+      setTimeout(()=>{{try{{window.location.href='https://t.me/AdaikZ_bot';}}catch(e){{}}}},2000);
+    }}else{{
+      const dd=await r.json();
+      alert(dd.detail||'Ошибка подключения');
+      btn.disabled=false;btn.textContent='Подключить';
+    }}
+  }}catch(e){{alert('Ошибка соединения');btn.disabled=false;btn.textContent='Подключить';}}
+}}
+function cancel(){{window.location.href='https://t.me/AdaikZ_bot';}}
+load();
+</script>
+</body></html>"""
 
 _FB_ERROR = """<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>*{{box-sizing:border-box}}body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}.card{{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;text-align:center;max-width:400px}}.icon{{font-size:56px;margin-bottom:16px}}.title{{font-size:22px;font-weight:700;margin-bottom:8px}}.sub{{color:#64748b;font-size:15px}}</style></head>
@@ -572,25 +698,24 @@ async def fb_callback(code: str = Query(None), state: str = Query(None),
         return HTMLResponse(_FB_ERROR.format(title="Отмена", msg="Вы отменили подключение Facebook."))
     if not code or not state:
         return HTMLResponse(_FB_ERROR.format(title="Ошибка", msg="Неверный запрос."))
-
     try:
         user_id = int(state)
     except ValueError:
         return HTMLResponse(_FB_ERROR.format(title="Ошибка", msg="Неверный state."))
 
+    # Exchange code → short token
     async with httpx.AsyncClient(timeout=15) as client:
         r = await client.get("https://graph.facebook.com/v19.0/oauth/access_token", params={
             "client_id": FB_APP_ID, "client_secret": FB_APP_SECRET,
             "redirect_uri": FB_REDIRECT, "code": code,
         })
         token_data = r.json()
-
     if "error" in token_data:
         msg = token_data["error"].get("message", "Ошибка Facebook")
         return HTMLResponse(_FB_ERROR.format(title="Ошибка Facebook", msg=msg))
-
     short_token = token_data["access_token"]
 
+    # Exchange short → long-lived token
     async with httpx.AsyncClient(timeout=15) as client:
         r = await client.get("https://graph.facebook.com/v19.0/oauth/access_token", params={
             "grant_type": "fb_exchange_token", "client_id": FB_APP_ID,
@@ -599,63 +724,68 @@ async def fb_callback(code: str = Query(None), state: str = Query(None),
         ll = r.json()
     long_token = ll.get("access_token", short_token)
 
+    # Redirect to beautiful resource selection page
+    from urllib.parse import quote
+    return RedirectResponse(f"/fb/select-resources?user_id={user_id}&token={quote(long_token)}")
+
+
+@app.get("/fb/select-resources")
+async def fb_select_resources_page(user_id: int = Query(...), token: str = Query(...)):
+    """Beautiful resource selection page — shown after Facebook OAuth."""
+    import json as _json
+    html = _FB_SELECT_HTML.format(
+        user_id=user_id,
+        token_json=_json.dumps(token),
+    )
+    return HTMLResponse(html)
+
+
+@app.get("/api/fb/resources")
+async def api_fb_resources(user_id: int = Query(...), token: str = Query(...)):
+    """Return available Facebook pages and ad accounts for the selection modal."""
     async with httpx.AsyncClient(timeout=15) as client:
-        r = await client.get("https://graph.facebook.com/v19.0/me/adaccounts", params={
-            "access_token": long_token, "fields": "id,name,account_status",
+        r_acc = await client.get("https://graph.facebook.com/v19.0/me/adaccounts", params={
+            "access_token": token,
+            "fields": "id,name,account_status,currency",
         })
-        accounts = r.json().get("data", [])
+        r_pag = await client.get("https://graph.facebook.com/v19.0/me/accounts", params={
+            "access_token": token,
+            "fields": "id,name,instagram_business_account{id,username}",
+        })
+    return {
+        "ad_accounts": r_acc.json().get("data", []),
+        "pages":       r_pag.json().get("data", []),
+    }
 
-    if not accounts:
-        return HTMLResponse(_FB_ERROR.format(title="Аккаунты не найдены",
-                            msg="Рекламные аккаунты Facebook не найдены."))
 
-    if len(accounts) == 1:
-        ad_account_id = accounts[0]["id"]
-        save_fb_token(user_id, long_token, ad_account_id)
-    else:
-        items = "".join(
-            f'<a href="/fb/select?user_id={user_id}&token={long_token}&account_id={a["id"]}" '
-            f'style="display:block;background:#1e293b;border:1px solid #334155;border-radius:10px;'
-            f'padding:16px;margin:8px 0;text-decoration:none;color:#fff;font-size:15px">'
-            f'<b>{a["name"]}</b><br><span style="color:#64748b;font-size:13px">{a["id"]}</span></a>'
-            for a in accounts
-        )
-        return HTMLResponse(f"""<!DOCTYPE html><html><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>*{{box-sizing:border-box}}body{{font-family:-apple-system,sans-serif;background:#030712;color:#fff;padding:24px 20px;max-width:480px;margin:0 auto}}h2{{font-size:20px;margin-bottom:6px}}p{{color:#64748b;font-size:14px;margin-bottom:20px}}</style></head>
-<body>
-<h2>Выберите рекламный аккаунт</h2>
-<p>Выберите аккаунт Facebook Ads для подключения к Adai</p>
-{items}
-</body></html>""")
+@app.post("/api/fb/save-connection")
+async def api_fb_save_connection(request: Request):
+    """Save selected Facebook resources and sync campaigns."""
+    body = await request.json()
+    user_id     = body.get("user_id")
+    token       = body.get("token")
+    ad_account_id = body.get("ad_account_id")
+    page_id     = body.get("page_id", "")
+
+    if not user_id or not token or not ad_account_id:
+        raise HTTPException(400, "user_id, token и ad_account_id обязательны")
+
+    save_fb_token(int(user_id), token, ad_account_id)
+    if page_id:
+        try:
+            save_user_page_id(int(user_id), page_id)
+        except Exception as e:
+            logger.warning("save_user_page_id error: %s", e)
 
     from ai_manager import sync_fb_campaigns
-    import asyncio
     count = await asyncio.get_event_loop().run_in_executor(
-        None, sync_fb_campaigns, user_id, long_token, ad_account_id
+        None, sync_fb_campaigns, int(user_id), token, ad_account_id
     )
     sync_text = f"📊 Синхронизировано кампаний: *{count}*" if count > 0 else "📊 Активных кампаний не найдено"
-
-    await _notify_webapp(user_id,
-        f"✅ *Facebook подключён и синхронизирован!*\n\n"
-        f"Аккаунт: `{ad_account_id}`\n"
-        f"{sync_text}\n\n"
+    await _notify_webapp(int(user_id),
+        f"✅ *Facebook подключён!*\n\nАккаунт: `{ad_account_id}`\n{sync_text}\n\n"
         f"Нажмите кнопку ниже чтобы открыть кабинет 👇")
-    return HTMLResponse(_FB_SUCCESS_TMPL)
-
-
-@app.get("/fb/select")
-async def fb_select(user_id: int = Query(...), token: str = Query(...), account_id: str = Query(...)):
-    save_fb_token(user_id, token, account_id)
-    from ai_manager import sync_fb_campaigns
-    count = await asyncio.get_event_loop().run_in_executor(
-        None, sync_fb_campaigns, user_id, token, account_id
-    )
-    sync_text = f"📊 Синхронизировано кампаний: *{count}*" if count > 0 else "📊 Активных кампаний не найдено"
-    await _notify_webapp(user_id,
-        f"✅ *Facebook подключён!*\n\nАккаунт: `{account_id}`\n{sync_text}\n\n"
-        f"Нажмите кнопку ниже чтобы открыть кабинет 👇")
-    return HTMLResponse(_FB_SUCCESS_TMPL)
+    return {"status": "ok", "campaigns_synced": count}
 
 
 # в"Ђв"Ђ Directions API в"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђ
