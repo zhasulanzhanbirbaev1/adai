@@ -19,6 +19,7 @@ BASE_URL = os.environ.get("BASE_URL", "https://like-ai-production.up.railway.app
 # ── States ────────────────────────────────────────────────────────────────────
 LAUNCH_ASK_PAGE_ID       = 0
 LAUNCH_CHOOSE_DIRECTION  = 1
+LAUNCH_CHOOSE_MODE       = 8   # new: whatsapp vs leads
 LAUNCH_CHOOSE_CREATIVE   = 2
 LAUNCH_WAIT_PHOTO        = 3
 LAUNCH_CONFIRM_AD_TEXT   = 4
@@ -232,8 +233,41 @@ async def launch_direction_selected(update: Update, context: ContextTypes.DEFAUL
         )
         return ConversationHandler.END
 
-    context.user_data["launch"] = {"direction": dict(direction)}
+    context.user_data["launch"] = {"direction": dict(direction), "mode": "leads"}
 
+    # Ask campaign mode before creative
+    kb = _ik(
+        [("🎯 Максимум лидов (рекомендуем)", "launch_mode:leads")],
+        [("💬 Сообщения в WhatsApp",          "launch_mode:whatsapp")],
+        [("❌ Отмена",                          "launch_mode:cancel")],
+    )
+    await q.edit_message_text(
+        f"*{direction['name']}* выбрано.\n\n"
+        f"🎯 *Максимум лидов* — Facebook + Instagram + Stories + Reels.\n"
+        f"Facebook сам ищет людей, которые скорее всего напишут.\n\n"
+        f"💬 *WhatsApp* — трафик только в чат, без алгоритмической оптимизации.\n\n"
+        f"Выберите режим кампании:",
+        parse_mode="Markdown",
+        reply_markup=kb,
+    )
+    return LAUNCH_CHOOSE_MODE
+
+
+async def launch_mode_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    q = update.callback_query
+    await q.answer()
+    mode = q.data.split(":")[1]
+
+    if mode == "cancel":
+        await q.edit_message_text("Отменено.")
+        context.user_data.pop("launch", None)
+        return ConversationHandler.END
+
+    context.user_data["launch"]["mode"] = mode
+    direction = context.user_data["launch"]["direction"]
+    dir_id = direction["id"]
+
+    mode_label = "🎯 Максимум лидов" if mode == "leads" else "💬 WhatsApp"
     creatives = db.get_direction_creatives(dir_id)
     rows = [[(f"📸 Креатив #{c['id']}", f"launch_cr:existing:{c['id']}")] for c in creatives]
     rows += [
@@ -242,7 +276,7 @@ async def launch_direction_selected(update: Update, context: ContextTypes.DEFAUL
         [("❌ Отмена", "launch_cr:cancel")],
     ]
     await q.edit_message_text(
-        f"*{direction['name']}* выбрано.\n\nВыбери или создай креатив:",
+        f"Режим: *{mode_label}* ✅\n\nВыбери или создай креатив:",
         parse_mode="Markdown",
         reply_markup=_ik(*rows),
     )
@@ -470,17 +504,18 @@ async def launch_final_selected(update: Update, context: ContextTypes.DEFAULT_TY
     user = db.get_user(uid)
 
     try:
+        mode = context.user_data.get("launch", {}).get("mode", "leads")
         campaign_id = await asyncio.to_thread(
             fb.create_fb_campaign,
             fb_token["access_token"], fb_token["ad_account_id"],
-            f"Adai / {d['name']}", "MESSAGES",
+            f"Adai / {d['name']}", mode,
         )
         adset_id = await asyncio.to_thread(
             fb.create_fb_adset,
             fb_token["access_token"], fb_token["ad_account_id"], campaign_id,
             f"{d['name']} adset", float(budget), d.get("geo", "Казахстан"),
             int(d.get("age_min") or 25), int(d.get("age_max") or 55),
-            d.get("gender", "all"), d.get("whatsapp_number", ""),
+            d.get("gender", "all"), d.get("whatsapp_number", ""), mode,
         )
         ad_id = await asyncio.to_thread(
             fb.create_fb_ad,
@@ -573,6 +608,9 @@ def build_launch_handler() -> ConversationHandler:
             ],
             LAUNCH_CHOOSE_DIRECTION: [
                 CallbackQueryHandler(launch_direction_selected, pattern=r"^launch_dir:"),
+            ],
+            LAUNCH_CHOOSE_MODE: [
+                CallbackQueryHandler(launch_mode_selected, pattern=r"^launch_mode:"),
             ],
             LAUNCH_CHOOSE_CREATIVE: [
                 CallbackQueryHandler(launch_creative_selected, pattern=r"^launch_cr:"),

@@ -62,12 +62,22 @@ def upload_image_to_fb(access_token: str, ad_account_id: str, image_bytes: bytes
     raise Exception(f"Image upload failed: {data}")
 
 
+# Campaign modes
+# "whatsapp"  → MESSAGES + CONVERSATIONS   — трафик в WhatsApp
+# "leads"     → OUTCOME_LEADS + LEAD_GENERATION — максимум лидов (FB + IG + Reels)
+CAMPAIGN_MODES = {
+    "whatsapp": {"objective": "MESSAGES",      "optimization": "CONVERSATIONS",   "label": "WhatsApp"},
+    "leads":    {"objective": "OUTCOME_LEADS", "optimization": "LEAD_GENERATION", "label": "Максимум лидов"},
+}
+
+
 def create_fb_campaign(access_token: str, ad_account_id: str,
-                        name: str, objective: str = "MESSAGES") -> str:
+                        name: str, mode: str = "leads") -> str:
+    cfg = CAMPAIGN_MODES.get(mode, CAMPAIGN_MODES["leads"])
     resp = requests.post(f"{META_API}/{ad_account_id}/campaigns", data={
         "access_token": access_token,
         "name": name,
-        "objective": objective,
+        "objective": cfg["objective"],
         "status": "ACTIVE",
         "special_ad_categories": "[]",
     })
@@ -80,13 +90,18 @@ def create_fb_campaign(access_token: str, ad_account_id: str,
 def create_fb_adset(access_token: str, ad_account_id: str, campaign_id: str,
                      name: str, daily_budget_kzt: float, geo: str,
                      age_min: int, age_max: int, gender: str,
-                     whatsapp_number: str) -> str:
-    country = "KZ"  # все города и регионы КЗ → страна KZ в Facebook
+                     whatsapp_number: str, mode: str = "leads") -> str:
+    cfg = CAMPAIGN_MODES.get(mode, CAMPAIGN_MODES["leads"])
 
+    # Targeting: KZ + age + gender + Advantage+ placements
     targeting = {
-        "geo_locations": {"countries": [country]},
+        "geo_locations": {"countries": ["KZ"]},
         "age_min": age_min,
         "age_max": age_max,
+        # Facebook + Instagram: Feed, Stories, Reels — больше показов, дешевле лиды
+        "publisher_platforms": ["facebook", "instagram"],
+        "facebook_positions": ["feed", "story", "reels", "right_hand_column"],
+        "instagram_positions": ["stream", "story", "reels", "explore"],
     }
     if gender == "male":
         targeting["genders"] = [1]
@@ -97,17 +112,22 @@ def create_fb_adset(access_token: str, ad_account_id: str, campaign_id: str,
     if whatsapp_number:
         promoted_object = {"whatsapp_phone_number": whatsapp_number}
 
-    resp = requests.post(f"{META_API}/{ad_account_id}/adsets", data={
+    params: dict = {
         "access_token": access_token,
         "name": name,
         "campaign_id": campaign_id,
         "daily_budget": int(daily_budget_kzt * 4.5),
         "billing_event": "IMPRESSIONS",
-        "optimization_goal": "CONVERSATIONS",
+        "optimization_goal": cfg["optimization"],
         "targeting": json.dumps(targeting),
-        "promoted_object": json.dumps(promoted_object) if promoted_object else "{}",
         "status": "PAUSED",
-    })
+    }
+    if promoted_object:
+        params["promoted_object"] = json.dumps(promoted_object)
+    if mode == "leads":
+        params["destination_type"] = "WHATSAPP"
+
+    resp = requests.post(f"{META_API}/{ad_account_id}/adsets", data=params)
     data = resp.json()
     if "id" in data:
         return data["id"]
