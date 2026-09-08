@@ -94,32 +94,29 @@ def create_fb_adset(access_token: str, ad_account_id: str, campaign_id: str,
                      whatsapp_number: str, mode: str = "leads") -> str:
     cfg = CAMPAIGN_MODES.get(mode, CAMPAIGN_MODES["leads"])
 
+    # Both modes use the niche-based age/gender from the business brief.
+    # "leads" adds more placements (Audience Network) for higher volume in the same audience.
+    targeting = {
+        "geo_locations": {"countries": ["KZ"]},
+        "age_min": age_min,
+        "age_max": age_max,
+    }
+    if gender == "male":
+        targeting["genders"] = [1]
+    elif gender == "female":
+        targeting["genders"] = [2]
+
     if mode == "leads":
-        # Advantage+ audience — Facebook picks the best audience automatically
-        # Broad age 18-65, all genders, all placements → max reach, lowest CPL
-        targeting = {
-            "geo_locations": {"countries": ["KZ"]},
-            "age_min": 18,
-            "age_max": 65,
-            "publisher_platforms": ["facebook", "instagram", "audience_network"],
-            "facebook_positions": ["feed", "story", "reels", "right_hand_column", "marketplace"],
-            "instagram_positions": ["stream", "story", "reels", "explore"],
-            "audience_network_positions": ["classic"],
-        }
+        # Max placements → more impressions in the same niche audience → lower CPL
+        targeting["publisher_platforms"] = ["facebook", "instagram", "audience_network"]
+        targeting["facebook_positions"]  = ["feed", "story", "reels", "right_hand_column", "marketplace"]
+        targeting["instagram_positions"] = ["stream", "story", "reels", "explore"]
+        targeting["audience_network_positions"] = ["classic"]
     else:
-        # "whatsapp" — user-specified targeting, narrower
-        targeting = {
-            "geo_locations": {"countries": ["KZ"]},
-            "age_min": age_min,
-            "age_max": age_max,
-            "publisher_platforms": ["facebook", "instagram"],
-            "facebook_positions": ["feed", "story", "reels"],
-            "instagram_positions": ["stream", "story", "reels", "explore"],
-        }
-        if gender == "male":
-            targeting["genders"] = [1]
-        elif gender == "female":
-            targeting["genders"] = [2]
+        # WhatsApp mode — FB + IG only, user controls placement
+        targeting["publisher_platforms"] = ["facebook", "instagram"]
+        targeting["facebook_positions"]  = ["feed", "story", "reels"]
+        targeting["instagram_positions"] = ["stream", "story", "reels", "explore"]
 
     promoted_object = {}
     if whatsapp_number:
