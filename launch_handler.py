@@ -491,7 +491,7 @@ async def launch_final_selected(update: Update, context: ContextTypes.DEFAULT_TY
         return LAUNCH_WAIT_BUDGET_INPUT
 
     # action == "create" — user approved
-    await q.edit_message_text("⏳ Создаю кампанию в Facebook…")
+    await q.edit_message_text("🤖 AI подбирает аудиторию…")
     chat_id = update.effective_chat.id
     uid = update.effective_user.id
 
@@ -499,12 +499,39 @@ async def launch_final_selected(update: Update, context: ContextTypes.DEFAULT_TY
     budget = context.user_data["launch"]["daily_budget"]
     ad_text = context.user_data["launch"]["ad_text"]
     image_hash = context.user_data["launch"]["image_hash"]
+    mode = context.user_data.get("launch", {}).get("mode", "leads")
 
     fb_token = db.get_fb_token(uid)
     user = db.get_user(uid)
 
+    # AI determines the best audience for this niche
+    niche = d.get("niche") or d.get("name") or ""
+    offer = d.get("description") or d.get("utp") or ""
     try:
-        mode = context.user_data.get("launch", {}).get("mode", "leads")
+        from image_generator import suggest_audience
+        aud = await suggest_audience(niche, offer)
+        age_min = int(aud.get("age_min") or d.get("age_min") or 25)
+        age_max = int(aud.get("age_max") or d.get("age_max") or 55)
+        gender  = aud.get("gender") or d.get("gender") or "all"
+        aud_desc = aud.get("audience_description", "")
+    except Exception:
+        age_min  = int(d.get("age_min") or 25)
+        age_max  = int(d.get("age_max") or 55)
+        gender   = d.get("gender") or "all"
+        aud_desc = ""
+
+    gender_label = {"male": "👨 Мужчины", "female": "👩 Женщины"}.get(gender, "👥 Все")
+    await context.bot.send_message(
+        chat_id,
+        f"🎯 *AI выбрал аудиторию:*\n"
+        f"• Возраст: {age_min}–{age_max}\n"
+        f"• Пол: {gender_label}\n"
+        f"• {aud_desc}\n\n"
+        f"⏳ Создаю кампанию в Facebook…",
+        parse_mode="Markdown",
+    )
+
+    try:
         campaign_id = await asyncio.to_thread(
             fb.create_fb_campaign,
             fb_token["access_token"], fb_token["ad_account_id"],
@@ -514,8 +541,7 @@ async def launch_final_selected(update: Update, context: ContextTypes.DEFAULT_TY
             fb.create_fb_adset,
             fb_token["access_token"], fb_token["ad_account_id"], campaign_id,
             f"{d['name']} adset", float(budget), d.get("geo", "Казахстан"),
-            int(d.get("age_min") or 25), int(d.get("age_max") or 55),
-            d.get("gender", "all"), d.get("whatsapp_number", ""), mode,
+            age_min, age_max, gender, d.get("whatsapp_number", ""), mode,
         )
         ad_id = await asyncio.to_thread(
             fb.create_fb_ad,
