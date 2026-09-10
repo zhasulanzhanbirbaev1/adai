@@ -210,6 +210,27 @@ async def cmd_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def cmd_reset_me(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    if user.id != OWNER_ID:
+        return
+    from database import get_conn
+    from datetime import datetime, timedelta
+    with get_conn() as conn:
+        conn.execute("DELETE FROM facebook_tokens WHERE user_id = %s", (user.id,))
+        conn.execute("UPDATE subscriptions SET active=0 WHERE user_id = %s", (user.id,))
+        trial_ends = (datetime.utcnow() + timedelta(days=7)).isoformat()
+        conn.execute("UPDATE users SET trial_ends_at = %s WHERE id = %s", (trial_ends, user.id))
+    await update.message.reply_text(
+        "✅ *Аккаунт сброшен*\n\n"
+        "— FB токен удалён\n"
+        "— Подписки деактивированы\n"
+        "— Триал: 7 дней с нуля\n\n"
+        "Напиши /start чтобы увидеть приветствие заново.",
+        parse_mode="Markdown",
+    )
+
+
 async def cmd_creative(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     if not has_access(user.id):
@@ -320,6 +341,7 @@ def build_app() -> Application:
     app.add_handler(CommandHandler("sync",      cmd_sync))
     app.add_handler(CommandHandler("creative",  cmd_creative))
     app.add_handler(CommandHandler("subscribe", show_plans))
+    app.add_handler(CommandHandler("reset_me",  cmd_reset_me))
     register_kaspi_handlers(app)
     app.add_handler(CallbackQueryHandler(cb_start_plans, pattern="^start_plans$"))
     app.add_handler(MessageHandler(filters.PHOTO, handle_creative_photo))
