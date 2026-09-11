@@ -2188,7 +2188,7 @@ async function launchCampaign() {
 
   const pageId = window._settings?.user?.fb_page_id || '';
   if (!pageId) {
-    alert('Укажите ID страницы Facebook в Настройках → Facebook Page ID');
+    showToast('Сначала подключите Facebook Ads в разделе «Настройки»');
     navigate('settings');
     return;
   }
@@ -2617,9 +2617,11 @@ function handleDirUpload(input) {
 
 async function launchDirection() {
   if (!_currentDirId && !useMock()) { alert('Сначала сохраните бриф'); return; }
-  const pageId=document.getElementById('dir-page-id').value.trim();
+  const sel=document.getElementById('dir-page-id');
+  const manual=document.getElementById('dir-page-id-manual');
+  const pageId=(sel&&sel.value.trim())||(manual&&manual.value.trim())||window._settings?.user?.fb_page_id||'';
   const adText=document.getElementById('dir-ad-text').value.trim();
-  if (!pageId) { alert('Введите Facebook Page ID'); return; }
+  if (!pageId) { showToast('Сначала подключите Facebook Ads в разделе «Настройки»'); return; }
   if (!adText) { alert('Введите текст объявления'); return; }
   const btn=document.getElementById('launch-btn');
   btn.disabled=true; btn.textContent='⏳ Создаю кампанию...';
