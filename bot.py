@@ -45,7 +45,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "в Facebook и Instagram — быстро, дёшево и без таргетолога.\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         "🎨 *Генерация баннеров*\n"
-        "3 профессиональных варианта под ваш бизнес за 30 секунд. "
+        "3 профессиональных варианта под ваш бизнес за 1–2 минуты. "
         "Текст, дизайн, подпись к посту — всё включено.\n\n"
         "🚀 *Запуск рекламы*\n"
         "Подключаете Facebook Ads — я сам создаю кампанию, "
@@ -284,7 +284,7 @@ async def handle_creative_niche(update: Update, context: ContextTypes.DEFAULT_TY
     photo_bytes = state["photo"]
     CREATIVE_STATES.pop(user.id, None)
 
-    await update.message.reply_text("⏳ Генерирую баннеры... (займёт ~30 секунд)")
+    await update.message.reply_text("⏳ Генерирую баннеры... (займёт 1–2 минуты)")
 
     openai_key = os.getenv("OPENAI_API_KEY", "")
     if not openai_key:
