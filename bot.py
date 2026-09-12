@@ -221,13 +221,21 @@ async def cmd_reset_me(update: Update, context: ContextTypes.DEFAULT_TYPE):
         conn.execute("UPDATE subscriptions SET active=0 WHERE user_id = %s", (user.id,))
         trial_ends = (datetime.utcnow() + timedelta(days=7)).isoformat()
         conn.execute("UPDATE users SET trial_ends_at = %s WHERE id = %s", (trial_ends, user.id))
+    reset_url = f"{WEBAPP_URL}?user_id={user.id}&reset=1" if WEBAPP_URL else None
+    kb = None
+    if reset_url:
+        from telegram import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+        kb = InlineKeyboardMarkup([[
+            InlineKeyboardButton("🔄 Открыть онбординг заново", web_app=WebAppInfo(url=reset_url))
+        ]])
     await update.message.reply_text(
         "✅ *Аккаунт сброшен*\n\n"
         "— FB токен удалён\n"
         "— Подписки деактивированы\n"
         "— Триал: 7 дней с нуля\n\n"
-        "Напиши /start чтобы увидеть приветствие заново.",
+        "Нажмите кнопку ниже чтобы открыть приложение с нуля 👇",
         parse_mode="Markdown",
+        reply_markup=kb,
     )
 
 
