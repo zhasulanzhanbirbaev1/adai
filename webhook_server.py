@@ -392,6 +392,8 @@ async def api_settings(user_id: int = Depends(_get_uid)):
                  "fb_page_id": user.get("fb_page_id", "")},
         "facebook": {"connected": fb is not None,
                      "ad_account_id": fb["ad_account_id"] if fb else None,
+                     "page_id": fb["page_id"] if fb else None,
+                     "page_name": fb["page_name"] if fb else None,
                      "connected_at": fb["connected_at"][:10] if fb else None},
         "instagram": instagram,
         "subscription": {"active": sub is not None or is_trial_active(user_id),
@@ -644,9 +646,10 @@ async function connect(){{
   const btn=document.getElementById('btn-ok');
   btn.disabled=true;btn.textContent='Подключаем…';
   try{{
+    const page_name=document.getElementById('pages-select').selectedOptions[0]?.text||'';
     const r=await fetch('/api/fb/save-connection',{{
       method:'POST',headers:{{'Content-Type':'application/json'}},
-      body:JSON.stringify({{user_id:UID,token:TOK,ad_account_id:acc_id,page_id:page_id}})
+      body:JSON.stringify({{user_id:UID,token:TOK,ad_account_id:acc_id,page_id:page_id,page_name:page_name}})
     }});
     if(r.ok){{
       document.getElementById('modal').innerHTML=`
@@ -762,15 +765,16 @@ async def api_fb_resources(user_id: int = Query(...), token: str = Query(...)):
 async def api_fb_save_connection(request: Request):
     """Save selected Facebook resources and sync campaigns."""
     body = await request.json()
-    user_id     = body.get("user_id")
-    token       = body.get("token")
+    user_id       = body.get("user_id")
+    token         = body.get("token")
     ad_account_id = body.get("ad_account_id")
-    page_id     = body.get("page_id", "")
+    page_id       = body.get("page_id", "")
+    page_name     = body.get("page_name", "")
 
     if not user_id or not token or not ad_account_id:
         raise HTTPException(400, "user_id, token и ad_account_id обязательны")
 
-    save_fb_token(int(user_id), token, ad_account_id)
+    save_fb_token(int(user_id), token, ad_account_id, page_id=page_id, page_name=page_name)
     if page_id:
         try:
             save_user_page_id(int(user_id), page_id)

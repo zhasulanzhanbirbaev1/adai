@@ -310,15 +310,26 @@ def activate_subscription(user_id: int, plan: str, payment_id: str = None):
 
 # ── Facebook ───────────────────────────────────────────────────────────────────
 
-def save_fb_token(user_id: int, access_token: str, ad_account_id: str, token_expires: str = None):
+def save_fb_token(user_id: int, access_token: str, ad_account_id: str,
+                  token_expires: str = None, page_id: str = None, page_name: str = None):
     with get_conn() as conn:
+        # ensure columns exist
+        for sql in [
+            "ALTER TABLE facebook_tokens ADD COLUMN IF NOT EXISTS page_id TEXT",
+            "ALTER TABLE facebook_tokens ADD COLUMN IF NOT EXISTS page_name TEXT",
+        ]:
+            try:
+                conn.execute(sql)
+            except Exception:
+                pass
         conn.execute(
-            """INSERT INTO facebook_tokens (user_id, access_token, ad_account_id, token_expires, connected_at)
-               VALUES (%s,%s,%s,%s,NOW()::TEXT)
+            """INSERT INTO facebook_tokens (user_id, access_token, ad_account_id, token_expires, connected_at, page_id, page_name)
+               VALUES (%s,%s,%s,%s,NOW()::TEXT,%s,%s)
                ON CONFLICT(user_id) DO UPDATE SET
                  access_token=EXCLUDED.access_token, ad_account_id=EXCLUDED.ad_account_id,
-                 token_expires=EXCLUDED.token_expires, connected_at=EXCLUDED.connected_at""",
-            (user_id, access_token, ad_account_id, token_expires),
+                 token_expires=EXCLUDED.token_expires, connected_at=EXCLUDED.connected_at,
+                 page_id=EXCLUDED.page_id, page_name=EXCLUDED.page_name""",
+            (user_id, access_token, ad_account_id, token_expires, page_id, page_name),
         )
 
 

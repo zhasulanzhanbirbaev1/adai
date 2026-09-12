@@ -866,11 +866,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
               <label class="form-label">WhatsApp для заявок</label>
               <input class="form-input" id="whatsapp" placeholder="+7 777 123 45 67"/>
             </div>
-            <div class="form-group">
-              <label class="form-label">Facebook Page ID</label>
-              <input class="form-input" id="fb-page-id" placeholder="123456789012345"/>
-              <div style="font-size:11px;color:var(--muted);margin-top:4px">Найти: facebook.com → ваша страница → О странице → ID страницы</div>
-            </div>
+            <input type="hidden" id="fb-page-id"/>
             <button class="btn btn-primary" onclick="saveProfile()">Сохранить</button>
           </div>
         </div>
@@ -1825,6 +1821,11 @@ async function loadSettings() {
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
           ${igRow}
+          ${data.facebook.page_name ? `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface);border-radius:8px">
+            <span style="color:var(--muted)">Facebook страница</span>
+            <span style="font-weight:700;font-size:13px;color:var(--text)">📄 ${data.facebook.page_name}</span>
+          </div>` : ''}
           <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--surface);border-radius:8px">
             <span style="color:var(--muted)">Рекламный аккаунт</span>
             <span style="font-weight:600;font-family:monospace;font-size:12px">${data.facebook.ad_account_id}</span>
