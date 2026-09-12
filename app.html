@@ -1897,17 +1897,36 @@ async function loadSettings() {
 
   const sub = data.subscription||{};
   const subDiv = document.getElementById('sub-info');
-  if (sub.active && sub.plan==='trial') {
-    subDiv.innerHTML=`<div class="status-badge status-trial" style="margin-bottom:10px">🟡 Пробный период</div><br/>Доступ до: <strong>${sub.trial_ends||'—'}</strong>`;
-  } else if (sub.active) {
-    subDiv.innerHTML=`<div class="status-badge status-active" style="margin-bottom:10px">🟢 Подписка активна</div><br/>Тариф: <strong>${sub.plan}</strong><br/>До: <strong>${sub.expires||'—'}</strong>`;
+  const left = sub.generations_left ?? 0;
+  const used = sub.generations_used ?? 0;
+  const total = sub.free_total ?? 10;
+  const pct = Math.round(used / total * 100);
+
+  if (sub.plan === 'month' || sub.plan === 'quarter' || sub.plan === 'year') {
+    subDiv.innerHTML = `
+      <div class="status-badge status-active" style="margin-bottom:10px">🟢 Подписка активна</div>
+      Тариф: <strong>${sub.plan}</strong><br/>До: <strong>${sub.expires||'—'}</strong>`;
+  } else if (left > 0) {
+    subDiv.innerHTML = `
+      <div class="status-badge status-trial" style="margin-bottom:10px">🎁 Бесплатный доступ</div>
+      <div style="margin:10px 0 6px;font-size:13px">Генераций использовано: <strong>${used} / ${total}</strong></div>
+      <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:10px">
+        <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:3px;transition:width .3s"></div>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">Осталось <strong style="color:var(--text)">${left} генераций</strong> бесплатно</div>`;
   } else {
-    subDiv.innerHTML=`<div class="status-badge status-expired" style="margin-bottom:10px">🔴 Нет подписки</div><br/>Оформите подписку в Telegram.`;
+    subDiv.innerHTML = `
+      <div class="status-badge status-expired" style="margin-bottom:10px">🔴 Генерации закончились</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Использованы все ${total} бесплатных генераций</div>
+      <button onclick="navigate('payment')" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),#0ea5e9);border:none;border-radius:10px;color:#fff;font-weight:700;font-size:14px;cursor:pointer">
+        💎 Оформить подписку
+      </button>`;
   }
+
   const u = data.user||{};
   document.getElementById('userAvatar').textContent = (u.first_name?.[0]||'А').toUpperCase();
   document.getElementById('userName').textContent   = u.first_name||'Пользователь';
-  document.getElementById('userPlan').textContent   = sub.plan==='trial'?'Пробный период':(sub.plan||'—');
+  document.getElementById('userPlan').textContent   = (sub.plan==='month'||sub.plan==='quarter'||sub.plan==='year') ? 'Подписка активна' : (left > 0 ? `${left} генераций` : 'Нет доступа');
 }
 
 function connectFacebook() {
@@ -2111,6 +2130,19 @@ async function generateBannersDalle() {
   const container= document.getElementById('gen-banners');
 
   if (!niche) { status.textContent='Укажите нишу'; return; }
+
+  // Check generations before even calling API
+  if (window._settings?.subscription?.generations_left === 0 && !window._settings?.subscription?.plan?.match(/month|quarter|year/)) {
+    container.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px 20px">
+      <div style="font-size:56px;margin-bottom:16px">🔒</div>
+      <div style="font-weight:800;font-size:18px;margin-bottom:8px">Бесплатные генерации закончились</div>
+      <div style="color:var(--muted);font-size:14px;margin-bottom:24px;line-height:1.6">Вы использовали все 10 бесплатных генераций.<br/>Оформите подписку для безлимитного доступа.</div>
+      <button class="btn btn-primary" onclick="navigate('payment')" style="font-size:15px;padding:14px 32px;width:100%">💎 Оформить подписку</button>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">от 30 000 ₸/мес · безлимитные генерации</div>
+    </div>`;
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = '⏳ Создаю...';
   status.textContent = 'AI генерирует изображение (20–40 сек)...';

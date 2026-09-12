@@ -287,7 +287,8 @@ def is_subscribed(user_id: int) -> bool:
 
 
 def has_access(user_id: int) -> bool:
-    return is_trial_active(user_id) or is_subscribed(user_id)
+    """Access = paid subscription OR free generations remaining."""
+    return is_subscribed(user_id) or can_generate(user_id)
 
 
 def get_active_subscription(user_id: int):

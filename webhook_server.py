@@ -18,7 +18,7 @@ from database import (
     add_direction_creative, get_direction_creatives,
     create_agent, get_agent, get_agents, update_agent,
     get_agent_conversations, get_conversation_detail,
-    can_generate, increment_generations, generations_left, FREE_GENERATIONS,
+    can_generate, increment_generations, generations_left, get_generations_used, FREE_GENERATIONS,
     save_user_page_id,
     save_banner_history, get_banner_history, get_banner_history_image,
 )
@@ -256,9 +256,12 @@ async def api_dashboard(user_id: int = Depends(_get_uid)):
             for r in ai_today
         ],
         "subscription": {
-            "active": sub is not None or is_trial_active(user_id),
-            "plan": sub["plan"] if sub else "trial",
+            "active": sub is not None or can_generate(user_id),
+            "plan": sub["plan"] if sub else ("free" if can_generate(user_id) else "expired"),
             "expires": sub["expires_at"][:10] if sub else None,
+            "generations_used": get_generations_used(user_id),
+            "generations_left": generations_left(user_id),
+            "free_total": FREE_GENERATIONS,
         },
     }
 
