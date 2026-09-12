@@ -792,6 +792,15 @@ async def api_fb_save_connection(request: Request):
     return {"status": "ok", "campaigns_synced": count}
 
 
+@app.post("/api/fb/disconnect")
+async def api_fb_disconnect(request: Request, user_id: int = Depends(_get_uid)):
+    """Remove saved Facebook token for the user."""
+    from database import get_conn
+    with get_conn() as conn:
+        conn.execute("DELETE FROM facebook_tokens WHERE user_id = %s", (user_id,))
+    return {"ok": True}
+
+
 # в"Ђв"Ђ Directions API в"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђ
 
 @app.get("/api/directions")

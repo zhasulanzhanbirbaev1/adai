@@ -1877,7 +1877,10 @@ async function loadSettings() {
             <span style="color:#10d9a0;font-weight:600">Активен ✓</span>
           </div>
         </div>
-        <button onclick="connectFacebook()" style="width:100%;margin-top:12px;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer">🔄 Переподключить</button>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button onclick="connectFacebook()" style="flex:1;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer">🔄 Переподключить</button>
+          <button onclick="disconnectFacebook()" style="flex:1;padding:10px;background:none;border:1px solid rgba(244,84,106,.4);border-radius:8px;color:#f4546a;font-size:13px;cursor:pointer">🔌 Отключить</button>
+        </div>
       </div>`;
   } else {
     fbBlock.innerHTML = `
@@ -1919,6 +1922,18 @@ function connectFacebook() {
   setTimeout(loadSettings, 10000);
 }
 
+
+async function disconnectFacebook() {
+  if (!UID) return;
+  if (!confirm('Отключить Facebook? Запуск рекламы станет недоступен до повторного подключения.')) return;
+  const res = await api('/api/fb/disconnect', { method: 'POST', body: JSON.stringify({ user_id: UID }) });
+  if (res?.ok) {
+    showToast('Facebook отключён');
+    loadSettings();
+  } else {
+    showToast('Ошибка при отключении');
+  }
+}
 
 async function saveProfile() {
   const cpl    = parseFloat(document.getElementById('target-cpl').value)||0;
