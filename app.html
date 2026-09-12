@@ -3072,6 +3072,10 @@ document.addEventListener('visibilitychange', function() {
 });
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+// ?reset=1 clears onboarding flag (for testing)
+if (new URLSearchParams(location.search).get('reset') === '1') {
+  localStorage.removeItem('adai_onboarded');
+}
 if (!localStorage.getItem('adai_onboarded')) {
   showOnboarding();
 }
