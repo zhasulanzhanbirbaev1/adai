@@ -1119,6 +1119,7 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
         from image_generator import (
             generate_dalle_image, generate_instagram_copy,
             generate_3_creatives_concept, suggest_audience, OPENAI_AVAILABLE,
+            generate_banners_from_photo,
         )
         from banner_composer import compose_creative_banner
     except Exception as e:
@@ -1166,17 +1167,59 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
     if not variants:
         raise HTTPException(500, "AI не вернул концепции, попробуйте ещё раз")
 
-    # ── Step 2: Get images (user photo OR generate 3 in parallel) ──────────
+    # ── Step 2 + 3: Generate/render banners ────────────────────────────────
     _last_img_error: list = []
-    if image_b64:
-        # User uploaded their own photo — use it for all 3 variants
-        try:
-            img_bytes_list = [b64mod.b64decode(image_b64)] * len(variants)
-        except Exception as e:
-            raise HTTPException(400, f"Неверный формат изображения: {e}")
-    else:
-        # Generate 3 unique images in parallel (one per concept)
+    banners = []
+    all_headlines, all_bullets, first_cta = [], [], ""
 
+    if image_b64:
+        # ── Photo pipeline: cv2 treatments + adrender text overlay ──────────
+        import uuid, os as _os
+        out_dir = f"/tmp/_ad_out/{user_id}_{uuid.uuid4().hex[:8]}"
+        try:
+            pipeline_result = await generate_banners_from_photo(
+                payload=concepts_data,
+                image_base64=image_b64,
+                niche=niche or description,
+                restage_mode="local",
+                out_dir=out_dir,
+            )
+        except Exception as e:
+            logger.error("Photo pipeline error: %s", e)
+            raise HTTPException(500, f"Ошибка фото-пайплайна: {str(e)}")
+
+        if pipeline_result.get("status") == "photo_rejected":
+            raise HTTPException(400, f"Фото не подходит: {', '.join(pipeline_result.get('problems', []))}")
+
+        import base64 as _b
+        for item in pipeline_result.get("results", []):
+            fp = item.get("file", "")
+            if not fp or not _os.path.exists(fp):
+                continue
+            with open(fp, "rb") as fh:
+                raw = fh.read()
+            b64 = _b.b64encode(raw).decode()
+            temp = item.get("temperature", "")
+            variant = next((v for v in variants if v.get("lead_temperature", "") == temp),
+                           variants[0] if variants else {})
+            to = variant.get("text_overlay", {})
+            banners.append({
+                "label":     variant.get("variant_name", item.get("treatment", "Вариант")),
+                "image":     f"data:image/png;base64,{b64}",
+                "size":      "1080×1350",
+                "post_copy": variant.get("post_copy", ""),
+                "hashtags":  variant.get("hashtags", []),
+                "concept":   variant.get("concept_explanation", ""),
+                "note":      item.get("note", ""),
+            })
+            hl = to.get("hook_headline", "")
+            if hl:
+                all_headlines.append(hl)
+            all_bullets = to.get("bullets") or all_bullets
+            if not first_cta:
+                first_cta = to.get("cta_button", "")
+    else:
+        # ── DALL-E path: generate 3 images in parallel + compose ─────────────
         async def _gen_img(prompt: str):
             try:
                 return await generate_dalle_image(prompt, size="1024x1536")
@@ -1185,41 +1228,38 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
                 _last_img_error.append(str(ex))
                 return None
 
-        results = await _asyncio.gather(*[_gen_img(v["image_prompt_en"]) for v in variants])
-        img_bytes_list = list(results)
+        img_results = await _asyncio.gather(*[_gen_img(v["image_prompt_en"]) for v in variants])
+        img_bytes_list = list(img_results)
 
-    # ── Step 3: Compose banners ─────────────────────────────────────────────
-    banners = []
-    all_headlines, all_bullets, first_cta = [], [], ""
-    for i, (variant, img_bytes) in enumerate(zip(variants, img_bytes_list)):
-        if img_bytes is None:
-            continue
-        try:
-            banner_bytes = compose_creative_banner(
-                img_bytes,
-                variant.get("text_overlay", {}),
-                variant.get("color_scheme", {}),
-                variant.get("font_style", "bold_sans"),
-            )
-            import base64 as _b
-            b64 = _b.b64encode(banner_bytes).decode()
-            to  = variant.get("text_overlay", {})
-            banners.append({
-                "label":      variant.get("variant_name", f"Вариант {i+1}"),
-                "image":      f"data:image/jpeg;base64,{b64}",
-                "size":       "1080×1350",
-                "post_copy":  variant.get("post_copy", ""),
-                "hashtags":   variant.get("hashtags", []),
-                "concept":    variant.get("concept_explanation", ""),
-            })
-            hl = to.get("hook_headline", "")
-            if hl:
-                all_headlines.append(hl)
-            all_bullets = to.get("bullets") or all_bullets
-            if not first_cta:
-                first_cta = to.get("cta_button", "")
-        except Exception as e:
-            logger.error("Banner compose error variant %d: %s", i, e)
+        import base64 as _b
+        for i, (variant, img_bytes) in enumerate(zip(variants, img_bytes_list)):
+            if img_bytes is None:
+                continue
+            try:
+                banner_bytes = compose_creative_banner(
+                    img_bytes,
+                    variant.get("text_overlay", {}),
+                    variant.get("color_scheme", {}),
+                    variant.get("font_style", "bold_sans"),
+                )
+                b64 = _b.b64encode(banner_bytes).decode()
+                to  = variant.get("text_overlay", {})
+                banners.append({
+                    "label":     variant.get("variant_name", f"Вариант {i+1}"),
+                    "image":     f"data:image/jpeg;base64,{b64}",
+                    "size":      "1080×1350",
+                    "post_copy": variant.get("post_copy", ""),
+                    "hashtags":  variant.get("hashtags", []),
+                    "concept":   variant.get("concept_explanation", ""),
+                })
+                hl = to.get("hook_headline", "")
+                if hl:
+                    all_headlines.append(hl)
+                all_bullets = to.get("bullets") or all_bullets
+                if not first_cta:
+                    first_cta = to.get("cta_button", "")
+            except Exception as e:
+                logger.error("Banner compose error variant %d: %s", i, e)
 
     if not banners:
         err_detail = _last_img_error[0] if _last_img_error else "неизвестная ошибка генерации изображений"
