@@ -932,6 +932,44 @@ async def api_launch_direction(did: int, request: Request, user_id: int = Depend
 
 # в"Ђв"Ђ Image Generator API в"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђ
 
+@app.post("/api/ai/strategy")
+async def api_ai_strategy(request: Request, user_id: int = Depends(_get_uid)):
+    """Generate a personalized marketing strategy based on onboarding data."""
+    import openai, os
+    body = await request.json()
+    niche = body.get("niche", "бизнес")
+    offer = body.get("offer", "")
+    city = body.get("city", "Алматы")
+    budget = body.get("budget", 2000)
+    gender = body.get("gender", "all")
+    age_min = body.get("age_min", 22)
+    age_max = body.get("age_max", 45)
+
+    gender_text = {"all": "мужчины и женщины", "male": "мужчины", "female": "женщины"}.get(gender, "все")
+    prompt = f"""Ты — опытный маркетолог для малого бизнеса Казахстана. Составь краткую, практичную маркетинговую стратегию для Facebook/Instagram рекламы.
+
+Бизнес: {niche}
+Оффер/услуга: {offer or 'не указан'}
+Город: {city}
+Бюджет: {budget} ₸/день
+Аудитория: {gender_text}, возраст {age_min}–{age_max} лет
+
+Составь стратегию в 4-5 пунктах. Каждый пункт — 1-2 предложения. Конкретные советы именно для этого бизнеса и города. Фокус на WhatsApp-лидах. Используй эмодзи в начале каждого пункта. Без вступления и заключения — только пункты."""
+
+    try:
+        client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        resp = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=400,
+            temperature=0.7,
+        )
+        strategy_text = resp.choices[0].message.content.strip()
+        return {"strategy": strategy_text}
+    except Exception as e:
+        return {"strategy": None, "error": str(e)}
+
+
 @app.post("/api/moderate")
 async def api_moderate(request: Request, user_id: int = Depends(_get_uid)):
     from image_generator import moderate_ad_content

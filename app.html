@@ -902,7 +902,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
   <div style="padding:16px 20px 0;flex-shrink:0">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div style="font-size:13px;color:var(--muted)" id="ob-step-label">Шаг 1 из 5</div>
-      <button onclick="obSkip()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:4px 8px">Пропустить</button>
+      <button id="ob-skip-btn" onclick="obSkip()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:4px 8px">Пропустить</button>
     </div>
     <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
       <div id="ob-progress-bar" style="height:100%;background:var(--accent);border-radius:2px;transition:width .35s;width:20%"></div>
@@ -911,6 +911,45 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
 
   <!-- Slide area -->
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+    <!-- Шаг 0: Знакомство с Adai -->
+    <div class="ob-slide" style="padding:32px 24px 24px;display:flex;flex-direction:column;align-items:center;text-align:center">
+      <div style="font-family:system-ui;font-size:52px;font-weight:900;letter-spacing:-2px;margin-bottom:4px"><span style="color:var(--accent)">A</span>dai</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:28px;letter-spacing:.05em">ИИ-МАРКЕТОЛОГ ДЛЯ ВАШЕГО БИЗНЕСА</div>
+
+      <div style="width:100%;display:flex;flex-direction:column;gap:10px;margin-bottom:28px;text-align:left">
+        <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:14px 16px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:26px;flex-shrink:0">🎨</span>
+          <div>
+            <div style="font-weight:700;font-size:14px">AI генерирует баннеры</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">3 варианта под ваш бизнес за 1–2 минуты. Без дизайнера.</div>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:14px 16px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:26px;flex-shrink:0">🚀</span>
+          <div>
+            <div style="font-weight:700;font-size:14px">Запускает рекламу в Facebook</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Подключите аккаунт — AI создаёт кампанию и настраивает аудиторию сам.</div>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:14px 16px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:26px;flex-shrink:0">📊</span>
+          <div>
+            <div style="font-weight:700;font-size:14px">Следит за рекламой 24/7</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Каждые 6 часов анализирует и оптимизирует — вы только получаете лиды.</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Для кого</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.8;margin-bottom:24px">
+        Стоматологии · Автосервисы · Салоны красоты<br>Кофейни · Фитнес · Онлайн-школы · Цветочные
+      </div>
+
+      <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:12px;padding:12px 16px;font-size:13px;color:var(--muted);width:100%">
+        ⏱ Настройка займёт <strong style="color:var(--text)">2–3 минуты</strong>. AI подберёт стратегию под ваш бизнес.
+      </div>
+    </div>
 
     <!-- Шаг 1: Ваш бизнес -->
     <div class="ob-slide" style="padding:28px 24px 20px">
@@ -1017,21 +1056,20 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
       </div>
     </div>
 
-    <!-- Шаг 5: Готово -->
-    <div class="ob-slide" style="display:none;padding:28px 24px 20px;text-align:center">
-      <div style="font-size:72px;margin-bottom:20px">🎉</div>
-      <div style="font-size:26px;font-weight:800;margin-bottom:12px">Всё готово!</div>
-      <div style="font-size:15px;color:var(--muted);line-height:1.65;margin-bottom:28px">
-        Настройка завершена. У вас <strong style="color:var(--accent)">10 бесплатных генераций</strong> — создайте первый рекламный баннер прямо сейчас.
+    <!-- Шаг 6: Готово + AI стратегия -->
+    <div class="ob-slide" style="display:none;padding:24px 24px 20px;text-align:center">
+      <div style="font-size:56px;margin-bottom:12px">🎉</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:8px">Всё готово!</div>
+      <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px">
+        У вас <strong style="color:var(--accent)">10 бесплатных генераций</strong>. Ниже — AI-стратегия для вашего бизнеса.
       </div>
 
-      <div id="ob-summary" style="background:var(--surface);border-radius:14px;padding:16px 20px;text-align:left;margin-bottom:24px;font-size:13px;line-height:1.8"></div>
+      <div id="ob-summary" style="background:var(--surface);border-radius:14px;padding:14px 16px;text-align:left;margin-bottom:16px;font-size:13px;line-height:1.8"></div>
 
-      <button onclick="obFinish()" style="width:100%;padding:18px;background:linear-gradient(135deg,var(--accent),#0ea5e9);border:none;color:#fff;border-radius:14px;font-size:17px;font-weight:800;cursor:pointer;margin-bottom:10px">
-        🎨 Создать первый баннер
-      </button>
-      <button onclick="obSkip()" style="width:100%;padding:12px;background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer">
-        Перейти в кабинет
+      <div id="ob-strategy" style="margin-bottom:20px"></div>
+
+      <button id="ob-finish-btn" onclick="obGoToApp()" style="width:100%;padding:16px;background:linear-gradient(135deg,var(--accent),#0ea5e9);border:none;color:#fff;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:10px">
+        Перейти в приложение →
       </button>
     </div>
 
@@ -2723,7 +2761,7 @@ function openTelegram() { window.open(`https://t.me/AdaiKZBot`,'_blank'); }
 
 // ── ONBOARDING ────────────────────────────────────────────────────────────────
 let _obSlide = 0;
-const _OB_TOTAL = 5;
+const _OB_TOTAL = 6;
 let _obGender = 'all';
 let _obData = {};
 
@@ -2786,8 +2824,8 @@ async function obCheckFb() {
 async function obNext() {
   const slides = document.querySelectorAll('.ob-slide');
 
-  // Validate and collect data per step
-  if (_obSlide === 0) {
+  // Validate and collect data per step (slide 0 = welcome, slides 1-5 = questions)
+  if (_obSlide === 1) {
     const niche = document.getElementById('ob-niche')?.value.trim();
     const city = document.getElementById('ob-city')?.value.trim();
     if (!niche) { showToast('Введите нишу бизнеса'); return; }
@@ -2795,20 +2833,20 @@ async function obNext() {
     _obData.niche = niche;
     _obData.offer = document.getElementById('ob-offer')?.value.trim() || '';
     _obData.city = city;
-  } else if (_obSlide === 1) {
+  } else if (_obSlide === 2) {
     const wa = document.getElementById('ob-whatsapp')?.value.trim();
     if (!wa) { showToast('Введите WhatsApp номер'); return; }
     _obData.whatsapp = wa;
     _obData.gender = _obGender;
     _obData.age_min = parseInt(document.getElementById('ob-age-min')?.value) || 22;
     _obData.age_max = parseInt(document.getElementById('ob-age-max')?.value) || 45;
-  } else if (_obSlide === 2) {
+  } else if (_obSlide === 3) {
     const budget = parseInt(document.getElementById('ob-budget')?.value) || 2000;
     if (budget < 1000) { showToast('Минимальный бюджет 1 000 ₸'); return; }
     _obData.budget = budget;
     _obData.cpl = parseInt(document.getElementById('ob-cpl')?.value) || 0;
-  } else if (_obSlide === 3) {
-    // Check FB status before going to step 5
+  } else if (_obSlide === 4) {
+    // Check FB status before going to summary
     await obCheckFb();
     _obRenderSummary();
   }
@@ -2816,7 +2854,8 @@ async function obNext() {
   if (_obSlide < _OB_TOTAL - 1) {
     _obSlide++;
     _obRender();
-    if (_obSlide === 3) obCheckFb();
+    if (_obSlide === 4) obCheckFb();
+    if (_obSlide === _OB_TOTAL - 1) obFinish(); // auto-generate strategy on last slide
   }
 }
 
@@ -2833,6 +2872,13 @@ function _obRenderSummary() {
 }
 
 async function obFinish() {
+  // Show loading state on the done-slide
+  const strategyEl = document.getElementById('ob-strategy');
+  const strategyContainer = document.getElementById('ob-strategy-container');
+  const finishBtn = document.getElementById('ob-finish-btn');
+  if (strategyEl) strategyEl.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px">⏳ AI составляет стратегию для вашего бизнеса...</div>';
+  if (finishBtn) finishBtn.disabled = true;
+
   // Save profile (whatsapp + cpl)
   if (UID && _obData.whatsapp) {
     await api('/api/settings/profile', {
@@ -2859,6 +2905,52 @@ async function obFinish() {
     });
   }
 
+  // Generate AI strategy
+  try {
+    const strat = await api('/api/ai/strategy', {
+      method: 'POST',
+      body: JSON.stringify({
+        niche: _obData.niche || '',
+        offer: _obData.offer || '',
+        city: _obData.city || 'Алматы',
+        budget: _obData.budget || 2000,
+        gender: _obData.gender || 'all',
+        age_min: _obData.age_min || 22,
+        age_max: _obData.age_max || 45,
+      }),
+    });
+    if (strategyEl && strat?.strategy) {
+      strategyEl.innerHTML = `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:left">
+          <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px">🤖 AI-стратегия для вашего бизнеса</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap">${strat.strategy}</div>
+        </div>`;
+    } else if (strategyEl) {
+      strategyEl.innerHTML = _obDefaultStrategy();
+    }
+  } catch(e) {
+    if (strategyEl) strategyEl.innerHTML = _obDefaultStrategy();
+  }
+
+  if (finishBtn) { finishBtn.disabled = false; finishBtn.textContent = 'Перейти в приложение →'; }
+}
+
+function _obDefaultStrategy() {
+  const niche = _obData.niche || 'вашего бизнеса';
+  const budget = _obData.budget || 2000;
+  return `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:left">
+      <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px">🤖 Базовая стратегия</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.8">
+        <b>1. Создайте баннер</b> — AI сгенерирует 3 варианта под ${niche}<br>
+        <b>2. Настройте аудиторию</b> — возраст ${_obData.age_min||22}–${_obData.age_max||45}, ${_obData.city||'ваш город'}<br>
+        <b>3. Запустите рекламу</b> — бюджет ${budget.toLocaleString('ru')} ₸/день на WhatsApp-лиды<br>
+        <b>4. Следите за результатами</b> — AI оптимизирует каждые 6 часов
+      </div>
+    </div>`;
+}
+
+function obGoToApp() {
   localStorage.setItem('adai_onboarded', '1');
   document.getElementById('onboarding').style.display = 'none';
 
@@ -2883,18 +2975,24 @@ function _obRender() {
   const bar = document.getElementById('ob-progress-bar');
   if (bar) bar.style.width = pct + '%';
 
-  // Step label
+  // Step label and skip button — hide on welcome slide (0)
   const lbl = document.getElementById('ob-step-label');
-  if (lbl) lbl.textContent = `Шаг ${_obSlide + 1} из ${_OB_TOTAL}`;
+  if (lbl) lbl.textContent = _obSlide === 0 ? '' : `Шаг ${_obSlide} из ${_OB_TOTAL - 1}`;
+  const skipBtn = document.getElementById('ob-skip-btn');
+  if (skipBtn) skipBtn.style.display = _obSlide === 0 ? 'none' : '';
 
   // Bottom button
   const bottom = document.getElementById('ob-bottom');
   const btn = document.getElementById('ob-next-btn');
   if (_obSlide === _OB_TOTAL - 1) {
-    if (bottom) bottom.style.display = 'none'; // step 5 has its own buttons
+    if (bottom) bottom.style.display = 'none'; // last step has its own buttons
   } else {
     if (bottom) bottom.style.display = 'block';
-    if (btn) btn.textContent = _obSlide === 3 ? 'Продолжить →' : 'Далее →';
+    if (btn) {
+      if (_obSlide === 0) btn.textContent = 'Начать →';
+      else if (_obSlide === 4) btn.textContent = 'Продолжить →';
+      else btn.textContent = 'Далее →';
+    }
   }
 }
 
