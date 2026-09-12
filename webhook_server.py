@@ -844,7 +844,8 @@ async def api_update_direction(did: int, request: Request, user_id: int = Depend
     fields = {k: v for k, v in body.items()
               if k in ("name","niche","description","utp","audience","pains","offers",
                        "geo","gender","traffic_dest","whatsapp_number",
-                       "daily_budget","target_cpl","welcome_message","pre_message","ad_text")}
+                       "daily_budget","target_cpl","welcome_message","pre_message","ad_text",
+                       "ai_strategy")}
     if fields:
         update_direction(did, **fields)
     return {"status": "updated"}
@@ -943,8 +944,8 @@ async def api_launch_direction(did: int, request: Request, user_id: int = Depend
 
 @app.post("/api/ai/strategy")
 async def api_ai_strategy(request: Request, user_id: int = Depends(_get_uid)):
-    """Generate a personalized marketing strategy based on onboarding data."""
-    import openai, os
+    """Generate a full structured marketing strategy based on onboarding data."""
+    import openai, os, json as _json
     body = await request.json()
     niche = body.get("niche", "бизнес")
     offer = body.get("offer", "")
@@ -955,28 +956,63 @@ async def api_ai_strategy(request: Request, user_id: int = Depends(_get_uid)):
     age_max = body.get("age_max", 45)
 
     gender_text = {"all": "мужчины и женщины", "male": "мужчины", "female": "женщины"}.get(gender, "все")
-    prompt = f"""Ты — опытный маркетолог для малого бизнеса Казахстана. Составь краткую, практичную маркетинговую стратегию для Facebook/Instagram рекламы.
 
-Бизнес: {niche}
-Оффер/услуга: {offer or 'не указан'}
-Город: {city}
-Бюджет: {budget} ₸/день
-Аудитория: {gender_text}, возраст {age_min}–{age_max} лет
+    prompt = f"""Ты — опытный таргетолог и маркетолог для малого бизнеса Казахстана.
+Составь ПОЛНУЮ готовую стратегию рекламы в Facebook/Instagram для запуска прямо сейчас.
 
-Составь стратегию в 4-5 пунктах. Каждый пункт — 1-2 предложения. Конкретные советы именно для этого бизнеса и города. Фокус на WhatsApp-лидах. Используй эмодзи в начале каждого пункта. Без вступления и заключения — только пункты."""
+Данные бизнеса:
+- Ниша: {niche}
+- Оффер: {offer or 'не указан'}
+- Город: {city}
+- Бюджет: {budget} ₸/день
+- Аудитория: {gender_text}, возраст {age_min}–{age_max} лет
+- Цель: лиды через WhatsApp
+
+Верни ТОЛЬКО валидный JSON без markdown, без пояснений:
+{{
+  "audience": {{
+    "description": "Описание целевой аудитории (2-3 предложения, кто они, чем интересуются)",
+    "age_min": {age_min},
+    "age_max": {age_max},
+    "gender": "{gender}",
+    "interests": ["интерес1", "интерес2", "интерес3", "интерес4"],
+    "behaviors": "Поведенческие характеристики (1 предложение)"
+  }},
+  "ad_text": {{
+    "headline": "Заголовок объявления (до 40 символов, цепляющий)",
+    "body": "Текст объявления (3-4 предложения: боль → решение → оффер → призыв к действию)",
+    "cta": "Текст кнопки (например: Написать в WhatsApp)"
+  }},
+  "schedule": {{
+    "best_hours": "Лучшее время показа (например: 09:00–12:00 и 18:00–21:00)",
+    "best_days": "Лучшие дни (например: вторник–суббота)"
+  }},
+  "budget_split": {{
+    "test_phase": "Как тестировать первые 3 дня",
+    "scale_phase": "Как масштабировать если идут лиды"
+  }},
+  "summary": "Краткое резюме стратегии (2-3 предложения)"
+}}"""
 
     try:
         client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         resp = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=400,
+            max_tokens=800,
             temperature=0.7,
         )
-        strategy_text = resp.choices[0].message.content.strip()
-        return {"strategy": strategy_text}
+        raw = resp.choices[0].message.content.strip()
+        # Strip markdown code fences if present
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        strategy = _json.loads(raw)
+        return {"ok": True, "strategy": strategy}
     except Exception as e:
-        return {"strategy": None, "error": str(e)}
+        logger.warning("ai/strategy error: %s", e)
+        return {"ok": False, "error": str(e)}
 
 
 @app.post("/api/moderate")

@@ -207,6 +207,7 @@ def init_db():
             "ALTER TABLE directions ADD COLUMN IF NOT EXISTS age_max INT DEFAULT 55",
             "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS budget_alert_sent_date TEXT",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS generations_used INT DEFAULT 0",
+            "ALTER TABLE directions ADD COLUMN IF NOT EXISTS ai_strategy TEXT",
         ]:
             conn.execute(col_sql)
     print("[DB] PostgreSQL initialized")

@@ -2887,14 +2887,17 @@ function _obRenderSummary() {
 }
 
 async function obFinish() {
-  // Show loading state on the done-slide
   const strategyEl = document.getElementById('ob-strategy');
-  const strategyContainer = document.getElementById('ob-strategy-container');
   const finishBtn = document.getElementById('ob-finish-btn');
-  if (strategyEl) strategyEl.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px">⏳ AI составляет стратегию для вашего бизнеса...</div>';
+  if (strategyEl) strategyEl.innerHTML = `
+    <div style="text-align:center;padding:24px 0;color:var(--muted);font-size:13px">
+      <div style="font-size:28px;margin-bottom:8px">🤖</div>
+      AI составляет полную стратегию для вашего бизнеса...<br>
+      <span style="font-size:11px">настройка аудитории, тексты, расписание</span>
+    </div>`;
   if (finishBtn) finishBtn.disabled = true;
 
-  // Save profile (whatsapp + cpl)
+  // Save profile
   if (UID && _obData.whatsapp) {
     await api('/api/settings/profile', {
       method: 'PUT',
@@ -2902,9 +2905,10 @@ async function obFinish() {
     });
   }
 
-  // Create first direction
+  // Create direction first (need its id to save strategy)
+  let dirId = null;
   if (UID && _obData.niche) {
-    await api('/api/directions', {
+    const dir = await api('/api/directions', {
       method: 'POST',
       body: JSON.stringify({
         name: _obData.niche,
@@ -2918,11 +2922,13 @@ async function obFinish() {
         audience: `Возраст ${_obData.age_min || 22}–${_obData.age_max || 45}`,
       }),
     });
+    dirId = dir?.id;
   }
 
-  // Generate AI strategy
+  // Generate full AI strategy
+  let strat = null;
   try {
-    const strat = await api('/api/ai/strategy', {
+    const res = await api('/api/ai/strategy', {
       method: 'POST',
       body: JSON.stringify({
         niche: _obData.niche || '',
@@ -2934,20 +2940,68 @@ async function obFinish() {
         age_max: _obData.age_max || 45,
       }),
     });
-    if (strategyEl && strat?.strategy) {
-      strategyEl.innerHTML = `
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:left">
-          <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px">🤖 AI-стратегия для вашего бизнеса</div>
-          <div style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap">${strat.strategy}</div>
-        </div>`;
-    } else if (strategyEl) {
-      strategyEl.innerHTML = _obDefaultStrategy();
-    }
-  } catch(e) {
-    if (strategyEl) strategyEl.innerHTML = _obDefaultStrategy();
+    if (res?.ok) strat = res.strategy;
+  } catch(e) { /* fallback below */ }
+
+  // Save strategy to direction so it's used for ad launch
+  if (strat && dirId && UID) {
+    await api(`/api/directions/${dirId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        audience: strat.audience?.description || '',
+        ad_text: strat.ad_text?.body || '',
+        ai_strategy: JSON.stringify(strat),
+      }),
+    }).catch(() => {});
   }
 
-  if (finishBtn) { finishBtn.disabled = false; finishBtn.textContent = 'Перейти в приложение →'; }
+  // Store for pre-fill when opening campaign wizard
+  if (strat) window._obStrategy = strat;
+
+  // Render strategy blocks
+  if (strategyEl) {
+    strategyEl.innerHTML = strat ? _obRenderStrategy(strat) : _obDefaultStrategy();
+  }
+  if (finishBtn) { finishBtn.disabled = false; finishBtn.textContent = 'Запустить рекламу →'; }
+}
+
+function _obRenderStrategy(s) {
+  const aud = s.audience || {};
+  const ad = s.ad_text || {};
+  const sched = s.schedule || {};
+  const bud = s.budget_split || {};
+  const interests = (aud.interests || []).map(i => `<span style="background:rgba(249,115,22,.12);color:var(--accent);padding:2px 8px;border-radius:20px;font-size:11px">${i}</span>`).join(' ');
+  return `
+    <div style="text-align:left;display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:13px;font-weight:700;color:var(--accent);text-align:center;margin-bottom:2px">✅ Стратегия готова</div>
+
+      ${s.summary ? `<div style="background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6;color:var(--text)">${s.summary}</div>` : ''}
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🎯 Целевая аудитория</div>
+        <div style="font-size:13px;color:var(--text);margin-bottom:8px">${aud.description || ''}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">${interests}</div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">📝 Текст объявления</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">${ad.headline || ''}</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">${ad.body || ''}</div>
+        ${ad.cta ? `<div style="margin-top:8px;display:inline-block;background:var(--accent);color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600">${ad.cta}</div>` : ''}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">⏰ Расписание</div>
+          <div style="font-size:12px;color:var(--text)">${sched.best_hours || ''}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${sched.best_days || ''}</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">💰 Бюджет</div>
+          <div style="font-size:12px;color:var(--text)">${bud.test_phase || ''}</div>
+        </div>
+      </div>
+    </div>`;
 }
 
 function _obDefaultStrategy() {
