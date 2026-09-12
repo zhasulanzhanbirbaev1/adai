@@ -307,41 +307,28 @@ async def generate_3_creatives_concept(brief: dict) -> dict:
     return json.loads(response.choices[0].message.content)
 
 
-async def generate_dalle_image(prompt: str, size: str = "1024x1024") -> bytes:
+async def generate_dalle_image(prompt: str, size: str = "1024x1536") -> bytes:
+    """Generate image via gpt-image-1. Size: 1024x1024 | 1024x1536 | 1536x1024."""
     if not client:
         raise RuntimeError("OPENAI_API_KEY not set")
     import base64 as _b64
-    import logging as _log
-    _logger = _log.getLogger(__name__)
 
-    # Try gpt-image-1 (requires special OpenAI org access)
-    try:
-        response = await client.images.generate(
-            model="gpt-image-1",
-            prompt=prompt,
-            size=size,
-            quality="medium",
-            n=1,
-        )
-        return _b64.b64decode(response.data[0].b64_json)
-    except Exception as _e:
-        _logger.warning("gpt-image-1 failed (%s), falling back to dall-e-3", _e)
+    # Validate size for gpt-image-1
+    valid_sizes = {"1024x1024", "1024x1536", "1536x1024", "auto"}
+    if size not in valid_sizes:
+        size = "1024x1536"
 
-    # Fallback: dall-e-3 (portrait 1024x1792, square 1024x1024)
-    try:
-        parts = size.split("x")
-        dalle_size = "1024x1792" if len(parts) == 2 and int(parts[0]) < int(parts[1]) else "1024x1024"
-    except Exception:
-        dalle_size = "1024x1024"
     response = await client.images.generate(
-        model="dall-e-3",
+        model="gpt-image-1",
         prompt=prompt,
-        size=dalle_size,
-        quality="standard",
-        response_format="b64_json",
+        size=size,
+        quality="high",
         n=1,
     )
-    return _b64.b64decode(response.data[0].b64_json)
+    raw = response.data[0].b64_json
+    if not raw:
+        raise RuntimeError("gpt-image-1 вернул пустой b64_json")
+    return _b64.b64decode(raw)
 
 
 async def generate_instagram_copy(niche: str, offer: str, audience: str) -> dict:

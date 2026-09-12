@@ -97,7 +97,8 @@ _BANNER_CACHE: dict = {}  # token -> (img_bytes, label, expires_at)
 async def _global_exc(request: Request, exc: Exception):
     import traceback
     logger.error("Unhandled %s at %s: %s\n%s", type(exc).__name__, request.url.path, exc, traceback.format_exc())
-    return JSONResponse(status_code=500, content={"detail": f"Внутренняя ошибка: {type(exc).__name__}"})
+    tb = traceback.format_exc()
+    return JSONResponse(status_code=500, content={"detail": f"Внутренняя ошибка: {type(exc).__name__}: {str(exc)[:200]}", "traceback": tb[-800:]})
 
 
 @app.post("/webhook")
