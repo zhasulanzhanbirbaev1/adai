@@ -1148,14 +1148,14 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
 
     # ── Step 1: AI Creative Director generates 3 concepts ──────────────────
     brief = {
-        "niche":       niche,
-        "geo":         body.get("geo", "Казахстан"),
-        "description": description,
-        "offers":      description,
-        "audience":    audience,
-        "utp":         "",
-        "pains":       "",
-        "whatsapp_number": "",
+        "niche":            niche,
+        "geo":              body.get("geo", "Казахстан"),
+        "description":      description,
+        "offers":           body.get("offers") or description,
+        "audience":         audience,
+        "utp":              body.get("utp", ""),
+        "whatsapp_number":  body.get("whatsapp_number", ""),
+        "client_photo":     bool(image_b64),
     }
     try:
         concepts_data = await generate_3_creatives_concept(brief)
