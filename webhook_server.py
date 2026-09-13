@@ -791,7 +791,7 @@ async def fb_connect(user_id: int = Query(...)):
     params = urlencode({
         "client_id": FB_APP_ID,
         "redirect_uri": FB_REDIRECT,
-        "scope": "ads_management,ads_read,business_management,pages_show_list",
+        "scope": "ads_management,ads_read,business_management,pages_show_list,instagram_basic",
         "state": str(user_id),
         "response_type": "code",
     })
