@@ -6,6 +6,7 @@ from openai import AsyncOpenAI
 
 logger = logging.getLogger(__name__)
 META_API = "https://graph.facebook.com/v19.0"
+BUDGET_MINOR_UNITS = 100  # Meta daily_budget is in smallest currency unit (tiyn for KZT)
 _openai = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
 
 
@@ -55,10 +56,12 @@ async def generate_brief_strategy(direction: dict) -> dict:
 def upload_image_to_fb(access_token: str, ad_account_id: str, image_bytes: bytes, filename: str) -> str:
     url = f"{META_API}/{ad_account_id}/adimages"
     resp = requests.post(url, data={"access_token": access_token},
-                         files={"filename": (filename, image_bytes, "image/jpeg")})
+                         files={"filename": (filename, image_bytes, "image/jpeg")},
+                         timeout=120)
     data = resp.json()
     if "images" in data:
         return list(data["images"].values())[0]["hash"]
+    logger.error("[FB] Image upload failed: %s", data)
     raise Exception(f"Image upload failed: {data}")
 
 
@@ -79,12 +82,13 @@ def create_fb_campaign(access_token: str, ad_account_id: str,
         "access_token": access_token,
         "name": name,
         "objective": cfg["objective"],
-        "status": "ACTIVE",
+        "status": "PAUSED",  # all objects start paused; activate after full build
         "special_ad_categories": "[]",
-    })
+    }, timeout=30)
     data = resp.json()
     if "id" in data:
         return data["id"]
+    logger.error("[FB] Campaign creation failed: %s", data)
     raise Exception(f"Campaign creation failed: {data}")
 
 
@@ -106,17 +110,12 @@ def create_fb_adset(access_token: str, ad_account_id: str, campaign_id: str,
     elif gender == "female":
         targeting["genders"] = [2]
 
-    if mode == "leads":
-        # Max placements → more impressions in the same niche audience → lower CPL
-        targeting["publisher_platforms"] = ["facebook", "instagram", "audience_network"]
-        targeting["facebook_positions"]  = ["feed", "story", "reels", "right_hand_column", "marketplace"]
-        targeting["instagram_positions"] = ["stream", "story", "reels", "explore"]
-        targeting["audience_network_positions"] = ["classic"]
-    else:
-        # WhatsApp mode — FB + IG only, user controls placement
-        targeting["publisher_platforms"] = ["facebook", "instagram"]
-        targeting["facebook_positions"]  = ["feed", "story", "reels"]
-        targeting["instagram_positions"] = ["stream", "story", "reels", "explore"]
+    # FB + IG only for both modes — WhatsApp traffic is mobile.
+    # audience_network and marketplace generate accidental taps that inflate
+    # conversation counts without real leads; right_hand_column is desktop-only.
+    targeting["publisher_platforms"] = ["facebook", "instagram"]
+    targeting["facebook_positions"]  = ["feed", "story", "reels"]
+    targeting["instagram_positions"] = ["stream", "story", "reels", "explore"]
 
     promoted_object = {}
     if whatsapp_number:
@@ -126,7 +125,7 @@ def create_fb_adset(access_token: str, ad_account_id: str, campaign_id: str,
         "access_token": access_token,
         "name": name,
         "campaign_id": campaign_id,
-        "daily_budget": int(daily_budget_kzt * 4.5),
+        "daily_budget": int(daily_budget_kzt * BUDGET_MINOR_UNITS),
         "billing_event": "IMPRESSIONS",
         "optimization_goal": cfg["optimization"],
         "targeting": json.dumps(targeting),
@@ -136,34 +135,44 @@ def create_fb_adset(access_token: str, ad_account_id: str, campaign_id: str,
     if promoted_object:
         params["promoted_object"] = json.dumps(promoted_object)
 
-    resp = requests.post(f"{META_API}/{ad_account_id}/adsets", data=params)
+    resp = requests.post(f"{META_API}/{ad_account_id}/adsets", data=params, timeout=30)
     data = resp.json()
     if "id" in data:
         return data["id"]
+    logger.error("[FB] AdSet creation failed: %s", data)
     raise Exception(f"AdSet creation failed: {data}")
 
 
 def create_fb_ad(access_token: str, ad_account_id: str, adset_id: str,
                   name: str, image_hash: str, ad_text: str,
-                  page_id: str, whatsapp_number: str = None) -> str:
+                  page_id: str, whatsapp_number: str = None,
+                  welcome_message: str = None) -> str:
+    wa_number = (whatsapp_number or "").lstrip("+").replace(" ", "")
+    wa_link = f"https://wa.me/{wa_number}" if wa_number else "https://api.whatsapp.com/send"
+    link_data: dict = {
+        "image_hash": image_hash,
+        "message": ad_text,
+        "link": wa_link,
+        "call_to_action": {
+            "type": "WHATSAPP_MESSAGE",
+            "value": {"app_destination": "WHATSAPP"},
+        },
+    }
+    if welcome_message:
+        link_data["page_welcome_message"] = welcome_message
+
+    story_spec: dict = {"page_id": page_id, "link_data": link_data}
+
     creative_data = {
         "access_token": access_token,
         "name": f"{name} Creative",
-        "object_story_spec": json.dumps({
-            "page_id": page_id,
-            "link_data": {
-                "image_hash": image_hash,
-                "message": ad_text,
-                "call_to_action": {
-                    "type": "WHATSAPP_MESSAGE",
-                    "value": {"app_destination": "WHATSAPP"}
-                }
-            }
-        }),
+        "object_story_spec": json.dumps(story_spec),
     }
-    cr = requests.post(f"{META_API}/{ad_account_id}/adcreatives", data=creative_data)
+    cr = requests.post(f"{META_API}/{ad_account_id}/adcreatives",
+                       data=creative_data, timeout=30)
     cr_data = cr.json()
     if "id" not in cr_data:
+        logger.error("[FB] Creative failed: %s", cr_data)
         raise Exception(f"Creative failed: {cr_data}")
 
     ad = requests.post(f"{META_API}/{ad_account_id}/ads", data={
@@ -172,11 +181,11 @@ def create_fb_ad(access_token: str, ad_account_id: str, adset_id: str,
         "adset_id": adset_id,
         "creative": json.dumps({"creative_id": cr_data["id"]}),
         "status": "PAUSED",
-        "access_token": access_token,
-    })
+    }, timeout=30)
     ad_data = ad.json()
     if "id" in ad_data:
         return ad_data["id"]
+    logger.error("[FB] Ad creation failed: %s", ad_data)
     raise Exception(f"Ad creation failed: {ad_data}")
 
 
@@ -219,9 +228,11 @@ def create_fb_video_ad(access_token: str, ad_account_id: str, adset_id: str,
             },
         }),
     }
-    cr = requests.post(f"{META_API}/{ad_account_id}/adcreatives", data=creative_data)
+    cr = requests.post(f"{META_API}/{ad_account_id}/adcreatives",
+                       data=creative_data, timeout=30)
     cr_data = cr.json()
     if "id" not in cr_data:
+        logger.error("[FB] Video creative failed: %s", cr_data)
         raise Exception(f"Video creative failed: {cr_data}")
 
     ad = requests.post(f"{META_API}/{ad_account_id}/ads", data={
@@ -230,16 +241,18 @@ def create_fb_video_ad(access_token: str, ad_account_id: str, adset_id: str,
         "adset_id": adset_id,
         "creative": json.dumps({"creative_id": cr_data["id"]}),
         "status": "PAUSED",
-    })
+    }, timeout=30)
     ad_data = ad.json()
     if "id" in ad_data:
         return ad_data["id"]
+    logger.error("[FB] Video ad creation failed: %s", ad_data)
     raise Exception(f"Video ad creation failed: {ad_data}")
 
 
 def get_fb_pages(access_token: str) -> list:
     resp = requests.get(f"{META_API}/me/accounts",
-                        params={"access_token": access_token, "fields": "id,name"})
+                        params={"access_token": access_token, "fields": "id,name"},
+                        timeout=10)
     return resp.json().get("data", [])
 
 
@@ -252,3 +265,20 @@ def set_campaign_status(access_token: str, campaign_id: str, status: str) -> dic
     )
     resp.raise_for_status()
     return resp.json()
+
+
+def activate_fb_objects(access_token: str, campaign_id: str,
+                         adset_id: str, ad_id: str) -> None:
+    """Set campaign → adset → ad to ACTIVE after successful creation."""
+    for obj_id in [campaign_id, adset_id, ad_id]:
+        try:
+            resp = requests.post(
+                f"{META_API}/{obj_id}",
+                data={"status": "ACTIVE", "access_token": access_token},
+                timeout=30,
+            )
+            data = resp.json()
+            if "error" in data:
+                logger.error("[FB] Activate %s failed: %s", obj_id, data)
+        except Exception as e:
+            logger.error("[FB] Activate %s exception: %s", obj_id, e)

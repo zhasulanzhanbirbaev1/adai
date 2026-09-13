@@ -28,7 +28,7 @@ ADMIN_KEY     = os.getenv("ADMIN_KEY", "changeme")
 TG_API        = f"https://api.telegram.org/bot{BOT_TOKEN}"
 FB_APP_ID     = os.getenv("FB_APP_ID", "")
 FB_APP_SECRET = os.getenv("FB_APP_SECRET", "")
-_BASE_URL     = os.getenv("BASE_URL", "https://like-ai-production.up.railway.app").rstrip("/")
+_BASE_URL     = os.getenv("BASE_URL", "").rstrip("/")
 FB_REDIRECT   = f"{_BASE_URL}/fb/callback"
 
 logger = logging.getLogger(__name__)
@@ -66,6 +66,8 @@ async def _lifespan(app):
                 allowed_updates=["message", "callback_query", "inline_query"],
             )
             logger.info("Webhook registered: %s/webhook", _base_url)
+        else:
+            logger.error("BASE_URL not set — webhook not registered, bot will not receive updates")
         logger.info("Bot + scheduler ready")
     except Exception as exc:
         logger.error("Bot startup failed (server still runs): %s", exc, exc_info=True)
@@ -449,17 +451,28 @@ async def api_studio_launch(request: Request, user_id: int = Depends(_get_uid)):
     budget_kzt    = float(body.get("budget_kzt", 5000))
     whatsapp      = body.get("whatsapp_number", "").strip()
     page_id       = body.get("page_id", "").strip()
-    campaign_name = body.get("campaign_name", "Adai кампания").strip()
-    age_min       = int(body.get("age_min", 20))
-    age_max       = int(body.get("age_max", 55))
-    gender        = body.get("gender", "all")
+    campaign_name   = body.get("campaign_name", "Adai кампания").strip()
+    age_min         = int(body.get("age_min", 20))
+    age_max         = int(body.get("age_max", 55))
+    gender          = body.get("gender", "all")
+    welcome_message = body.get("welcome_message", "").strip()
+    niche           = body.get("niche", campaign_name).strip()
 
     if not image_b64:
         raise HTTPException(400, "image_base64 required")
     if not page_id:
         raise HTTPException(400, "page_id required — укажите ID страницы Facebook в Настройках")
 
-    from fb_launcher import upload_image_to_fb, create_fb_campaign, create_fb_adset, create_fb_ad
+    # Auto-generate welcome message if not provided
+    if not welcome_message:
+        try:
+            from wa_greeter import generate_welcome_messages
+            variants = await generate_welcome_messages(niche, ad_text)
+            welcome_message = variants[0] if variants else ""
+        except Exception as e:
+            logger.warning("Welcome message generation failed: %s", e)
+
+    from fb_launcher import upload_image_to_fb, create_fb_campaign, create_fb_adset, create_fb_ad, activate_fb_objects
 
     try:
         img_bytes  = b64mod.b64decode(image_b64.split(",")[-1])
@@ -484,7 +497,9 @@ async def api_studio_launch(request: Request, user_id: int = Depends(_get_uid)):
             ad_text=ad_text or campaign_name,
             page_id=page_id,
             whatsapp_number=whatsapp,
+            welcome_message=welcome_message or None,
         )
+        activate_fb_objects(fb["access_token"], camp_id, adset_id, ad_id)
     except Exception as e:
         logger.error("Campaign launch error: %s", e)
         raise HTTPException(500, f"Ошибка запуска: {str(e)}")
@@ -523,7 +538,7 @@ async def api_studio_launch_video(request: Request, user_id: int = Depends(_get_
     if not fb:
         raise HTTPException(403, "Facebook не подключён")
 
-    from fb_launcher import upload_video_to_fb, create_fb_video_ad, create_fb_campaign, create_fb_adset
+    from fb_launcher import upload_video_to_fb, create_fb_video_ad, create_fb_campaign, create_fb_adset, activate_fb_objects
 
     video_bytes = _b64.b64decode(video_b64)
 
@@ -552,6 +567,7 @@ async def api_studio_launch_video(request: Request, user_id: int = Depends(_get_
             page_id=page_id,
             whatsapp_number=whatsapp,
         )
+        activate_fb_objects(fb["access_token"], camp_id, adset_id, ad_id)
     except Exception as e:
         logger.error("Video campaign launch error: %s", e)
         raise HTTPException(500, f"Ошибка создания кампании: {e}")
@@ -1101,6 +1117,20 @@ async def api_ai_strategy(request: Request, user_id: int = Depends(_get_uid)):
     except Exception as e:
         logger.warning("ai/strategy error: %s", e)
         return {"ok": False, "error": str(e)}
+
+
+@app.post("/api/ai/welcome-message")
+async def api_welcome_message(request: Request, user_id: int = Depends(_get_uid)):
+    """Generate 3 WhatsApp greeting variants based on niche and offer."""
+    from wa_greeter import generate_welcome_messages
+    body    = await request.json()
+    niche   = body.get("niche", "").strip()
+    offer   = body.get("offer", "").strip()
+    city    = body.get("city", "Казахстан").strip()
+    if not niche:
+        raise HTTPException(400, "niche required")
+    messages = await generate_welcome_messages(niche, offer, city)
+    return {"messages": messages}
 
 
 @app.post("/api/moderate")

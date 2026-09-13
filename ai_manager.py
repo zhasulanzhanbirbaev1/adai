@@ -246,13 +246,14 @@ async def daily_report(bot):
 
         yesterday_str = (datetime.utcnow() - timedelta(days=1)).strftime("%d.%m.%Y")
 
-        base_url = __import__("os").environ.get("BASE_URL", "https://like-ai-production.up.railway.app").rstrip("/")
+        base_url = __import__("os").environ.get("BASE_URL", "").rstrip("/")
+        cpl_line = f"💵 Цена за лид: *{cpl:,.0f} ₸*\n" if cpl > 0 else "💵 Цена за лид: *—*\n"
         text = (
             f"📊 *Отчёт за {yesterday_str}*\n\n"
             f"👁 Показы: *{stats['impressions']:,}*\n"
             f"🖱 Клики: *{stats['clicks']:,}* (CTR {ctr:.2f}%)\n"
-            f"🎯 Заявки: *{stats['leads']}*"
-            + (f" (CPL {cpl:,.0f} ₸)" if cpl > 0 else "") + "\n"
+            f"🎯 Заявки: *{stats['leads']}*\n"
+            + cpl_line +
             f"💰 Потрачено: *{stats['spent']:,.0f} ₸*\n"
             f"📁 Активных кампаний: {n_camps}\n\n"
             f"[Открыть дашборд]({base_url}/app?user_id={user_id})"

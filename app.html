@@ -691,6 +691,14 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
                     <div class="type-opt" data-val="male" onclick="selectLaunchGender(this)"><div class="t-label">Мужчины</div></div>
                   </div>
                 </div>
+                <div class="form-group">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                    <label class="form-label" style="margin-bottom:0">Приветственное сообщение WhatsApp</label>
+                    <button type="button" id="wm-gen-btn" onclick="generateWelcomeMessage()" style="padding:5px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--accent)">✨ Сгенерировать</button>
+                  </div>
+                  <textarea class="form-input" id="launch-welcome-message" rows="2" placeholder="Автоматически — или введите своё..."></textarea>
+                  <div id="wm-variants" style="display:none;margin-top:8px;flex-direction:column;gap:6px"></div>
+                </div>
                 <div id="launch-status" style="margin-bottom:10px;font-size:13px;color:var(--muted);text-align:center;display:none"></div>
                 <button class="btn btn-primary" id="launch-btn" onclick="launchWithModeration()" style="width:100%;font-size:16px;padding:14px">🚀 Запустить рекламу</button>
                 <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Кампания создаётся на паузе — проверите в Facebook Ads Manager</p>
@@ -2337,6 +2345,42 @@ async function generateBannersDalle() {
   }
 }
 
+async function generateWelcomeMessage() {
+  const niche = document.getElementById('gen-niche')?.value?.trim() || '';
+  const offer = document.getElementById('gen-description')?.value?.trim() || '';
+  const btn = document.getElementById('wm-gen-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳...';
+  try {
+    const r = await fetch(`${API}/api/ai/welcome-message?user_id=${UID}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({niche: niche || 'бизнес', offer})
+    });
+    const data = await r.json();
+    const variants = data.messages || [];
+    const box = document.getElementById('wm-variants');
+    if (variants.length) {
+      box.style.display = 'flex';
+      box.innerHTML = variants.map(msg =>
+        `<div onclick="selectWelcomeMsg(this,'${msg.replace(/'/g,"\\'")}')"`+
+        ` style="padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;color:var(--text);line-height:1.4">${msg}</div>`
+      ).join('');
+    }
+  } catch(e) {
+    showToast('Ошибка генерации');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ Сгенерировать';
+  }
+}
+
+function selectWelcomeMsg(el, msg) {
+  document.getElementById('launch-welcome-message').value = msg;
+  document.querySelectorAll('#wm-variants > div').forEach(d => d.style.border = '1px solid var(--border)');
+  el.style.border = '1px solid var(--accent)';
+}
+
 async function launchWithModeration() {
   const text = document.getElementById('launch-ad-text').value.trim();
   const modRow = document.getElementById('moderation-row');
@@ -2421,7 +2465,9 @@ async function launchCampaign() {
         age_max: parseInt(document.getElementById('launch-age-max').value)||55,
         gender: _launchGender,
         campaign_name: niche || 'Adai кампания',
+        niche: niche || '',
         page_id: pageId,
+        welcome_message: document.getElementById('launch-welcome-message').value.trim(),
       })
     });
     const data = await r.json();
