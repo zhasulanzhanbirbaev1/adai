@@ -499,6 +499,73 @@ async def api_studio_launch(request: Request, user_id: int = Depends(_get_uid)):
     return {"campaign_id": camp_id, "adset_id": adset_id, "ad_id": ad_id, "status": "launched"}
 
 
+@app.post("/api/studio/launch-video")
+async def api_studio_launch_video(request: Request, user_id: int = Depends(_get_uid)):
+    """Launch a video ad from base64-encoded video."""
+    import base64 as _b64
+    body         = await request.json()
+    video_b64    = body.get("video_base64", "")
+    ad_text      = body.get("ad_text", "").strip()
+    budget_kzt   = float(body.get("budget_kzt", 3000))
+    page_id      = body.get("page_id", "").strip()
+    whatsapp     = body.get("whatsapp_number", "").strip()
+    campaign_name = body.get("campaign_name", "Adai Видео").strip()
+    age_min      = int(body.get("age_min", 20))
+    age_max      = int(body.get("age_max", 55))
+    gender       = body.get("gender", "all")
+
+    if not video_b64:
+        raise HTTPException(400, "video_base64 required")
+    if not page_id:
+        raise HTTPException(400, "page_id required — укажите ID страницы Facebook в Настройках")
+
+    fb = get_fb_token(user_id)
+    if not fb:
+        raise HTTPException(403, "Facebook не подключён")
+
+    from fb_launcher import upload_video_to_fb, create_fb_video_ad, create_fb_campaign, create_fb_adset
+
+    video_bytes = _b64.b64decode(video_b64)
+
+    try:
+        video_id = await asyncio.get_event_loop().run_in_executor(
+            None, upload_video_to_fb,
+            fb["access_token"], fb["ad_account_id"], video_bytes, f"{campaign_name}.mp4"
+        )
+    except Exception as e:
+        raise HTTPException(500, f"Ошибка загрузки видео в Facebook: {e}")
+
+    try:
+        camp_id  = create_fb_campaign(fb["access_token"], fb["ad_account_id"], name=campaign_name)
+        adset_id = create_fb_adset(
+            fb["access_token"], fb["ad_account_id"], camp_id,
+            name=f"{campaign_name} AdSet",
+            daily_budget_kzt=budget_kzt,
+            geo="KZ", age_min=age_min, age_max=age_max,
+            gender=gender, whatsapp_number=whatsapp,
+        )
+        ad_id = create_fb_video_ad(
+            fb["access_token"], fb["ad_account_id"], adset_id,
+            name=f"{campaign_name} Ad",
+            video_id=video_id,
+            ad_text=ad_text or campaign_name,
+            page_id=page_id,
+            whatsapp_number=whatsapp,
+        )
+    except Exception as e:
+        logger.error("Video campaign launch error: %s", e)
+        raise HTTPException(500, f"Ошибка создания кампании: {e}")
+
+    await _notify(user_id,
+        f"🎬 *Видео-реклама запущена!*\n\n"
+        f"📌 {campaign_name}\n"
+        f"💰 Бюджет: {int(budget_kzt):,} ₸/день\n"
+        f"🆔 ID: `{camp_id}`\n\n"
+        f"Статус: на проверке Facebook")
+
+    return {"campaign_id": camp_id, "adset_id": adset_id, "ad_id": ad_id, "video_id": video_id, "status": "launched"}
+
+
 @app.get("/api/facebook/pages")
 async def api_facebook_pages(user_id: int = Depends(_get_uid)):
     """Fetch user's Facebook Pages using saved token."""

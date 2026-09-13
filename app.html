@@ -524,50 +524,101 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
           <div class="chart-box">
             <div class="box-header"><div class="box-title">🎨 AI Генератор рекламы</div></div>
 
-            <!-- Photo upload -->
-            <div class="form-group">
-              <label class="form-label">Ваше фото <span id="gen-photo-hint" style="color:var(--muted);font-weight:400;font-size:11px">— или AI создаст сам</span></label>
-              <div id="gen-upload-zone" onclick="document.getElementById('gen-file-input').click()"
-                   style="border:2px dashed var(--border);border-radius:12px;padding:18px 14px;text-align:center;cursor:pointer;transition:border-color .2s;background:var(--surface)">
-                <div id="gen-upload-preview" style="margin-bottom:6px;font-size:26px">📸</div>
-                <div id="gen-upload-text" style="color:var(--muted);font-size:13px">Нажмите чтобы загрузить фото товара / услуги</div>
-                <input type="file" id="gen-file-input" accept="image/*" style="display:none" onchange="handleStudioUpload(this)">
-              </div>
-              <div id="gen-photo-clear" style="display:none;text-align:right;margin-top:6px">
-                <span onclick="clearStudioPhoto()" style="font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline">✕ убрать фото (AI создаст сам)</span>
-              </div>
+            <!-- Mode tabs -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+              <button id="tab-banner" onclick="switchStudioTab('banner')"
+                style="padding:10px;border-radius:10px;border:2px solid var(--accent);background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer">
+                🖼 Баннер
+              </button>
+              <button id="tab-video" onclick="switchStudioTab('video')"
+                style="padding:10px;border-radius:10px;border:2px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer">
+                🎬 Видео / Reels
+              </button>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Ниша / бизнес <span style="color:var(--accent)">*</span></label>
-              <input class="form-input" id="gen-niche" placeholder="Салон красоты, кофейня, фитнес..." style="font-size:16px"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Оффер <span style="color:var(--muted);font-weight:400">(необязательно)</span></label>
-              <textarea class="form-input" id="gen-description" rows="2" placeholder="Скидка 30% на первое посещение, пробный урок бесплатно..."></textarea>
-            </div>
-            <div class="form-group" id="gen-style-group">
-              <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);border-radius:10px">
-                <div style="font-size:20px">🤖</div>
-                <div>
-                  <div style="font-size:13px;font-weight:600;color:var(--text)">AI выберет стиль автоматически</div>
-                  <div style="font-size:11px;color:var(--muted);margin-top:2px">По вашей нише и офферу — HOT, WARM или COLD визуал</div>
+            <!-- ── BANNER TAB ── -->
+            <div id="studio-tab-banner">
+              <!-- Photo upload -->
+              <div class="form-group">
+                <label class="form-label">Ваше фото <span id="gen-photo-hint" style="color:var(--muted);font-weight:400;font-size:11px">— или AI создаст сам</span></label>
+                <div id="gen-upload-zone" onclick="document.getElementById('gen-file-input').click()"
+                     style="border:2px dashed var(--border);border-radius:12px;padding:18px 14px;text-align:center;cursor:pointer;transition:border-color .2s;background:var(--surface)">
+                  <div id="gen-upload-preview" style="margin-bottom:6px;font-size:26px">📸</div>
+                  <div id="gen-upload-text" style="color:var(--muted);font-size:13px">Нажмите чтобы загрузить фото товара / услуги</div>
+                  <input type="file" id="gen-file-input" accept="image/*" style="display:none" onchange="handleStudioUpload(this)">
+                </div>
+                <div id="gen-photo-clear" style="display:none;text-align:right;margin-top:6px">
+                  <span onclick="clearStudioPhoto()" style="font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline">✕ убрать фото (AI создаст сам)</span>
                 </div>
               </div>
-            </div>
 
-            <div class="form-group">
-              <label class="form-label">Пол аудитории</label>
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-                <div class="type-opt active" data-val="all" onclick="selectGenGender(this)"><div class="t-label">👥 Все</div></div>
-                <div class="type-opt" data-val="female" onclick="selectGenGender(this)"><div class="t-label">👩 Женщины</div></div>
-                <div class="type-opt" data-val="male" onclick="selectGenGender(this)"><div class="t-label">👨 Мужчины</div></div>
+              <div class="form-group">
+                <label class="form-label">Ниша / бизнес <span style="color:var(--accent)">*</span></label>
+                <input class="form-input" id="gen-niche" placeholder="Салон красоты, кофейня, фитнес..." style="font-size:16px"/>
               </div>
+              <div class="form-group">
+                <label class="form-label">Оффер <span style="color:var(--muted);font-weight:400">(необязательно)</span></label>
+                <textarea class="form-input" id="gen-description" rows="2" placeholder="Скидка 30% на первое посещение, пробный урок бесплатно..."></textarea>
+              </div>
+              <div class="form-group" id="gen-style-group">
+                <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);border-radius:10px">
+                  <div style="font-size:20px">🤖</div>
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:var(--text)">AI выберет стиль автоматически</div>
+                    <div style="font-size:11px;color:var(--muted);margin-top:2px">По вашей нише и офферу — HOT, WARM или COLD визуал</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Пол аудитории</label>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+                  <div class="type-opt active" data-val="all" onclick="selectGenGender(this)"><div class="t-label">👥 Все</div></div>
+                  <div class="type-opt" data-val="female" onclick="selectGenGender(this)"><div class="t-label">👩 Женщины</div></div>
+                  <div class="type-opt" data-val="male" onclick="selectGenGender(this)"><div class="t-label">👨 Мужчины</div></div>
+                </div>
+              </div>
+
+              <button class="btn btn-primary" id="gen-btn" onclick="generateBannersDalle()" style="width:100%;font-size:16px;padding:14px">✨ Создать рекламные баннеры</button>
+              <div id="gen-status" style="margin-top:12px;color:var(--muted);font-size:13px;text-align:center"></div>
+              <div id="gen-counter" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
             </div>
 
-            <button class="btn btn-primary" id="gen-btn" onclick="generateBannersDalle()" style="width:100%;font-size:16px;padding:14px">✨ Создать рекламные баннеры</button>
-            <div id="gen-status" style="margin-top:12px;color:var(--muted);font-size:13px;text-align:center"></div>
-            <div id="gen-counter" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
+            <!-- ── VIDEO TAB ── -->
+            <div id="studio-tab-video" style="display:none">
+              <div class="form-group">
+                <label class="form-label">Ваше видео <span style="color:var(--accent)">*</span></label>
+                <div id="vid-upload-zone" onclick="document.getElementById('vid-file-input').click()"
+                     style="border:2px dashed var(--border);border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer;background:var(--surface)">
+                  <div id="vid-upload-icon" style="font-size:32px;margin-bottom:6px">🎬</div>
+                  <div id="vid-upload-text" style="color:var(--muted);font-size:13px">Нажмите чтобы загрузить MP4 / MOV</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:4px">До 500 МБ · Reels: 9:16, до 90 сек</div>
+                  <input type="file" id="vid-file-input" accept="video/mp4,video/quicktime,video/mov" style="display:none" onchange="handleVideoUpload(this)">
+                </div>
+                <div id="vid-clear" style="display:none;text-align:right;margin-top:6px">
+                  <span onclick="clearVideo()" style="font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline">✕ убрать видео</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Текст объявления <span style="color:var(--accent)">*</span></label>
+                <textarea class="form-input" id="vid-ad-text" rows="3" placeholder="Запишитесь на бесплатную консультацию! Напишите нам в WhatsApp 👇"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Дневной бюджет (₸)</label>
+                <input class="form-input" id="vid-budget" type="number" value="3000" min="500" step="500"/>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:10px;margin-bottom:16px">
+                <div style="font-size:18px">📺</div>
+                <div style="font-size:11px;color:var(--muted)">Видео запустится в <b style="color:var(--text)">Facebook Feed + Instagram Reels + Stories</b> — охват максимальный</div>
+              </div>
+
+              <button class="btn btn-primary" id="vid-btn" onclick="launchVideoAd()" style="width:100%;font-size:16px;padding:14px">🚀 Запустить видео-рекламу</button>
+              <div id="vid-status" style="margin-top:12px;color:var(--muted);font-size:13px;text-align:center"></div>
+            </div>
+
           </div>
             <div id="gen-copy-box" style="display:none">
               <div class="chart-box">
@@ -2067,6 +2118,90 @@ function clearStudioPhoto() {
   document.getElementById('gen-style-group').style.display = '';
   document.getElementById('gen-photo-hint').textContent = '— или AI создаст сам';
   document.getElementById('gen-file-input').value = '';
+}
+
+// ── VIDEO TAB ─────────────────────────────────────────────────────────────────
+let _videoB64 = null;
+
+function switchStudioTab(tab) {
+  const isBanner = tab === 'banner';
+  document.getElementById('studio-tab-banner').style.display = isBanner ? '' : 'none';
+  document.getElementById('studio-tab-video').style.display  = isBanner ? 'none' : '';
+  const btnBanner = document.getElementById('tab-banner');
+  const btnVideo  = document.getElementById('tab-video');
+  btnBanner.style.background   = isBanner ? 'var(--accent)' : 'transparent';
+  btnBanner.style.color        = isBanner ? '#fff' : 'var(--muted)';
+  btnBanner.style.borderColor  = isBanner ? 'var(--accent)' : 'var(--border)';
+  btnVideo.style.background    = isBanner ? 'transparent' : 'var(--accent)';
+  btnVideo.style.color         = isBanner ? 'var(--muted)' : '#fff';
+  btnVideo.style.borderColor   = isBanner ? 'var(--border)' : 'var(--accent)';
+}
+
+function handleVideoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 500 * 1024 * 1024) {
+    showToast('Файл слишком большой (максимум 500 МБ)');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    _videoB64 = e.target.result.split(',')[1];
+    document.getElementById('vid-upload-icon').textContent = '✅';
+    document.getElementById('vid-upload-text').textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' МБ)';
+    document.getElementById('vid-clear').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearVideo() {
+  _videoB64 = null;
+  document.getElementById('vid-upload-icon').textContent = '🎬';
+  document.getElementById('vid-upload-text').textContent = 'Нажмите чтобы загрузить MP4 / MOV';
+  document.getElementById('vid-clear').style.display = 'none';
+  document.getElementById('vid-file-input').value = '';
+}
+
+async function launchVideoAd() {
+  if (!_videoB64) { showToast('Загрузите видео'); return; }
+  const adText = document.getElementById('vid-ad-text').value.trim();
+  if (!adText) { showToast('Введите текст объявления'); return; }
+  const budget = parseInt(document.getElementById('vid-budget').value) || 3000;
+
+  const btn = document.getElementById('vid-btn');
+  const status = document.getElementById('vid-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ Загружаем видео...';
+  status.textContent = 'Отправляем видео в Facebook, это может занять минуту...';
+
+  try {
+    const settings = await fetch(`${API}/api/settings?user_id=${UID}`).then(r=>r.json());
+    const pageId   = settings.fb_page_id || '';
+    const whatsapp = settings.whatsapp || '';
+
+    const r = await fetch(`${API}/api/studio/launch-video?user_id=${UID}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        video_base64: _videoB64,
+        ad_text: adText,
+        budget_kzt: budget,
+        page_id: pageId,
+        whatsapp_number: whatsapp,
+        campaign_name: 'Adai Видео'
+      })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Ошибка запуска');
+
+    btn.textContent = '✅ Запущено!';
+    status.innerHTML = `<span style="color:var(--success)">🎬 Видео-реклама отправлена на проверку Facebook.<br>ID кампании: <b>${data.campaign_id}</b></span>`;
+    clearVideo();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '🚀 Запустить видео-рекламу';
+    status.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`;
+  }
 }
 
 function selectLaunchGender(el) {

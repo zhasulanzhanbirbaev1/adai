@@ -180,6 +180,63 @@ def create_fb_ad(access_token: str, ad_account_id: str, adset_id: str,
     raise Exception(f"Ad creation failed: {ad_data}")
 
 
+def upload_video_to_fb(access_token: str, ad_account_id: str,
+                        video_bytes: bytes, filename: str = "ad.mp4") -> str:
+    """Upload video to Facebook Ad Library. Returns video_id."""
+    url = f"{META_API}/{ad_account_id}/advideos"
+    resp = requests.post(
+        url,
+        data={"access_token": access_token, "name": filename},
+        files={"source": (filename, video_bytes, "video/mp4")},
+        timeout=120,
+    )
+    data = resp.json()
+    if "id" in data:
+        return data["id"]
+    raise Exception(f"Video upload failed: {data}")
+
+
+def create_fb_video_ad(access_token: str, ad_account_id: str, adset_id: str,
+                        name: str, video_id: str, ad_text: str,
+                        page_id: str, whatsapp_number: str = None) -> str:
+    """Create a video ad creative and ad. Returns ad_id."""
+    cta_value = {"app_destination": "WHATSAPP"}
+    if whatsapp_number:
+        cta_value["whatsapp_number"] = whatsapp_number
+
+    creative_data = {
+        "access_token": access_token,
+        "name": f"{name} Creative",
+        "object_story_spec": json.dumps({
+            "page_id": page_id,
+            "video_data": {
+                "video_id": video_id,
+                "message": ad_text,
+                "call_to_action": {
+                    "type": "WHATSAPP_MESSAGE",
+                    "value": cta_value,
+                },
+            },
+        }),
+    }
+    cr = requests.post(f"{META_API}/{ad_account_id}/adcreatives", data=creative_data)
+    cr_data = cr.json()
+    if "id" not in cr_data:
+        raise Exception(f"Video creative failed: {cr_data}")
+
+    ad = requests.post(f"{META_API}/{ad_account_id}/ads", data={
+        "access_token": access_token,
+        "name": name,
+        "adset_id": adset_id,
+        "creative": json.dumps({"creative_id": cr_data["id"]}),
+        "status": "PAUSED",
+    })
+    ad_data = ad.json()
+    if "id" in ad_data:
+        return ad_data["id"]
+    raise Exception(f"Video ad creation failed: {ad_data}")
+
+
 def get_fb_pages(access_token: str) -> list:
     resp = requests.get(f"{META_API}/me/accounts",
                         params={"access_token": access_token, "fields": "id,name"})
