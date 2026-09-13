@@ -218,27 +218,52 @@ async def cmd_reset_me(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     from database import get_conn
     from datetime import datetime, timedelta
+    uid = user.id
     with get_conn() as conn:
-        conn.execute("DELETE FROM facebook_tokens WHERE user_id = %s", (user.id,))
-        conn.execute("UPDATE subscriptions SET active=0 WHERE user_id = %s", (user.id,))
+        # Wipe everything linked to this user
+        conn.execute("DELETE FROM facebook_tokens WHERE user_id = %s", (uid,))
+        conn.execute("DELETE FROM subscriptions WHERE user_id = %s", (uid,))
+        conn.execute("DELETE FROM banner_history WHERE user_id = %s", (uid,))
+        conn.execute("DELETE FROM ai_log WHERE user_id = %s", (uid,))
+        # Delete directions and their creatives (cascade not guaranteed)
+        dir_ids = [r["id"] for r in conn.execute(
+            "SELECT id FROM directions WHERE user_id=%s", (uid,)
+        ).fetchall()]
+        for did in dir_ids:
+            conn.execute("DELETE FROM direction_creatives WHERE direction_id=%s", (did,))
+        conn.execute("DELETE FROM directions WHERE user_id = %s", (uid,))
+        # Delete campaigns and their stats
+        camp_ids = [r["id"] for r in conn.execute(
+            "SELECT id FROM campaigns WHERE user_id=%s", (uid,)
+        ).fetchall()]
+        for cid in camp_ids:
+            conn.execute("DELETE FROM campaign_stats WHERE campaign_id=%s", (cid,))
+        conn.execute("DELETE FROM campaigns WHERE user_id = %s", (uid,))
+        # Reset user to fresh state
         trial_ends = (datetime.utcnow() + timedelta(days=7)).isoformat()
         conn.execute(
-            "UPDATE users SET trial_ends_at = %s, generations_used = 0 WHERE id = %s",
-            (trial_ends, user.id)
+            "UPDATE users SET trial_ends_at=%s, generations_used=0, "
+            "target_cpl=0, whatsapp=NULL, fb_page_id=NULL, fb_ad_account_id=NULL "
+            "WHERE id=%s",
+            (trial_ends, uid)
         )
-    reset_url = f"{WEBAPP_URL}?user_id={user.id}&reset=1" if WEBAPP_URL else None
+    reset_url = f"{WEBAPP_URL}?user_id={uid}&reset=1" if WEBAPP_URL else None
     kb = None
     if reset_url:
         from telegram import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
         kb = InlineKeyboardMarkup([[
-            InlineKeyboardButton("🔄 Открыть онбординг заново", web_app=WebAppInfo(url=reset_url))
+            InlineKeyboardButton("🔄 Открыть приложение заново", web_app=WebAppInfo(url=reset_url))
         ]])
     await update.message.reply_text(
-        "✅ *Аккаунт сброшен*\n\n"
+        "✅ *Полный сброс выполнен*\n\n"
         "— FB токен удалён\n"
-        "— Подписки деактивированы\n"
+        "— Подписки удалены\n"
+        "— Кампании удалены\n"
+        "— Направления удалены\n"
+        "— История баннеров удалена\n"
+        "— Генерации: 0/10\n"
         "— Триал: 7 дней с нуля\n\n"
-        "Нажмите кнопку ниже чтобы открыть приложение с нуля 👇",
+        "Нажмите кнопку ниже — войдёте как новый пользователь 👇",
         parse_mode="Markdown",
         reply_markup=kb,
     )
