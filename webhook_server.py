@@ -1280,7 +1280,13 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
         raise HTTPException(500, f"Ошибка AI Creative Director: {str(e)}")
 
     if not variants:
-        raise HTTPException(500, "AI не вернул концепции, попробуйте ещё раз")
+        missing = concepts_data.get("missing", [])
+        questions = concepts_data.get("questions", [])
+        if missing or questions:
+            detail = "Заполните подробнее: " + "; ".join(questions or missing)
+        else:
+            detail = "Укажите конкретный оффер с цифрой (цена, скидка, срок) и попробуйте снова"
+        raise HTTPException(400, detail)
 
     # ── Step 2 + 3: Generate/render banners ────────────────────────────────
     _last_img_error: list = []
