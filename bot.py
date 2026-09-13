@@ -222,7 +222,10 @@ async def cmd_reset_me(update: Update, context: ContextTypes.DEFAULT_TYPE):
         conn.execute("DELETE FROM facebook_tokens WHERE user_id = %s", (user.id,))
         conn.execute("UPDATE subscriptions SET active=0 WHERE user_id = %s", (user.id,))
         trial_ends = (datetime.utcnow() + timedelta(days=7)).isoformat()
-        conn.execute("UPDATE users SET trial_ends_at = %s WHERE id = %s", (trial_ends, user.id))
+        conn.execute(
+            "UPDATE users SET trial_ends_at = %s, generations_used = 0 WHERE id = %s",
+            (trial_ends, user.id)
+        )
     reset_url = f"{WEBAPP_URL}?user_id={user.id}&reset=1" if WEBAPP_URL else None
     kb = None
     if reset_url:
