@@ -547,12 +547,12 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
               <textarea class="form-input" id="gen-description" rows="2" placeholder="Скидка 30% на первое посещение, пробный урок бесплатно..."></textarea>
             </div>
             <div class="form-group" id="gen-style-group">
-              <label class="form-label">Стиль фото <span id="gen-style-hint" style="color:var(--muted);font-weight:400;font-size:11px">(когда фото нет — AI генерирует)</span></label>
-              <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-                <div class="type-opt active" data-val="cinematic" onclick="selectGenStyle(this)"><div class="t-icon">🎬</div><div class="t-label">Кинематичный</div></div>
-                <div class="type-opt" data-val="product" onclick="selectGenStyle(this)"><div class="t-icon">📸</div><div class="t-label">Продуктовый</div></div>
-                <div class="type-opt" data-val="lifestyle" onclick="selectGenStyle(this)"><div class="t-icon">🌟</div><div class="t-label">Лайфстайл</div></div>
-                <div class="type-opt" data-val="minimal" onclick="selectGenStyle(this)"><div class="t-icon">⬜</div><div class="t-label">Минимализм</div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);border-radius:10px">
+                <div style="font-size:20px">🤖</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:var(--text)">AI выберет стиль автоматически</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:2px">По вашей нише и офферу — HOT, WARM или COLD визуал</div>
+                </div>
               </div>
             </div>
 
@@ -1467,7 +1467,7 @@ let currentPage = 'dashboard';
 let spendChart  = null;
 let selectedCampType = 'photo';
 let _uploadedBase64 = null;
-let _genStyle = 'cinematic';
+let _genStyle = null;
 let _currentDirId = null;
 let _currentStrategy = null;
 let _selectedAdText = null;
@@ -2038,16 +2038,6 @@ async function generateBannersUpload() {
 }
 
 // ── DALL-E GENERATOR ──────────────────────────────────────────────────────────
-function selectGenStyle(el) {
-  if (el.classList.contains('active')) {
-    el.classList.remove('active');
-    _genStyle = null;
-  } else {
-    el.closest('div').querySelectorAll('.type-opt').forEach(o => o.classList.remove('active'));
-    el.classList.add('active');
-    _genStyle = el.dataset.val;
-  }
-}
 
 let _lastGeneratedBanners = [];
 let _launchGender = 'all';
