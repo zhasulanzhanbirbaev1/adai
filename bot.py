@@ -224,7 +224,7 @@ async def cmd_reset_me(update: Update, context: ContextTypes.DEFAULT_TYPE):
         conn.execute("DELETE FROM facebook_tokens WHERE user_id = %s", (uid,))
         conn.execute("DELETE FROM subscriptions WHERE user_id = %s", (uid,))
         conn.execute("DELETE FROM banner_history WHERE user_id = %s", (uid,))
-        conn.execute("DELETE FROM ai_log WHERE user_id = %s", (uid,))
+        conn.execute("DELETE FROM ai_decisions WHERE user_id = %s", (uid,))
         # Delete directions and their creatives (cascade not guaranteed)
         dir_ids = [r["id"] for r in conn.execute(
             "SELECT id FROM directions WHERE user_id=%s", (uid,)
