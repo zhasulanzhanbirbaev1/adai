@@ -756,7 +756,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
               </div>
               <div style="display:flex;gap:14px;align-items:flex-start">
                 <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
-                <div><strong>Нажми «Создать рекламные баннеры»</strong><br><span style="font-size:13px;color:var(--muted)">AI создаёт 3 варианта за ~60 сек</span></div>
+                <div><strong>Нажми «Создать рекламные баннеры»</strong><br><span style="font-size:13px;color:var(--muted)">AI создаёт 3 варианта за ~2 минуты</span></div>
               </div>
               <div style="display:flex;gap:14px;align-items:flex-start">
                 <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div>
@@ -2278,7 +2278,7 @@ async function generateBannersDalle() {
 
   btn.disabled = true;
   btn.textContent = '⏳ Создаю...';
-  status.textContent = 'AI генерирует изображение (20–40 сек)...';
+  status.textContent = 'AI генерирует баннеры (~2 минуты)...';
   container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:44px 0"><div style="font-size:32px;display:inline-block;animation:spin 1.2s linear infinite">✨</div></div>';
   document.getElementById('gen-copy-box').style.display='none';
   document.getElementById('launch-block').style.display='none';
