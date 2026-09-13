@@ -78,7 +78,6 @@ async def _lifespan(app):
         if sched:
             sched.shutdown(wait=False)
         if bot:
-            await bot.bot.delete_webhook()
             await bot.stop()
             await bot.shutdown()
     except Exception:
