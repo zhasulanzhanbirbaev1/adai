@@ -318,6 +318,24 @@ async def api_create_campaign(request: Request, user_id: int = Depends(_get_uid)
 @app.patch("/api/campaigns/{campaign_id}/toggle")
 async def api_toggle(campaign_id: int, user_id: int = Depends(_get_uid)):
     new_state = toggle_campaign(campaign_id, user_id)
+
+    # Sync status to Facebook if campaign has meta_campaign_id
+    try:
+        from database import get_campaigns
+        from fb_launcher import set_campaign_status
+        camps = get_campaigns(user_id)
+        camp = next((c for c in camps if c["id"] == campaign_id), None)
+        if camp and camp.get("meta_campaign_id"):
+            fb = get_fb_token(user_id)
+            if fb:
+                fb_status = "ACTIVE" if new_state else "PAUSED"
+                await asyncio.get_event_loop().run_in_executor(
+                    None, set_campaign_status,
+                    fb["access_token"], camp["meta_campaign_id"], fb_status
+                )
+    except Exception as e:
+        logger.warning("toggle: FB sync failed: %s", e)
+
     return {"active": new_state}
 
 
