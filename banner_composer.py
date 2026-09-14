@@ -6,12 +6,15 @@ FEED_H = 1350   # 4:5 Instagram portrait
 
 _BASE = os.path.join(os.path.dirname(__file__), "fonts")
 _FONT_CANDIDATES_BOLD = [
+    os.path.join(_BASE, "Montserrat-ExtraBold.ttf"),
+    os.path.join(_BASE, "Montserrat-Bold.ttf"),
     os.path.join(_BASE, "arialbd.ttf"),
     r"C:\Windows\Fonts\arialbd.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
 ]
 _FONT_CANDIDATES_REG = [
+    os.path.join(_BASE, "Montserrat-Bold.ttf"),
     os.path.join(_BASE, "arial.ttf"),
     r"C:\Windows\Fonts\arial.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -163,11 +166,6 @@ def style_premium(base: Image.Image, headline: str, bullets: list, cta: str) -> 
     img = _gradient_overlay(base, int(H * 0.42), color=(2, 10, 30), alpha_start=0, alpha_end=228)
     draw = ImageDraw.Draw(img)
 
-    # Blue brand bar at top
-    draw.rectangle([0, 0, W, 84], fill=(37, 99, 235))
-    fl = _font(F_BOLD, 36)
-    draw.text((50, 22), "Adai  ·  Реклама Instagram & Facebook", font=fl, fill=(255, 255, 255))
-
     fh = _font(F_BOLD, 86)
     ft = _font(F_REG,  41)
     fc = _font(F_BOLD, 44)
@@ -306,13 +304,20 @@ def compose_creative_banner(image_bytes: bytes, text_overlay: dict,
     bullets = text_overlay.get("bullets") or []
     y_b = int(H * 0.645)
     for b in bullets[:3]:
-        draw.text((margin, y_b), f"— {b}", font=fsb, fill=WHITE)
-        y_b += 56
+        draw.text((margin, y_b), f"✓  {b}", font=fsb, fill=WHITE)
+        y_b += 58
 
-    # ── CTA button (near bottom) ──────────────────────────────────────────────
+    # ── CTA button — full width ───────────────────────────────────────────────
     cta = (text_overlay.get("cta_button") or "Узнать цену").strip()
     y_cta = int(H * 0.835)
-    _pill(draw, margin, y_cta, cta, fc, bg=cta_bg, fg=WHITE)
+    btn_pad_x, btn_pad_y = 36, 22
+    bb = draw.textbbox((0, 0), cta, font=fc)
+    btn_h = (bb[3] - bb[1]) + btn_pad_y * 2
+    btn_x1, btn_x2 = margin, W - margin
+    draw.rounded_rectangle([btn_x1, y_cta, btn_x2, y_cta + btn_h],
+                            radius=btn_h // 2, fill=cta_bg)
+    tw_cta = bb[2] - bb[0]
+    draw.text(((btn_x1 + btn_x2 - tw_cta) // 2, y_cta + btn_pad_y), cta, font=fc, fill=WHITE)
 
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=94)
