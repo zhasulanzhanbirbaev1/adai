@@ -181,11 +181,13 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
 .upload-area:hover{border-color:var(--accent)}
 .upload-icon{font-size:42px;margin-bottom:10px;opacity:.5}
 .banners-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
-.banner-preview{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s}
+.banner-preview{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;position:relative}
 .banner-preview:hover{border-color:var(--accent);transform:translateY(-2px)}
 .banner-preview.selected{border-color:var(--accent);box-shadow:0 0 18px rgba(99,102,241,.25)}
+.banner-preview.banner-recommended{border-color:#f59e0b;box-shadow:0 0 14px rgba(245,158,11,.20)}
+.rec-badge{position:absolute;top:8px;left:8px;z-index:10;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.3px;pointer-events:none}
 .banner-img{width:100%;aspect-ratio:4/5;background:var(--surface);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.banner-info{padding:9px 11px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.banner-info{padding:9px 11px;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
 .banner-style-name{font-size:11px;color:var(--muted);flex:1}
 .banner-size-tag{font-size:10px;color:var(--accent);background:rgba(99,102,241,.12);padding:2px 6px;border-radius:4px;white-space:nowrap}
 
@@ -2506,12 +2508,13 @@ function renderGeneratedBanners(data) {
   const hint      = document.getElementById('gen-dl-hint');
   hint.textContent = '⬇ — отправляет фото в ваш Telegram';
   container.innerHTML = data.banners.map((b,i)=>`
-    <div class="banner-preview" onclick="openBannerPreview(${i})">
+    <div class="banner-preview${b.recommended?' banner-recommended':''}" onclick="openBannerPreview(${i})">
+      ${b.recommended ? `<div class="rec-badge">⭐ Рекомендуем</div>` : ''}
       <div class="banner-img"><img src="${b.image}" style="width:100%;height:100%;object-fit:cover"/></div>
       <div class="banner-info">
         <span class="banner-style-name">${esc(b.label||'Вариант '+(i+1))}</span>
         <span class="banner-size-tag">${b.size||'1080×1350'}</span>
-        <span style="font-size:11px;color:var(--muted)">👆 нажми для просмотра</span>
+        ${b.recommended && b.recommendation_reason ? `<span style="font-size:11px;color:var(--accent);font-weight:600;margin-top:2px">${esc(b.recommendation_reason)}</span>` : `<span style="font-size:11px;color:var(--muted)">👆 нажми для просмотра</span>`}
       </div>
     </div>`).join('');
 

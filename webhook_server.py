@@ -1325,13 +1325,15 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
                            variants[0] if variants else {})
             to = variant.get("text_overlay", {})
             banners.append({
-                "label":     variant.get("variant_name", item.get("treatment", "Вариант")),
-                "image":     f"data:image/png;base64,{b64}",
-                "size":      "1080×1350",
-                "post_copy": variant.get("post_copy", ""),
-                "hashtags":  variant.get("hashtags", []),
-                "concept":   variant.get("concept_explanation", ""),
-                "note":      item.get("note", ""),
+                "label":                 variant.get("variant_name", item.get("treatment", "Вариант")),
+                "image":                 f"data:image/png;base64,{b64}",
+                "size":                  "1080×1350",
+                "post_copy":             variant.get("post_copy", ""),
+                "hashtags":              variant.get("hashtags", []),
+                "concept":               variant.get("concept_explanation", ""),
+                "note":                  item.get("note", ""),
+                "recommended":           bool(variant.get("recommended", False)),
+                "recommendation_reason": variant.get("recommendation_reason", ""),
             })
             hl = to.get("hook_headline", "")
             if hl:
@@ -1366,12 +1368,14 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
                 b64 = _b.b64encode(banner_bytes).decode()
                 to  = variant.get("text_overlay", {})
                 banners.append({
-                    "label":     variant.get("variant_name", f"Вариант {i+1}"),
-                    "image":     f"data:image/jpeg;base64,{b64}",
-                    "size":      "1080×1350",
-                    "post_copy": variant.get("post_copy", ""),
-                    "hashtags":  variant.get("hashtags", []),
-                    "concept":   variant.get("concept_explanation", ""),
+                    "label":                 variant.get("variant_name", f"Вариант {i+1}"),
+                    "image":                 f"data:image/jpeg;base64,{b64}",
+                    "size":                  "1080×1350",
+                    "post_copy":             variant.get("post_copy", ""),
+                    "hashtags":              variant.get("hashtags", []),
+                    "concept":               variant.get("concept_explanation", ""),
+                    "recommended":           bool(variant.get("recommended", False)),
+                    "recommendation_reason": variant.get("recommendation_reason", ""),
                 })
                 hl = to.get("hook_headline", "")
                 if hl:
