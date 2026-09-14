@@ -89,6 +89,9 @@ async def _lifespan(app):
 app = FastAPI(title="Adai API", docs_url="/docs", redoc_url=None, lifespan=_lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
+from demo_routes import demo_router
+app.include_router(demo_router)
+
 # Temporary in-memory cache for banner file downloads (token → (bytes, label))
 import hashlib as _hashlib, time as _time
 _BANNER_CACHE: dict = {}  # token -> (img_bytes, label, expires_at)

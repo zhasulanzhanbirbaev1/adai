@@ -14,7 +14,7 @@ from banner_composer import generate_creative_for_direction
 
 log = logging.getLogger(__name__)
 
-BASE_URL = os.environ.get("BASE_URL", "https://like-ai-production.up.railway.app").rstrip("/")
+BASE_URL = os.getenv("BASE_URL", "").rstrip("/")
 
 # ── States ────────────────────────────────────────────────────────────────────
 LAUNCH_ASK_PAGE_ID       = 0
