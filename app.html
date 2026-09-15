@@ -340,6 +340,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
     <a class="nav-item" data-page="targetolog" onclick="navigate('targetolog')"><span class="icon">🤖</span>AI Таргетолог</a>
     <a class="nav-item" data-page="marketolog" onclick="navigate('marketolog')"><span class="icon">🎨</span>AI Маркетолог</a>
     <div class="nav-section">Аналитика</div>
+    <a class="nav-item" data-page="demo" onclick="navigate('demo')"><span class="icon">🎁</span>Демо</a>
     <a class="nav-item" data-page="analytics" onclick="navigate('analytics')"><span class="icon">📈</span>Аналитика</a>
     <a class="nav-item" data-page="history" onclick="navigate('history')"><span class="icon">🗂</span>История</a>
     <a class="nav-item" data-page="help" onclick="navigate('help')"><span class="icon">❓</span>Инструкция</a>
@@ -705,6 +706,58 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
                 <button class="btn btn-primary" id="launch-btn" onclick="launchWithModeration()" style="width:100%;font-size:16px;padding:14px">🚀 Запустить рекламу</button>
                 <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Кампания создаётся на паузе — проверите в Facebook Ads Manager</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ ДЕМО ══════════════ -->
+    <div class="page" id="page-demo">
+      <div class="studio-grid">
+        <div>
+          <div class="chart-box">
+            <div class="box-header"><div class="box-title">🎁 Демо-режим</div></div>
+            <p style="color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:18px">
+              Выберите нишу — AI подставит пример предложения. Через пару минут получите
+              три готовых баннера, ровно как их получает реальный клиент.
+              Facebook и подписка не нужны.
+            </p>
+
+            <div class="form-group">
+              <label class="form-label">Ниша <span style="color:var(--accent)">*</span></label>
+              <input class="form-input" id="demo-niche" placeholder="Стоматология" style="font-size:16px"/>
+              <div id="demo-chips" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Предложение <span style="color:var(--muted);font-weight:400">— лучше с цифрой</span></label>
+              <textarea class="form-input" id="demo-offer" rows="2" placeholder="Виниры от 45 000 ₸, диагностика бесплатно"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Город</label>
+              <input class="form-input" id="demo-city" value="Алматы" style="font-size:16px"/>
+            </div>
+
+            <button class="btn btn-primary" id="demo-btn" onclick="demoGenerate()" style="width:100%;font-size:16px;padding:14px">✨ Создать баннеры</button>
+            <div id="demo-status" style="margin-top:12px;color:var(--muted);font-size:13px;text-align:center"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="chart-box" style="min-height:360px">
+            <div class="box-header"><div class="box-title">Результат</div></div>
+            <div id="demo-banners" class="banners-grid">
+              <div style="grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--muted)">
+                <div style="font-size:42px;opacity:.3;margin-bottom:10px">✨</div>
+                <p>Выберите нишу и нажмите «Создать баннеры»</p>
+              </div>
+            </div>
+            <div id="demo-note" style="display:none;margin-top:18px;padding:15px 16px;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:11px;font-size:13px;line-height:1.55;color:var(--text)">
+              Дальше клиент нажимает «Запустить рекламу», и кампания уходит в Facebook и Instagram.
+              Заявки приходят прямо в WhatsApp. В демо этот шаг отключён — для него нужен
+              подключённый рекламный аккаунт.
             </div>
           </div>
         </div>
@@ -1555,7 +1608,8 @@ const PAGE_TITLES = {
   dashboard:'Дашборд', campaigns:'Кампании', directions:'Направления',
   targetolog:'AI Таргетолог', marketolog:'AI Маркетолог',
   analytics:'Аналитика', settings:'Настройки',
-  history:'История', help:'Инструкция', subscribe:'Тариф и оплата'
+  history:'История', help:'Инструкция', subscribe:'Тариф и оплата',
+  demo:'Демо'
 };
 
 // Navigation stack for back button
@@ -1607,6 +1661,93 @@ function loadPage(page) {
   if (page==='history')     loadHistory();
   if (page==='marketolog')  loadStudio();
   if (page==='subscribe')   loadSubscribe();
+  if (page==='demo')        loadDemo();
+}
+
+// ── DEMO PAGE — no auth, no generation limit, no Facebook ─────────────────────
+const DEMO_NICHES = [
+  ['Стоматология',  'Виниры от 45 000 ₸, диагностика бесплатно'],
+  ['Автосервис',    'Замена масла за 20 минут, диагностика бесплатно'],
+  ['Салон красоты', 'Окрашивание от 15 000 ₸, уход за волосами в подарок'],
+  ['Автосалон',     'Кредит от 4% годовых, первый взнос 10%'],
+  ['Цветочный',     'Букет от 8 000 ₸, доставка за 2 часа'],
+  ['Онлайн-школа',  'Курс английского от 25 000 ₸, первый урок бесплатно'],
+  ['Клиника',       'Чекап за 3 часа, анализы в подарок'],
+  ['Косметология',  'Чистка лица от 12 000 ₸, консультация бесплатно'],
+  ['Ювелирный',     'Рассрочка 0% на 12 месяцев, гравировка бесплатно'],
+  ['Фитнес',        'Абонемент от 12 000 ₸, 2 тренировки в подарок'],
+  ['Кофейня',       'Завтрак с кофе за 2 500 ₸ до 12:00'],
+  ['Ресторан',      'Бизнес-ланч за 3 500 ₸ с 12:00 до 16:00'],
+];
+
+function loadDemo() {
+  const box = document.getElementById('demo-chips');
+  if (!box || box.children.length) return;
+  box.innerHTML = DEMO_NICHES.map(([n], i) =>
+    `<span onclick="demoPick(${i})" style="background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:7px 13px;font-size:12.5px;color:var(--muted);cursor:pointer">${esc(n)}</span>`
+  ).join('');
+}
+
+function demoPick(i) {
+  document.getElementById('demo-niche').value = DEMO_NICHES[i][0];
+  document.getElementById('demo-offer').value = DEMO_NICHES[i][1];
+}
+
+const DEMO_STEPS = ['Изучаю нишу и аудиторию','Придумываю три концепции','Рисую баннеры','Собираю макеты'];
+
+async function demoGenerate() {
+  const niche  = document.getElementById('demo-niche').value.trim();
+  const offer  = document.getElementById('demo-offer').value.trim();
+  const city   = document.getElementById('demo-city').value.trim();
+  const btn    = document.getElementById('demo-btn');
+  const status = document.getElementById('demo-status');
+  const wrap   = document.getElementById('demo-banners');
+  const note   = document.getElementById('demo-note');
+
+  if (!niche || !offer) { status.textContent = 'Заполните нишу и предложение'; return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Создаю...';
+  note.style.display = 'none';
+  wrap.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:44px 0"><div style="font-size:32px;display:inline-block;animation:spin 1.2s linear infinite">✨</div></div>';
+
+  let step = 0;
+  status.textContent = DEMO_STEPS[0] + '...';
+  const tick = setInterval(() => {
+    step = (step + 1) % DEMO_STEPS.length;
+    status.textContent = DEMO_STEPS[step] + '...';
+  }, 9000);
+
+  const fail = (icon, msg) => {
+    status.textContent = '';
+    wrap.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--muted)"><div style="font-size:42px;margin-bottom:10px">${icon}</div><p>${esc(msg)}</p></div>`;
+  };
+
+  try {
+    const r = await fetch(`${API}/demo/generate`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({niche, offer, city})
+    });
+    const d = await r.json();
+    clearInterval(tick);
+    if (!r.ok) { fail('🔒', d.error || 'Ошибка'); return; }
+    status.textContent = '';
+    wrap.innerHTML = d.variants.map((v, n) => `
+      <div class="banner-preview">
+        <div class="banner-img"><img src="${v.image}" style="width:100%;height:100%;object-fit:cover"/></div>
+        <div class="banner-info">
+          <span class="banner-style-name">${esc(v.headline || 'Вариант ' + (n+1))}</span>
+          ${v.cta ? `<span class="banner-size-tag">${esc(v.cta)}</span>` : ''}
+        </div>
+      </div>`).join('');
+    note.style.display = 'block';
+  } catch (e) {
+    clearInterval(tick);
+    fail('❌', 'Сервер недоступен');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ Создать баннеры';
+  }
 }
 
 // ── SUBSCRIBE PAGE ─────────────────────────────────────────────────────────────
