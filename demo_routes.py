@@ -318,7 +318,8 @@ go.onclick=async()=>{
     }
     st.style.display='none';
     out.innerHTML=d.variants.map((v,n)=>{
-      const src=(v.image||'').startsWith('http')?v.image:'data:image/png;base64,'+v.image;
+      const raw=v.image||'';
+      const src=/^(https?:|data:)/.test(raw)?raw:'data:image/jpeg;base64,'+raw;
       return '<img class="shot" src="'+src+'" alt="Вариант '+(n+1)+'">'+
              '<div class="cap">Вариант '+(n+1)+(v.headline?' · '+v.headline:'')+'</div>';
     }).join('');
