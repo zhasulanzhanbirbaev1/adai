@@ -324,7 +324,7 @@ async def generate_image(prompt: str, size: str = "1024x1536") -> bytes:
         model="gpt-image-1",
         prompt=prompt,
         size=size,
-        quality="high",
+        quality="medium",
         n=1,
     )
     raw = response.data[0].b64_json
