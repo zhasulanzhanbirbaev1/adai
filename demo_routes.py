@@ -242,10 +242,10 @@ button:disabled{opacity:.5;cursor:default}
 <label>НИША</label>
 <input id="niche" placeholder="Стоматология">
 <div class="chips">
-  <span class="chip" data-f="niche">Стоматология</span>
-  <span class="chip" data-f="niche">Автосервис</span>
-  <span class="chip" data-f="niche">Салон красоты</span>
-  <span class="chip" data-f="niche">Кофейня</span>
+  <span class="chip" data-offer="Виниры от 45 000 ₸, диагностика бесплатно">Стоматология</span>
+  <span class="chip" data-offer="Замена масла за 20 минут, диагностика бесплатно">Автосервис</span>
+  <span class="chip" data-offer="Окрашивание от 15 000 ₸, уход за волосами в подарок">Салон красоты</span>
+  <span class="chip" data-offer="Завтрак с кофе за 2 500 ₸ до 12:00">Кофейня</span>
 </div>
 
 <label>ПРЕДЛОЖЕНИЕ · обязательно с цифрой</label>
@@ -268,7 +268,10 @@ button:disabled{opacity:.5;cursor:default}
 
 <script>
 document.querySelectorAll('.chip').forEach(c=>{
-  c.onclick=()=>{document.getElementById(c.dataset.f).value=c.textContent}
+  c.onclick=()=>{
+    document.getElementById('niche').value=c.textContent;
+    document.getElementById('offer').value=c.dataset.offer||'';
+  }
 });
 
 const go=document.getElementById('go'),
