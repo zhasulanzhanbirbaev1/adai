@@ -10,14 +10,13 @@ demo_routes.py — демо-режим для показа жюри.
     from demo_routes import demo_router
     app.include_router(demo_router)
 
-Открывается по адресу:  https://ваш-домен/demo
+Интерфейс — пункт «Демо» в app.html. Здесь только эндпоинты.
 
 ЧТО ДЕЛАЕТ:
   - три поля: ниша, оффер, город
   - генерирует баннеры тем же кодом, что и основной продукт
   - НЕ требует Facebook, НЕ пишет в БД, НЕ списывает генерации
-  - кнопка «Запустить рекламу» показана неактивной — видно, что
-    продукт целый, просто у гостя нет подключённого аккаунта
+  - интерфейс живёт в app.html (пункт «Демо»), здесь только API
 """
 
 from __future__ import annotations
@@ -29,7 +28,7 @@ import time
 from collections import defaultdict
 
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import JSONResponse
 
 demo_router = APIRouter(prefix="/demo", tags=["demo"])
 
@@ -176,161 +175,3 @@ async def demo_stats():
             "left": max(MAX_TOTAL - _total_used, 0),
             "unique_ips": len(_used_by_ip),
             "uptime_min": round((time.time() - _started) / 60, 1)}
-
-
-@demo_router.get("", response_class=HTMLResponse)
-@demo_router.get("/", response_class=HTMLResponse)
-async def demo_page():
-    return HTMLResponse(DEMO_HTML)
-
-
-# ─────────────────────────────────────────────────────────────────────
-# СТРАНИЦА
-# ─────────────────────────────────────────────────────────────────────
-
-DEMO_HTML = r"""<!DOCTYPE html>
-<html lang="ru"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Adai — демо</title>
-<style>
-:root{--bg:#07070E;--surf:#12121F;--line:#24243A;--ink:#F3F3F8;
-      --mute:#8C8CA6;--violet:#7C5CFF;--teal:#2DD4A0}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--ink);
-     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-     padding:26px 20px 48px;max-width:560px;margin:0 auto;min-height:100vh}
-.top{height:3px;background:linear-gradient(90deg,var(--violet),var(--teal));
-     border-radius:2px;margin-bottom:26px}
-h1{font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
-.sub{color:var(--mute);font-size:15px;margin-top:9px;line-height:1.5}
-label{display:block;font-size:12px;font-weight:600;letter-spacing:.08em;
-      color:var(--mute);margin:20px 0 7px}
-input{width:100%;background:var(--surf);border:1px solid var(--line);
-      border-radius:11px;padding:14px 15px;color:var(--ink);font-size:16px;
-      font-family:inherit;outline:none}
-input:focus{border-color:var(--violet)}
-button{width:100%;margin-top:26px;padding:16px;border:none;border-radius:11px;
-       background:var(--violet);color:#fff;font-size:16px;font-weight:600;
-       font-family:inherit;cursor:pointer}
-button:disabled{opacity:.5;cursor:default}
-.ghost{background:transparent;border:1px solid var(--line);color:var(--mute);
-       margin-top:12px}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.chip{background:var(--surf);border:1px solid var(--line);border-radius:100px;
-      padding:7px 13px;font-size:13px;color:var(--mute);cursor:pointer}
-.chip:active{border-color:var(--violet);color:var(--ink)}
-#status{margin-top:22px;color:var(--mute);font-size:15px;line-height:1.5;
-        display:none;text-align:center}
-.dots::after{content:'';animation:d 1.4s infinite}
-@keyframes d{0%{content:''}33%{content:'.'}66%{content:'..'}100%{content:'...'}}
-#out{margin-top:28px;display:none}
-.shot{width:100%;border-radius:13px;border:1px solid var(--line);
-      margin-bottom:14px;display:block}
-.cap{font-size:13px;color:var(--mute);margin:-6px 0 18px}
-.note{background:rgba(124,92,255,.1);border:1px solid rgba(124,92,255,.3);
-      border-radius:12px;padding:16px 17px;margin-top:22px;
-      font-size:14px;line-height:1.55;color:#D6D6E4}
-.err{background:rgba(255,107,107,.1);border-color:rgba(255,107,107,.35)}
-</style></head><body>
-
-<div class="top"></div>
-<h1>Adai. Реклама без таргетолога</h1>
-<p class="sub">Опишите бизнес в трёх полях. Через пару минут получите три
-готовых рекламных баннера — так же, как их получает реальный клиент.</p>
-
-<label>НИША</label>
-<input id="niche" placeholder="Стоматология">
-<div class="chips">
-  <span class="chip" data-offer="Виниры от 45 000 ₸, диагностика бесплатно">Стоматология</span>
-  <span class="chip" data-offer="Замена масла за 20 минут, диагностика бесплатно">Автосервис</span>
-  <span class="chip" data-offer="Окрашивание от 15 000 ₸, уход за волосами в подарок">Салон красоты</span>
-  <span class="chip" data-offer="Кредит от 4% годовых, первый взнос 10%">Автосалон</span>
-  <span class="chip" data-offer="Букет от 8 000 ₸, доставка за 2 часа">Цветочный</span>
-  <span class="chip" data-offer="Курс английского от 25 000 ₸, первый урок бесплатно">Онлайн-школа</span>
-  <span class="chip" data-offer="Чекап за 3 часа, анализы в подарок">Клиника</span>
-  <span class="chip" data-offer="Чистка лица от 12 000 ₸, консультация бесплатно">Косметология</span>
-  <span class="chip" data-offer="Рассрочка 0% на 12 месяцев, гравировка бесплатно">Ювелирный</span>
-  <span class="chip" data-offer="Абонемент от 12 000 ₸, 2 тренировки в подарок">Фитнес</span>
-  <span class="chip" data-offer="Завтрак с кофе за 2 500 ₸ до 12:00">Кофейня</span>
-  <span class="chip" data-offer="Бизнес-ланч за 3 500 ₸ с 12:00 до 16:00">Ресторан</span>
-</div>
-
-<label>ПРЕДЛОЖЕНИЕ · обязательно с цифрой</label>
-<input id="offer" placeholder="Виниры от 45 000 ₸, диагностика бесплатно">
-
-<label>ГОРОД</label>
-<input id="city" placeholder="Алматы" value="Алматы">
-
-<button id="go">Сгенерировать баннеры</button>
-<button class="ghost" disabled>Запустить рекламу · нужен аккаунт Facebook</button>
-
-<div id="status"></div>
-<div id="out"></div>
-
-<div class="note" id="note" style="display:none">
-  Дальше клиент нажимает «Запустить рекламу», и кампания уходит в Facebook
-  и Instagram. Заявки приходят прямо в WhatsApp. В демо-режиме этот шаг
-  отключён — для него нужен подключённый рекламный аккаунт.
-</div>
-
-<script>
-document.querySelectorAll('.chip').forEach(c=>{
-  c.onclick=()=>{
-    document.getElementById('niche').value=c.textContent;
-    document.getElementById('offer').value=c.dataset.offer||'';
-  }
-});
-
-const go=document.getElementById('go'),
-      st=document.getElementById('status'),
-      out=document.getElementById('out'),
-      note=document.getElementById('note');
-
-const steps=['Изучаю нишу и аудиторию','Придумываю три концепции',
-             'Рисую баннеры','Собираю макеты'];
-
-go.onclick=async()=>{
-  const niche=document.getElementById('niche').value.trim();
-  const offer=document.getElementById('offer').value.trim();
-  const city=document.getElementById('city').value.trim();
-  if(!niche||!offer){alert('Заполните нишу и предложение');return}
-
-  go.disabled=true; out.style.display='none'; note.style.display='none';
-  st.style.display='block'; st.className='';
-  let i=0;
-  st.innerHTML='<span class="dots">'+steps[0]+'</span>';
-  const tick=setInterval(()=>{
-    i=(i+1)%steps.length;
-    st.innerHTML='<span class="dots">'+steps[i]+'</span>';
-  },9000);
-
-  try{
-    const r=await fetch('/demo/generate',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({niche,offer,city})
-    });
-    const d=await r.json();
-    clearInterval(tick);
-    if(!r.ok){
-      st.innerHTML='<div class="note err">'+(d.error||'Ошибка')+'</div>';
-      return;
-    }
-    st.style.display='none';
-    out.innerHTML=d.variants.map((v,n)=>{
-      const raw=v.image||'';
-      const src=/^(https?:|data:)/.test(raw)?raw:'data:image/jpeg;base64,'+raw;
-      return '<img class="shot" src="'+src+'" alt="Вариант '+(n+1)+'">'+
-             '<div class="cap">Вариант '+(n+1)+(v.headline?' · '+v.headline:'')+'</div>';
-    }).join('');
-    out.style.display='block';
-    note.style.display='block';
-  }catch(e){
-    clearInterval(tick);
-    st.innerHTML='<div class="note err">Не получилось. Попробуйте ещё раз.</div>';
-  }finally{
-    go.disabled=false;
-  }
-};
-</script>
-</body></html>"""
