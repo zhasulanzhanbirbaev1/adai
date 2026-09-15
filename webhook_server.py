@@ -634,18 +634,18 @@ async def api_save_profile(request: Request, user_id: int = Depends(_get_uid)):
 
 # в"Ђв"Ђ Facebook OAuth в"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђ
 
-_BOT_LINK = "https://t.me/AdaikZ_bot"
+_BOT_LINK = f"https://t.me/{os.getenv('BOT_USERNAME', 'ZHASCLAUDE_BOT')}"
 
 _FB_SUCCESS_TMPL = """<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>*{box-sizing:border-box}body{font-family:-apple-system,sans-serif;background:#030712;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px}.card{background:#0f172a;border:1px solid #1e293b;border-radius:20px;padding:40px 32px;text-align:center;max-width:400px;width:100%}.icon{font-size:64px;margin-bottom:16px}.title{font-size:24px;font-weight:700;margin-bottom:10px}.sub{color:#64748b;font-size:15px;line-height:1.7;margin-bottom:28px}.btn{display:block;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;font-weight:700;font-size:16px;padding:16px 28px;border-radius:14px;text-decoration:none;transition:opacity .2s}.btn:hover{opacity:.9}.hint{margin-top:16px;font-size:12px;color:#374151}</style>
-<script>setTimeout(function(){try{window.location.href='https://t.me/AdaikZ_bot';}catch(e){}},2000);</script>
+<script>setTimeout(function(){try{window.location.href='https://t.me/ZHASCLAUDE_BOT';}catch(e){}},2000);</script>
 </head>
 <body><div class="card">
   <div class="icon">✅</div>
   <div class="title">Facebook подключён!</div>
   <div class="sub">Кампании синхронизированы.<br>Telegram уже прислал уведомление — нажмите <b>«Открыть кабинет»</b>.</div>
-  <a class="btn" href="https://t.me/AdaikZ_bot">Вернуться в Telegram →</a>
+  <a class="btn" href="https://t.me/ZHASCLAUDE_BOT">Вернуться в Telegram →</a>
   <div class="hint">Страница автоматически перейдёт через 2 секунды</div>
 </div></body></html>"""
 
@@ -764,9 +764,9 @@ async function connect(){{
           <div style="font-size:56px;margin-bottom:16px">✅</div>
           <div style="font-size:20px;font-weight:700;color:#1a1a2e;margin-bottom:8px">Facebook подключён!</div>
           <div style="color:#6b7a99;font-size:14px;margin-bottom:24px">Возвращайтесь в Telegram</div>
-          <a href="https://t.me/AdaikZ_bot" style="display:inline-block;background:#6366f1;color:#fff;padding:13px 32px;border-radius:12px;text-decoration:none;font-weight:600">Открыть Adai →</a>
+          <a href="https://t.me/ZHASCLAUDE_BOT" style="display:inline-block;background:#6366f1;color:#fff;padding:13px 32px;border-radius:12px;text-decoration:none;font-weight:600">Открыть Adai →</a>
         </div>`;
-      setTimeout(()=>{{try{{window.location.href='https://t.me/AdaikZ_bot';}}catch(e){{}}}},2000);
+      setTimeout(()=>{{try{{window.location.href='https://t.me/ZHASCLAUDE_BOT';}}catch(e){{}}}},2000);
     }}else{{
       const dd=await r.json();
       alert(dd.detail||'Ошибка подключения');
@@ -774,7 +774,7 @@ async function connect(){{
     }}
   }}catch(e){{alert('Ошибка соединения');btn.disabled=false;btn.textContent='Подключить';}}
 }}
-function cancel(){{window.location.href='https://t.me/AdaikZ_bot';}}
+function cancel(){{window.location.href='https://t.me/ZHASCLAUDE_BOT';}}
 load();
 </script>
 </body></html>"""
