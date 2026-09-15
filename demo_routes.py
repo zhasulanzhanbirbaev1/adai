@@ -245,7 +245,15 @@ button:disabled{opacity:.5;cursor:default}
   <span class="chip" data-offer="Виниры от 45 000 ₸, диагностика бесплатно">Стоматология</span>
   <span class="chip" data-offer="Замена масла за 20 минут, диагностика бесплатно">Автосервис</span>
   <span class="chip" data-offer="Окрашивание от 15 000 ₸, уход за волосами в подарок">Салон красоты</span>
+  <span class="chip" data-offer="Кредит от 4% годовых, первый взнос 10%">Автосалон</span>
+  <span class="chip" data-offer="Букет от 8 000 ₸, доставка за 2 часа">Цветочный</span>
+  <span class="chip" data-offer="Курс английского от 25 000 ₸, первый урок бесплатно">Онлайн-школа</span>
+  <span class="chip" data-offer="Чекап за 3 часа, анализы в подарок">Клиника</span>
+  <span class="chip" data-offer="Чистка лица от 12 000 ₸, консультация бесплатно">Косметология</span>
+  <span class="chip" data-offer="Рассрочка 0% на 12 месяцев, гравировка бесплатно">Ювелирный</span>
+  <span class="chip" data-offer="Абонемент от 12 000 ₸, 2 тренировки в подарок">Фитнес</span>
   <span class="chip" data-offer="Завтрак с кофе за 2 500 ₸ до 12:00">Кофейня</span>
+  <span class="chip" data-offer="Бизнес-ланч за 3 500 ₸ с 12:00 до 16:00">Ресторан</span>
 </div>
 
 <label>ПРЕДЛОЖЕНИЕ · обязательно с цифрой</label>
