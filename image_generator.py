@@ -309,7 +309,7 @@ async def generate_3_creatives_concept(brief: dict) -> dict:
     return json.loads(response.choices[0].message.content)
 
 
-async def generate_dalle_image(prompt: str, size: str = "1024x1536") -> bytes:
+async def generate_image(prompt: str, size: str = "1024x1536") -> bytes:
     """Generate image via gpt-image-1. Size: 1024x1024 | 1024x1536 | 1536x1024."""
     if not client:
         raise RuntimeError("OPENAI_API_KEY not set")

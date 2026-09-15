@@ -63,7 +63,7 @@ async def _generate(niche: str, offer: str, city: str) -> list:
     """Возвращает список из 1-3 элементов:
        [{"image": "data:image/jpeg;base64,...", "headline": "...", "cta": "..."}, ...]
     """
-    from image_generator import generate_3_creatives_concept, generate_dalle_image
+    from image_generator import generate_3_creatives_concept, generate_image
     from banner_composer import compose_creative_banner
 
     brief = {
@@ -91,7 +91,7 @@ async def _generate(niche: str, offer: str, city: str) -> list:
         import logging
         from fastapi.concurrency import run_in_threadpool
         try:
-            img_bytes    = await generate_dalle_image(v["image_prompt_en"], size="1024x1536")
+            img_bytes    = await generate_image(v["image_prompt_en"], size="1024x1536")
             banner_bytes = await run_in_threadpool(
                 compose_creative_banner,
                 img_bytes,

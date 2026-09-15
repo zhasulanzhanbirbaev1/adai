@@ -1235,7 +1235,7 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
         import base64 as b64mod
         import asyncio as _asyncio
         from image_generator import (
-            generate_dalle_image, generate_instagram_copy,
+            generate_image, generate_instagram_copy,
             generate_3_creatives_concept, suggest_audience, OPENAI_AVAILABLE,
             generate_banners_from_photo,
         )
@@ -1345,10 +1345,10 @@ async def api_generate_banner(request: Request, user_id: int = Depends(_get_uid)
             if not first_cta:
                 first_cta = to.get("cta_button", "")
     else:
-        # ── DALL-E path: generate 3 images in parallel + compose ─────────────
+        # ── gpt-image-1 path: generate 3 images in parallel + compose ──────────
         async def _gen_img(prompt: str):
             try:
-                return await generate_dalle_image(prompt, size="1024x1536")
+                return await generate_image(prompt, size="1024x1536")
             except Exception as ex:
                 logger.error("Image gen error: %s", ex)
                 _last_img_error.append(str(ex))
