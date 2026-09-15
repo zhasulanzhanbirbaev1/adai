@@ -1136,6 +1136,23 @@ async def api_welcome_message(request: Request, user_id: int = Depends(_get_uid)
     return {"messages": messages}
 
 
+@app.post("/api/ai/suggest-offers")
+async def api_suggest_offers(request: Request):
+    """Suggest 3 offers specific to the given niche. No auth: costs a fraction of
+    a tenge on gpt-4o-mini and is shared by the Studio and the demo page."""
+    from image_generator import suggest_offers
+    body  = await request.json()
+    niche = (body.get("niche") or "").strip()[:80]
+    city  = (body.get("city") or "Казахстан").strip()[:40]
+    if not niche:
+        raise HTTPException(400, "Укажите нишу")
+    try:
+        return await suggest_offers(niche, city)
+    except Exception as e:
+        logger.error("suggest_offers failed: %s", e)
+        raise HTTPException(500, "Не удалось придумать офферы — попробуйте ещё раз")
+
+
 @app.post("/api/moderate")
 async def api_moderate(request: Request, user_id: int = Depends(_get_uid)):
     from image_generator import moderate_ad_content

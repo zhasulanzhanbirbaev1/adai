@@ -562,6 +562,11 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
               <div class="form-group">
                 <label class="form-label">Оффер <span style="color:var(--muted);font-weight:400">(необязательно)</span></label>
                 <textarea class="form-input" id="gen-description" rows="2" placeholder="Скидка 30% на первое посещение, пробный урок бесплатно..."></textarea>
+                <button id="gen-offer-btn" onclick="suggestOffers('gen-niche','gen-description','gen-offer-btn','gen-offer-list')"
+                        style="margin-top:8px;padding:8px 14px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer">
+                  ✨ Придумать оффер
+                </button>
+                <div id="gen-offer-list" style="display:none;flex-direction:column;gap:6px;margin-top:8px"></div>
               </div>
               <div class="form-group" id="gen-style-group">
                 <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);border-radius:10px">
@@ -733,6 +738,11 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
             <div class="form-group">
               <label class="form-label">Предложение <span style="color:var(--muted);font-weight:400">— лучше с цифрой</span></label>
               <textarea class="form-input" id="demo-offer" rows="2" placeholder="Виниры от 45 000 ₸, диагностика бесплатно"></textarea>
+              <button id="demo-offer-btn" onclick="suggestOffers('demo-niche','demo-offer','demo-offer-btn','demo-offer-list')"
+                      style="margin-top:8px;padding:8px 14px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer">
+                ✨ Придумать оффер
+              </button>
+              <div id="demo-offer-list" style="display:none;flex-direction:column;gap:6px;margin-top:8px"></div>
             </div>
 
             <div class="form-group">
@@ -1691,6 +1701,46 @@ function loadDemo() {
 function demoPick(i) {
   document.getElementById('demo-niche').value = DEMO_NICHES[i][0];
   document.getElementById('demo-offer').value = DEMO_NICHES[i][1];
+}
+
+// Shared by the Studio and the demo page: AI writes offers for whatever niche was typed
+async function suggestOffers(nicheId, offerId, btnId, listId) {
+  const niche = document.getElementById(nicheId)?.value.trim();
+  const btn   = document.getElementById(btnId);
+  const list  = document.getElementById(listId);
+  if (!niche) { showToast('Сначала укажите нишу'); return; }
+
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Думаю...';
+  list.style.display = 'none';
+
+  try {
+    const city = document.getElementById('demo-city')?.value.trim()
+              || window._settings?.user?.city || 'Казахстан';
+    const r = await fetch(`${API}/api/ai/suggest-offers`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({niche, city})
+    });
+    const d = await r.json();
+    if (!r.ok || !d.offers?.length) { showToast(d.detail || 'Не получилось, попробуйте ещё раз'); return; }
+
+    list.innerHTML = d.offers.map(o => `
+      <div onclick="pickOffer('${offerId}','${listId}',this)"
+           style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;
+                  padding:10px 13px;font-size:13.5px;line-height:1.4;cursor:pointer">${esc(o)}</div>`).join('');
+    list.style.display = 'flex';
+  } catch (e) {
+    showToast('Сервер не ответил');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+function pickOffer(offerId, listId, el) {
+  document.getElementById(offerId).value = el.textContent.trim();
+  document.getElementById(listId).style.display = 'none';
 }
 
 const DEMO_STEPS = ['Изучаю нишу и аудиторию','Придумываю три концепции','Рисую баннеры','Собираю макеты'];
