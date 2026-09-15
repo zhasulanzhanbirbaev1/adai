@@ -2248,16 +2248,40 @@ let _studioPhotoB64 = null;
 function handleStudioUpload(input) {
   const file = input.files[0];
   if (!file) return;
+  const txt = document.getElementById('gen-upload-text');
+  txt.textContent = 'Обрабатываю фото...';
+
   const reader = new FileReader();
   reader.onload = e => {
-    _studioPhotoB64 = e.target.result.split(',')[1];
-    document.getElementById('gen-upload-preview').innerHTML =
-      `<img src="${e.target.result}" style="width:100%;max-height:130px;object-fit:cover;border-radius:8px">`;
-    document.getElementById('gen-upload-text').textContent = '✅ ' + file.name;
-    document.getElementById('gen-photo-clear').style.display = 'block';
-    document.getElementById('gen-style-group').style.display = 'none';
-    document.getElementById('gen-photo-hint').textContent = '— фото загружено';
+    const img = new Image();
+    img.onload = () => {
+      // Phone photos run 3-12 MB; base64 adds a third on top and the upload dies
+      // on mobile before it reaches the server. 1600px is plenty for a 1080×1350 banner.
+      const MAX = 1600;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (Math.max(w, h) > MAX) {
+        const k = MAX / Math.max(w, h);
+        w = Math.round(w * k);
+        h = Math.round(h * k);
+      }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = c.toDataURL('image/jpeg', 0.85);
+      _studioPhotoB64 = dataUrl.split(',')[1];
+
+      const kb = Math.round(_studioPhotoB64.length * 0.75 / 1024);
+      document.getElementById('gen-upload-preview').innerHTML =
+        `<img src="${dataUrl}" style="width:100%;max-height:130px;object-fit:cover;border-radius:8px">`;
+      txt.textContent = `✅ ${file.name} · ${w}×${h}, ${kb} КБ`;
+      document.getElementById('gen-photo-clear').style.display = 'block';
+      document.getElementById('gen-style-group').style.display = 'none';
+      document.getElementById('gen-photo-hint').textContent = '— фото загружено';
+    };
+    img.onerror = () => { txt.textContent = '❌ Не удалось прочитать фото — попробуйте другое'; };
+    img.src = e.target.result;
   };
+  reader.onerror = () => { txt.textContent = '❌ Не удалось открыть файл'; };
   reader.readAsDataURL(file);
 }
 
@@ -2481,7 +2505,10 @@ async function generateBannersDalle() {
     }
     document.getElementById('moderation-row').style.display = 'none';
   } catch(e) {
-    status.textContent='Сервер недоступен';
+    status.textContent = _studioPhotoB64
+      ? 'Не удалось отправить фото. Проверьте связь или попробуйте другое фото.'
+      : 'Связь с сервером прервалась. Попробуйте ещё раз.';
+    container.innerHTML = '';
   } finally {
     btn.disabled=false;
     btn.textContent='✨ Создать баннеры';
