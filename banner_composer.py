@@ -42,8 +42,19 @@ def _font(path, size):
     return ImageFont.load_default()
 
 
+_GLUE = " "  # keeps a trailing unit (₸, %, ₽) on the same line as its number
+
+
 def _wrap(text, font, max_w, draw):
-    words = text.split()
+    words = []
+    for w in text.split():
+        prev = words[-1] if words else ""
+        # "45 000 ₸" is one token: neither the thousands group nor the unit may break off
+        glue = w in ("₸", "%", "₽", "тг", "тыс", "млн") or (w.isdigit() and prev[-1:].isdigit())
+        if words and glue:
+            words[-1] += _GLUE + w
+        else:
+            words.append(w)
     lines, cur = [], []
     for w in words:
         test = " ".join(cur + [w])
@@ -247,14 +258,12 @@ def compose_creative_banner(image_bytes: bytes, text_overlay: dict,
                              color_scheme: dict, font_style: str = "bold_sans") -> bytes:
     """
     Compose one banner using the AI Creative Director's structured output.
-    Layout: dark top zone (city tag + headline) · clear center (product) · dark bottom zone (bullets + CTA)
+    Layout: dark top zone (city tag + headline) · clear center (product) · dark bottom zone (bullets)
     """
     W, H = FEED_W, FEED_H
     base = _cover_crop(image_bytes)
 
-    # Text is always white. Only CTA button uses AI color.
-    # Gradient is always pure black for a clean professional look.
-    cta_bg  = _hex_to_rgb(color_scheme.get("cta_bg", "#2563EB"), (37, 99, 235))
+    # Text is always white. Gradient is always pure black for a clean professional look.
     BLACK   = (0, 0, 0)
     WHITE   = (255, 255, 255)
     WHITE_DIM = (200, 200, 200)
@@ -268,7 +277,6 @@ def compose_creative_banner(image_bytes: bytes, text_overlay: dict,
 
     fh  = _font(fh_path, 88)   # headline
     fsb = _font(fb_path, 40)   # subheadline / bullets
-    fc  = _font(fh_path, 44)   # CTA
     fct = _font(fb_path, 28)   # city tag
 
     margin, tw = 64, W - 128
@@ -301,23 +309,21 @@ def compose_creative_banner(image_bytes: bytes, text_overlay: dict,
         draw.text((margin, y), sub, font=fsb, fill=WHITE_DIM)
 
     # ── Bullets (bottom zone) ─────────────────────────────────────────────────
-    bullets = text_overlay.get("bullets") or []
-    y_b = int(H * 0.645)
-    for b in bullets[:3]:
-        draw.text((margin, y_b), f"✓  {b}", font=fsb, fill=WHITE)
-        y_b += 58
-
-    # ── CTA button — full width ───────────────────────────────────────────────
-    cta = (text_overlay.get("cta_button") or "Узнать цену").strip()
-    y_cta = int(H * 0.835)
-    btn_pad_x, btn_pad_y = 36, 22
-    bb = draw.textbbox((0, 0), cta, font=fc)
-    btn_h = (bb[3] - bb[1]) + btn_pad_y * 2
-    btn_x1, btn_x2 = margin, W - margin
-    draw.rounded_rectangle([btn_x1, y_cta, btn_x2, y_cta + btn_h],
-                            radius=btn_h // 2, fill=cta_bg)
-    tw_cta = bb[2] - bb[0]
-    draw.text(((btn_x1 + btn_x2 - tw_cta) // 2, y_cta + btn_pad_y), cta, font=fc, fill=WHITE)
+    # No CTA button is drawn: Meta renders its own tappable one under the image,
+    # and a painted copy invites taps that do nothing.
+    bullets = [str(b).strip() for b in (text_overlay.get("bullets") or [])[:3] if str(b).strip()]
+    if bullets:
+        line_h, bottom_margin, cap_h = 58, 96, 46
+        tick, gap = 30, 20
+        y_b = H - bottom_margin - ((len(bullets) - 1) * line_h + cap_h)
+        for b in bullets:
+            # tick drawn as vector — the ✓ glyph is missing from the display fonts
+            ty = y_b + 6
+            draw.line([(margin, ty + tick * .52), (margin + tick * .36, ty + tick * .84),
+                       (margin + tick, ty + tick * .12)],
+                      fill=WHITE, width=5, joint="curve")
+            draw.text((margin + tick + gap, y_b), b, font=fsb, fill=WHITE)
+            y_b += line_h
 
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=94)
